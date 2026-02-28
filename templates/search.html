@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vitrina — поиск недвижимости</title>
+    <link rel="shortcut icon" href="/static/images/favicon.png" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/fonts/icomoon/style.css" />
+    <link rel="stylesheet" href="/static/fonts/flaticon/font/flaticon.css" />
+    <link rel="stylesheet" href="/static/css/tiny-slider.css" />
+    <link rel="stylesheet" href="/static/css/aos.css" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+
+    <style>
+      html { scroll-behavior: smooth; }
+      .vitrina-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        padding: 1.25rem 0;
+        background: rgba(255,255,255,0.08);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+      .vitrina-header .vitrina-logo {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #fff;
+        text-decoration: none;
+        letter-spacing: -0.02em;
+        font-family: 'Work Sans', sans-serif;
+      }
+      .vitrina-header .vitrina-logo:hover { color: #fff; opacity: 0.9; }
+      .vitrina-nav {
+        display: flex;
+        align-items: center;
+        gap: 2.5rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .vitrina-nav a {
+        color: rgba(255,255,255,0.9);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: color 0.2s;
+      }
+      .vitrina-nav a:hover,
+      .vitrina-nav a.active { color: #fff; }
+      .vitrina-page-hero {
+        position: relative;
+        min-height: 32vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.65)), url('/static/images/hero_bg_2.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+      .vitrina-page-hero .vitrina-hero-title {
+        font-size: clamp(1.75rem, 4vw, 2.5rem);
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 0.5rem;
+        font-family: 'Work Sans', sans-serif;
+      }
+      .vitrina-page-hero .breadcrumb { background: transparent; }
+      .vitrina-page-hero .breadcrumb-item a { color: rgba(255,255,255,0.9); }
+      .vitrina-page-hero .breadcrumb-item.active { color: rgba(255,255,255,0.7); }
+      .vitrina-search-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        padding: 1.5rem;
+      }
+      .vitrina-search-card .form-control,
+      .vitrina-search-card .form-select {
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        padding: 0.65rem 1rem;
+        font-size: 0.95rem;
+      }
+      .vitrina-search-card .form-control:focus,
+      .vitrina-search-card .form-select:focus {
+        border-color: #5a6c7d;
+        box-shadow: 0 0 0 3px rgba(90, 108, 125, 0.2);
+      }
+      .vitrina-search-btn {
+        background: #5a6c7d;
+        color: #fff;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        padding: 0.65rem 1.75rem;
+        white-space: nowrap;
+        transition: background 0.2s;
+      }
+      .vitrina-search-btn:hover { background: #4a5568; color: #fff; }
+      /* Карточки объектов — как на главной, без подчёркивания цены */
+      .vitrina-search-property-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        border: 1px solid rgba(0,0,0,0.06);
+      }
+      .vitrina-search-property-card .vitrina-property-img {
+        flex-shrink: 0;
+        height: 220px;
+        overflow: hidden;
+      }
+      .vitrina-search-property-card .vitrina-property-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .vitrina-search-property-card .vitrina-property-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 1.25rem;
+      }
+      .vitrina-search-property-card .vitrina-property-price {
+        color: #5a6c7d;
+        font-weight: 600;
+        font-size: 1.15rem;
+        margin-bottom: 0.5rem;
+        text-decoration: none;
+      }
+      .vitrina-search-property-card .vitrina-property-meta { color: #6c757d; font-size: 0.9rem; }
+      .vitrina-search-property-card .vitrina-property-body .btn-primary {
+        margin-top: auto;
+        background: #5a6c7d;
+        border-color: #5a6c7d;
+      }
+      .vitrina-search-property-card .vitrina-property-body .btn-primary:hover {
+        background: #4a5568;
+        border-color: #4a5568;
+      }
+      @media (max-width: 991.98px) {
+        .vitrina-search-card .row > [class^="col-"] { margin-bottom: 0.5rem; }
+        .vitrina-search-btn { width: 100%; }
+      }
+    </style>
+</head>
+
+<body>
+
+    <div class="site-mobile-menu site-navbar-target">
+      <div class="site-mobile-menu-header">
+        <div class="site-mobile-menu-close">
+          <span class="icofont-close js-menu-toggle"></span>
+        </div>
+      </div>
+      <div class="site-mobile-menu-body"></div>
+    </div>
+
+    <header class="vitrina-header">
+      <div class="container">
+        <div class="d-flex align-items-center justify-content-between">
+          <a href="/" class="vitrina-logo">Vitrina</a>
+          <ul class="js-clone-nav d-none d-lg-flex vitrina-nav mb-0">
+            <li><a href="/">Главная</a></li>
+            <li><a href="/search" class="active">Поиск</a></li>
+            <li><a href="/faq">FAQ</a></li>
+          </ul>
+          <a href="#" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Меню"><span></span></a>
+        </div>
+      </div>
+    </header>
+
+    <div class="vitrina-page-hero">
+      <div class="container text-center">
+        <h1 class="vitrina-hero-title">Поиск объектов</h1>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-center mb-0">
+            <li class="breadcrumb-item"><a href="/">Главная</a></li>
+            <li class="breadcrumb-item active">Поиск</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+
+    <div class="section">
+        <div class="container">
+
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <form action="/search" method="GET" class="vitrina-search-card mb-5">
+                      <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                          <label class="form-label small text-muted mb-1">Поиск по адресу или названию</label>
+                          <input type="text" name="q" class="form-control" placeholder="БЦ, Арбат, склад" value="{{ q or '' }}">
+                        </div>
+                        <div class="col-6 col-md-3">
+                          <label class="form-label small text-muted mb-1">Площадь от (м²)</label>
+                          <input type="number" name="min_area" class="form-control" placeholder="От" min="1" step="1" value="{{ min_area or '' }}">
+                        </div>
+                        <div class="col-6 col-md-3">
+                          <label class="form-label small text-muted mb-1">Площадь до (м²)</label>
+                          <input type="number" name="max_area" class="form-control" placeholder="До" min="1" step="1" value="{{ max_area or '' }}">
+                        </div>
+                        <div class="col-6 col-md-3">
+                          <label class="form-label small text-muted mb-1">Тип сделки</label>
+                          <select name="deal_type" class="form-select">
+                            <option value="Все" {% if deal_type == 'Все' or not deal_type %}selected{% endif %}>Все</option>
+                            <option value="Аренда" {% if deal_type == 'Аренда' %}selected{% endif %}>Аренда</option>
+                            <option value="Продажа" {% if deal_type == 'Продажа' %}selected{% endif %}>Продажа</option>
+                          </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                          <label class="form-label small text-muted mb-1">Тип помещения</label>
+                          <select name="category" class="form-select">
+                            <option value="Все" {% if category == 'Все' or not category %}selected{% endif %}>Все типы</option>
+                            <option value="Офис" {% if category == 'Офис' %}selected{% endif %}>Офис</option>
+                            <option value="Торговая площадь" {% if category == 'Торговая площадь' %}selected{% endif %}>Торговая площадь</option>
+                            <option value="Свободного назначения" {% if category == 'Свободного назначения' %}selected{% endif %}>Свободного назначения</option>
+                            <option value="Промышленное" {% if category == 'Промышленное' %}selected{% endif %}>Промышленное</option>
+                            <option value="Склад" {% if category == 'Склад' %}selected{% endif %}>Склад</option>
+                            <option value="Здание" {% if category == 'Здание' %}selected{% endif %}>Здание</option>
+                            <option value="ГАБ" {% if category == 'ГАБ' %}selected{% endif %}>ГАБ</option>
+                          </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                          <label class="form-label small text-muted mb-1">Цена от (₽)</label>
+                          <input type="number" name="min_price" class="form-control" placeholder="От" min="0" value="{{ request.query_params.get('min_price', '') or min_price or '' }}">
+                        </div>
+                        <div class="col-6 col-md-3">
+                          <label class="form-label small text-muted mb-1">Цена до (₽)</label>
+                          <input type="number" name="max_price" class="form-control" placeholder="До" min="0" value="{{ request.query_params.get('max_price', '') or max_price or '' }}">
+                        </div>
+                        <div class="col-6 col-md-3 d-flex align-items-end">
+                          <button type="submit" class="vitrina-search-btn btn w-100">Найти</button>
+                        </div>
+                      </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if matched_properties %}
+            <h2 class="heading text-primary mb-4">Подходящие объекты</h2>
+            {% endif %}
+            <div class="row g-4">
+                {% for property in matched_properties %}
+                <div class="col-12 col-sm-6 col-lg-4 d-flex">
+                    <div class="vitrina-search-property-card w-100">
+                        <a href="/property/{{ property.id }}" class="vitrina-property-img">
+                            <img src="{% if property.main_image %}{{ property.main_image }}{% else %}/static/images/hero_bg_1.jpg{% endif %}" alt="{{ property.title }}">
+                        </a>
+                        <div class="vitrina-property-body">
+                            <div class="vitrina-property-price">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
+                            <span class="d-block vitrina-property-meta mb-1">{{ property.address }}</span>
+                            <span class="d-block vitrina-property-meta mb-3">{{ property.title }}</span>
+                            <div class="specs d-flex mb-3">
+                                <span class="d-flex align-items-center me-3 vitrina-property-meta">
+                                    <span class="icon-bed me-2"></span>
+                                    <span class="caption">{{ property.area }} м²</span>
+                                </span>
+                            </div>
+                            <a href="/property/{{ property.id }}" class="btn btn-primary py-2 px-3">Подробнее</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if not matched_properties and not other_properties %}
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h3 class="text-black-50">Объекты не найдены. Попробуйте изменить параметры.</h3>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if range_filter_used and other_properties %}
+            <div class="my-5 py-4 text-center border-top">
+                <h3 class="fw-bold mb-2">Остальные предложения</h3>
+                <p class="text-muted mb-0">Объекты вне указанного диапазона (±10% по площади и цене), которые могут вас заинтересовать</p>
+            </div>
+            <div class="row g-4">
+                {% for property in other_properties %}
+                <div class="col-12 col-sm-6 col-lg-4 d-flex">
+                    <div class="vitrina-search-property-card w-100">
+                        <a href="/property/{{ property.id }}" class="vitrina-property-img">
+                            <img src="{% if property.main_image %}{{ property.main_image }}{% else %}/static/images/hero_bg_1.jpg{% endif %}" alt="{{ property.title }}">
+                        </a>
+                        <div class="vitrina-property-body">
+                            <div class="vitrina-property-price">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
+                            <span class="d-block vitrina-property-meta mb-1">{{ property.address }}</span>
+                            <span class="d-block vitrina-property-meta mb-3">{{ property.title }}</span>
+                            <div class="specs d-flex mb-3">
+                                <span class="d-flex align-items-center me-3 vitrina-property-meta">
+                                    <span class="icon-bed me-2"></span>
+                                    <span class="caption">{{ property.area }} м²</span>
+                                </span>
+                            </div>
+                            <a href="/property/{{ property.id }}" class="btn btn-primary py-2 px-3">Подробнее</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/tiny-slider.js"></script>
+    <script src="/static/js/aos.js"></script>
+    <script src="/static/js/navbar.js"></script>
+    <script src="/static/js/custom.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vitrina — FAQ</title>
+    <link rel="shortcut icon" href="/static/images/favicon.png" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/fonts/icomoon/style.css" />
+    <link rel="stylesheet" href="/static/fonts/flaticon/font/flaticon.css" />
+    <link rel="stylesheet" href="/static/css/tiny-slider.css" />
+    <link rel="stylesheet" href="/static/css/aos.css" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+
+    <style>
+      .vitrina-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        padding: 1.25rem 0;
+        background: rgba(255,255,255,0.08);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+      .vitrina-header .vitrina-logo {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #fff;
+        text-decoration: none;
+        letter-spacing: -0.02em;
+        font-family: 'Work Sans', sans-serif;
+      }
+      .vitrina-header .vitrina-logo:hover { color: #fff; opacity: 0.9; }
+      .vitrina-nav {
+        display: flex;
+        align-items: center;
+        gap: 2.5rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .vitrina-nav a {
+        color: rgba(255,255,255,0.9);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: color 0.2s;
+      }
+      .vitrina-nav a:hover,
+      .vitrina-nav a.active { color: #fff; }
+      .vitrina-page-hero {
+        position: relative;
+        min-height: 32vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.65)), url('/static/images/hero_bg_2.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+      .vitrina-page-hero .vitrina-hero-title {
+        font-size: clamp(1.75rem, 4vw, 2.5rem);
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 0.5rem;
+        font-family: 'Work Sans', sans-serif;
+      }
+      .vitrina-page-hero .vitrina-hero-subtitle {
+        color: rgba(255,255,255,0.85);
+        font-size: 1rem;
+        margin-bottom: 0;
+      }
+      .vitrina-faq-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        padding: 1.5rem 1.75rem;
+        height: 100%;
+        border: 1px solid #f0f0f0;
+      }
+      .vitrina-faq-card .vitrina-faq-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 1rem;
+        font-family: 'Work Sans', sans-serif;
+      }
+      .vitrina-faq-card ul { font-size: 0.9rem; color: #555; }
+    </style>
+  </head>
+  <body>
+    <div class="site-mobile-menu site-navbar-target">
+      <div class="site-mobile-menu-header">
+        <div class="site-mobile-menu-close">
+          <span class="icofont-close js-menu-toggle"></span>
+        </div>
+      </div>
+      <div class="site-mobile-menu-body"></div>
+    </div>
+
+    <header class="vitrina-header">
+      <div class="container">
+        <div class="d-flex align-items-center justify-content-between">
+          <a href="/" class="vitrina-logo">Vitrina</a>
+          <ul class="js-clone-nav d-none d-lg-flex vitrina-nav mb-0">
+            <li><a href="/">Главная</a></li>
+            <li><a href="/search">Поиск</a></li>
+            <li><a href="/faq" class="active">FAQ</a></li>
+          </ul>
+          <a href="#" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Меню"><span></span></a>
+        </div>
+      </div>
+    </header>
+
+    <div class="vitrina-page-hero">
+      <div class="container text-center">
+        <h1 class="vitrina-hero-title">FAQ — как использовать Vitrina</h1>
+        <p class="vitrina-hero-subtitle">Ответы на частые вопросы агентов, арендаторов и собственников</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4">
+            <div class="vitrina-faq-card">
+              <h2 class="vitrina-faq-title">Для агентов</h2>
+              <ul class="list-unstyled small mb-0">
+                <li class="mb-2"><strong>Как добавить объект?</strong><br />Через админ‑панель в разделе «Объекты недвижимости» нажмите «Создать» и заполните карточку.</li>
+                <li class="mb-2"><strong>Как прикрепить фото и документы?</strong><br />В форме объекта загрузите превью, дополнительное фото и документы — они сохранятся в галерею и раздел «Документы».</li>
+                <li class="mb-2"><strong>Как отправить подборку клиенту?</strong><br />Используйте поиск, откройте подходящие карточки и отправьте ссылки или выгрузите XML для Авито.</li>
+                <li class="mb-0"><strong>Кто видит объекты?</strong><br />Только пользователи с доступом к внутреннему каталогу вашего агентства.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="col-md-6 col-lg-4">
+            <div class="vitrina-faq-card">
+              <h2 class="vitrina-faq-title">Для арендаторов</h2>
+              <ul class="list-unstyled small mb-0">
+                <li class="mb-2"><strong>Как подобрать помещение?</strong><br />Перейдите в раздел «Поиск» и задайте тип сделки, назначение и бюджет.</li>
+                <li class="mb-2"><strong>Что видно в карточке объекта?</strong><br />Адрес, площадь, описание, фото, а также условия сделки.</li>
+                <li class="mb-2"><strong>Как уточнить детали?</strong><br />Свяжитесь со своим агентом — он видит все внутренние комментарии по объекту.</li>
+                <li class="mb-0"><strong>Насколько актуальны объекты?</strong><br />Каталог ведётся агентством и регулярно обновляется.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="col-md-6 col-lg-4">
+            <div class="vitrina-faq-card">
+              <h2 class="vitrina-faq-title">Мы покупаем / собственники</h2>
+              <ul class="list-unstyled small mb-0">
+                <li class="mb-2"><strong>Можно ли вести объекты под выкуп?</strong><br />Да, вы можете отмечать такие объекты отдельной категорией и фильтровать их в поиске.</li>
+                <li class="mb-2"><strong>Где хранить документы?</strong><br />В карточке объекта прикрепляйте планы, договоры и презентации — всё будет доступно в один клик.</li>
+                <li class="mb-2"><strong>Как оценивать объект?</strong><br />Используйте цену, площадь, тип помещения и местоположение; при необходимости экспортируйте данные для дальнейшего анализа.</li>
+                <li class="mb-0"><strong>Кто имеет доступ к документам?</strong><br />Доступ ограничен внутренними пользователями агентства.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/tiny-slider.js"></script>
+    <script src="/static/js/aos.js"></script>
+    <script src="/static/js/navbar.js"></script>
+    <script src="/static/js/custom.js"></script>
+  </body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="shortcut icon" href="/static/images/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/fonts/icomoon/style.css" />
+    <link rel="stylesheet" href="/static/fonts/flaticon/font/flaticon.css" />
+    <link rel="stylesheet" href="/static/css/tiny-slider.css" />
+    <link rel="stylesheet" href="/static/css/aos.css" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+
+    <style>
+      .vitrina-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        padding: 1.25rem 0;
+        background: rgba(255,255,255,0.08);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+      .vitrina-header .vitrina-logo {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #fff;
+        text-decoration: none;
+        letter-spacing: -0.02em;
+        font-family: 'Work Sans', sans-serif;
+      }
+      .vitrina-header .vitrina-logo:hover { color: #fff; opacity: 0.9; }
+      .vitrina-nav {
+        display: flex;
+        align-items: center;
+        gap: 2.5rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .vitrina-nav a {
+        color: rgba(255,255,255,0.9);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: color 0.2s;
+      }
+      .vitrina-nav a:hover,
+      .vitrina-nav a.active { color: #fff; }
+      .vitrina-page-hero {
+        position: relative;
+        min-height: 32vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5rem 0 2.5rem;
+        background-size: cover;
+        background-position: center top;
+        background-repeat: no-repeat;
+      }
+      .vitrina-page-hero .vitrina-hero-title {
+        font-size: clamp(1.75rem, 4vw, 2.5rem);
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 0.5rem;
+        font-family: 'Work Sans', sans-serif;
+      }
+      .vitrina-page-hero .vitrina-hero-subtitle {
+        color: rgba(255,255,255,0.85);
+        font-size: 1rem;
+        margin-bottom: 0;
+      }
+      .vitrina-property-carousel img {
+        object-fit: cover;
+        height: 500px;
+        border-radius: 10px;
+        width: 100%;
+      }
+    </style>
+
+    <title>{{ property.title }} — Vitrina</title>
+  </head>
+  <body>
+    <div class="site-mobile-menu site-navbar-target">
+      <div class="site-mobile-menu-header">
+        <div class="site-mobile-menu-close">
+          <span class="icofont-close js-menu-toggle"></span>
+        </div>
+      </div>
+      <div class="site-mobile-menu-body"></div>
+    </div>
+
+    {% set bg_image = property.main_image if property.main_image else '/static/images/hero_bg_2.png' %}
+    <header class="vitrina-header">
+      <div class="container">
+        <div class="d-flex align-items-center justify-content-between">
+          <a href="/" class="vitrina-logo">Vitrina</a>
+          <ul class="js-clone-nav d-none d-lg-flex vitrina-nav mb-0">
+            <li><a href="/">Главная</a></li>
+            <li><a href="/search" class="active">Поиск</a></li>
+            <li><a href="/faq">FAQ</a></li>
+          </ul>
+          <a href="#" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Меню"><span></span></a>
+        </div>
+      </div>
+    </header>
+
+    <div class="vitrina-page-hero" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.65)), url('{{ bg_image }}');">
+      <div class="container text-center">
+        <h1 class="vitrina-hero-title">{{ property.title }}</h1>
+        <p class="vitrina-hero-subtitle">{{ property.address }}</p>
+        {% if property.parent %}
+        <p class="mt-2 mb-0">
+          <span class="badge rounded-pill bg-light text-muted fw-normal">
+            📍 Находится в составе:
+            <a href="/property/{{ property.parent.id }}" class="text-decoration-none">
+              {{ property.parent.title or ('Объект #' ~ property.parent.id) }}
+            </a>
+          </span>
+        </p>
+        {% endif %}
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-center mb-0">
+            <li class="breadcrumb-item"><a href="/" class="text-white-50">Главная</a></li>
+            <li class="breadcrumb-item"><a href="/search" class="text-white-50">Каталог</a></li>
+            <li class="breadcrumb-item active text-white" aria-current="page">{{ property.title }}</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="container">
+        <div class="row justify-content-between">
+          
+          <div class="col-lg-7 mb-5 mb-lg-0">
+            {% set main_img_url = property.main_image or '/static/images/hero_bg_1.jpg' %}
+            <div class="vitrina-property-carousel mb-5">
+              <div id="propertyCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                  <button type="button" data-bs-target="#propertyCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Фото 1"></button>
+                  {% for image in property.images %}
+                  <button type="button" data-bs-target="#propertyCarousel" data-bs-slide-to="{{ loop.index }}" aria-label="Фото {{ loop.index + 1 }}"></button>
+                  {% endfor %}
+                </div>
+                <div class="carousel-inner">
+                  <div class="carousel-item active">
+                    <img src="{{ main_img_url }}" alt="{{ property.title }}" class="d-block w-100" />
+                  </div>
+                  {% for image in property.images %}
+                  <div class="carousel-item">
+                    <img src="{{ image.image_url }}" alt="{{ property.title }}" class="d-block w-100" />
+                  </div>
+                  {% endfor %}
+                </div>
+                {% if property.main_image or property.images %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
+                  <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                  <span class="visually-hidden">Назад</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
+                  <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                  <span class="visually-hidden">Вперёд</span>
+                </button>
+                {% endif %}
+              </div>
+            </div>
+
+            <h2 class="heading text-primary mb-4">Описание объекта</h2>
+            <div class="text-black-50 mb-5">
+              {{ property.description | safe if property.description else "Описание пока не добавлено." }}
+            </div>
+
+            {% if available_units %}
+            <h2 class="heading text-primary mb-3">Доступные площади в этом здании</h2>
+            <div class="list-group mb-5 rounded shadow-sm">
+              {% for child in available_units %}
+              <a href="/property/{{ child.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="fw-semibold">
+                    {{ child.title or ('Помещение #' ~ child.id) }}
+                  </div>
+                  <div class="text-muted small">
+                    {{ child.area }} м² · {{ "{:,.0f}".format(child.price).replace(',', ' ') }} ₽
+                  </div>
+                </div>
+                <span class="text-primary small">Открыть →</span>
+              </a>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if property.documents %}
+            <h2 class="heading text-primary mb-4">Документы и планировки</h2>
+            <div class="list-group mb-5 rounded shadow-sm" style="border: 1px solid #e9ecef;">
+              {% for document in property.documents %}
+              <a href="{{ document.document_url }}" target="_blank" rel="noopener noreferrer" class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-3">
+                <span aria-hidden="true">📄</span>
+                <span>{{ document.title }}</span>
+              </a>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="col-lg-4">
+            
+            <h2 class="heading text-primary mb-4">Характеристики</h2>
+            <div class="property-specs bg-light p-4 rounded shadow-sm mb-5">
+              <ul class="list-unstyled mb-0">
+                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                  <span class="text-black-50">Тип сделки:</span> <strong>{{ property.deal_type }}</strong>
+                </li>
+                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                  <span class="text-black-50">Тип помещения:</span> <strong>{{ property.category }}</strong>
+                </li>
+                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                  <span class="text-black-50">Площадь:</span> <strong>{{ property.area }} м²</strong>
+                </li>
+                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                  <span class="text-black-50">Цена:</span> <strong class="text-success fs-5">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</strong>
+                </li>
+                <li class="d-flex justify-content-between mb-2">
+                  <span class="text-black-50">Адрес:</span> <strong class="text-end" style="max-width: 60%;">{{ property.address }}</strong>
+                </li>
+              </ul>
+            </div>
+
+            <h2 class="heading text-primary mb-4">Расположение</h2>
+            <div class="map-wrap rounded overflow-hidden shadow-sm" style="height: 350px; background: #eee;">
+              {% if property.latitude and property.longitude %}
+                <iframe 
+                  src="https://yandex.ru/map-widget/v1/?ll={{ property.longitude }},{{ property.latitude }}&z=16&pt={{ property.longitude }},{{ property.latitude }},pm2rdm" 
+                  width="100%" 
+                  height="100%" 
+                  frameborder="0" 
+                  allowfullscreen="true">
+                </iframe>
+              {% else %}
+                <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                  <p class="mb-0">Координаты не указаны в базе</p>
+                </div>
+              {% endif %}
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="site-footer section py-4">
+      <div class="container">
+        <div class="row">
+          <div class="col-12 text-center">
+            <p class="mb-0">
+              &copy; <script>document.write(new Date().getFullYear());</script> 
+              Vitrina Real Estate System. Внутренний каталог.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/aos.js"></script>
+    <script src="/static/js/navbar.js"></script>
+    <script src="/static/js/custom.js"></script>
+  </body>
+</html>
