@@ -1,45 +1,45 @@
-from sqlalchemy import create_engine, text
+"""
+Настройка БД: асинхронный стек для FastAPI (async_engine + AsyncSessionLocal),
+синхронный engine и SessionLocal — только для SQLAdmin.
+"""
+from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Создаем файл базы данных SQLite прямо в папке проекта
-SQLALCHEMY_DATABASE_URL = "sqlite:///./vitrina.db"
+# URL для асинхронной работы (FastAPI, роуты)
+SQLALCHEMY_DATABASE_URL_ASYNC = "sqlite+aiosqlite:///./vitrina.db"
 
-# Настройка движка базы данных
-# check_same_thread=False нужен только для SQLite
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+# URL для синхронной работы (SQLAdmin и Alembic)
+SQLALCHEMY_DATABASE_URL_SYNC = "sqlite:///./vitrina.db"
+
+# Асинхронный движок и фабрика сессий для приложения
+async_engine = create_async_engine(
+    SQLALCHEMY_DATABASE_URL_ASYNC,
+    connect_args={"check_same_thread": False},
+    echo=False,
+)
+AsyncSessionLocal = async_sessionmaker(
+    async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
 )
 
-
-def ensure_property_main_page_columns():
-    """Добавляет недостающие служебные столбцы в таблицу properties."""
-    with engine.connect() as conn:
-        r = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='properties'"))
-        if not r.fetchone():
-            return  # таблица ещё не создана (create_all создаст с нужными колонками)
-        r = conn.execute(text("PRAGMA table_info(properties)"))
-        names = [row[1] for row in r.fetchall()]
-        if "show_on_main" not in names:
-            conn.execute(text("ALTER TABLE properties ADD COLUMN show_on_main BOOLEAN DEFAULT 0"))
-            conn.commit()
-        if "main_page_order" not in names:
-            conn.execute(text("ALTER TABLE properties ADD COLUMN main_page_order INTEGER"))
-            conn.commit()
-        if "parent_id" not in names:
-            conn.execute(text("ALTER TABLE properties ADD COLUMN parent_id INTEGER REFERENCES properties(id)"))
-            conn.commit()
-
-# Создаем фабрику сессий для работы с БД
+# Синхронный движок и фабрика сессий только для SQLAdmin
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL_SYNC,
+    connect_args={"check_same_thread": False},
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Базовый класс для всех наших моделей
+# Базовый класс для моделей (общий для async и sync)
 Base = declarative_base()
 
-# Функция для получения сессии (понадобится позже)
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
+async def get_db():
+    """Асинхронный генератор сессии для FastAPI (Depends(get_db))."""
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()

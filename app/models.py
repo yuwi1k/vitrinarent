@@ -6,13 +6,14 @@ class Property(Base):
     __tablename__ = "properties"
 
     id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, unique=True, index=True, nullable=True)
     title = Column(String, index=True) 
     description = Column(Text, nullable=True) 
     price = Column(Integer, index=True) 
     area = Column(Float, index=True) 
     address = Column(String) 
     
-    # Главное фото (превью), которое мы обрезаем через визуальный редактор
+    # Главное фото (превью). В БД храним путь, всегда начинающийся с /static/ (например /static/uploads/properties/...)
     main_image = Column(String, nullable=True) 
     is_active = Column(Boolean, default=True)
 
@@ -32,16 +33,20 @@ class Property(Base):
     parent_id = Column(Integer, ForeignKey("properties.id"), nullable=True)
 
     # --- СВЯЗИ С НОВЫМИ ТАБЛИЦАМИ ---
-    # cascade="all, delete-orphan" означает, что если ты удалишь объект,
-    # все его фотки и документы из базы удалятся автоматически
-    images = relationship("PropertyImage", back_populates="property", cascade="all, delete-orphan")
-    documents = relationship("PropertyDocument", back_populates="property", cascade="all, delete-orphan")
+    # lazy="selectin" подходит для асинхронной работы (предзагрузка связей)
+    images = relationship(
+        "PropertyImage", back_populates="property", cascade="all, delete-orphan", lazy="selectin"
+    )
+    documents = relationship(
+        "PropertyDocument", back_populates="property", cascade="all, delete-orphan", lazy="selectin"
+    )
 
     # Иерархия "Здание → Этаж → Офис"
     children = relationship(
         "Property",
         backref=backref("parent", remote_side="Property.id"),
         cascade="all, delete-orphan",
+        lazy="selectin",
     )
 
     @property
@@ -60,15 +65,15 @@ class Property(Base):
         return []
 
 
-# ТАБЛИЦА ДЛЯ ГАЛЕРЕИ (МНОГО ФОТО)
+# ТАБЛИЦА ДЛЯ ГАЛЕРЕИ (МНОГО ФОТО). image_url хранит путь, начинающийся с /static/
 class PropertyImage(Base):
     __tablename__ = "property_images"
     
     id = Column(Integer, primary_key=True, index=True)
     property_id = Column(Integer, ForeignKey("properties.id"))
-    image_url = Column(String)
+    image_url = Column(String)  # URL картинки, например /static/uploads/properties/1_xxx/images/uuid.jpg
     
-    property = relationship("Property", back_populates="images")
+    property = relationship("Property", back_populates="images", lazy="selectin")
 
 
 # ТАБЛИЦА ДЛЯ ДОКУМЕНТОВ
@@ -80,4 +85,4 @@ class PropertyDocument(Base):
     title = Column(String) # Например: "План БТИ" или "Договор"
     document_url = Column(String)
     
-    property = relationship("Property", back_populates="documents")
+    property = relationship("Property", back_populates="documents", lazy="selectin")

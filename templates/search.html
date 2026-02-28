@@ -153,6 +153,7 @@
         .vitrina-search-card .row > [class^="col-"] { margin-bottom: 0.5rem; }
         .vitrina-search-btn { width: 100%; }
       }
+      .vitrina-map { overflow: hidden; }
     </style>
 </head>
 
@@ -184,6 +185,7 @@
     <div class="vitrina-page-hero">
       <div class="container text-center">
         <h1 class="vitrina-hero-title">Поиск объектов</h1>
+        <p class="text-white mb-0 opacity-90">Найдено объектов: {{ total_items }}</p>
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb justify-content-center mb-0">
             <li class="breadcrumb-item"><a href="/">Главная</a></li>
@@ -249,17 +251,20 @@
                 </div>
             </div>
 
-            {% if matched_properties %}
-            <h2 class="heading text-primary mb-4">Подходящие объекты</h2>
-            {% endif %}
+            <h2 class="heading text-primary mb-3">Карта объектов</h2>
+            <div id="map" class="vitrina-map shadow-sm" style="height: 500px; border-radius: 15px; margin-bottom: 30px;"></div>
+
+            {% if properties %}
+            <h2 class="heading text-primary mb-4">Найденные объекты</h2>
             <div class="row g-4">
-                {% for property in matched_properties %}
+                {% for property in properties %}
                 <div class="col-12 col-sm-6 col-lg-4 d-flex">
                     <div class="vitrina-search-property-card w-100">
-                        <a href="/property/{{ property.id }}" class="vitrina-property-img">
-                            <img src="{% if property.main_image %}{{ property.main_image }}{% else %}/static/images/hero_bg_1.jpg{% endif %}" alt="{{ property.title }}">
+                        <a href="/property/{{ property.slug or property.id }}" class="vitrina-property-img">
+                            <img src="{% if property.main_image %}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}{% else %}/static/images/hero_bg_1.jpg{% endif %}" alt="{{ property.title }}" class="img-fluid" width="400" height="220" loading="lazy">
                         </a>
                         <div class="vitrina-property-body">
+                            {% if property.category %}<span class="d-block text-uppercase small fw-bold text-muted mb-1" style="letter-spacing: 0.05em;">{{ property.category }}</span>{% endif %}
                             <div class="vitrina-property-price">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
                             <span class="d-block vitrina-property-meta mb-1">{{ property.address }}</span>
                             <span class="d-block vitrina-property-meta mb-3">{{ property.title }}</span>
@@ -269,59 +274,109 @@
                                     <span class="caption">{{ property.area }} м²</span>
                                 </span>
                             </div>
-                            <a href="/property/{{ property.id }}" class="btn btn-primary py-2 px-3">Подробнее</a>
+                            <a href="/property/{{ property.slug or property.id }}" class="btn btn-primary py-2 px-3">Подробнее</a>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
-            {% if not matched_properties and not other_properties %}
+            {% if total_pages > 1 %}
+            <nav aria-label="Навигация по страницам" class="mt-5">
+                <ul class="pagination justify-content-center flex-wrap">
+                    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                        {% if page > 1 %}
+                        <a class="page-link" href="/search?page={{ page - 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}">Назад</a>
+                        {% else %}
+                        <span class="page-link">Назад</span>
+                        {% endif %}
+                    </li>
+                    {% for p in pages %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="/search?page={{ p }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+                    <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                        {% if page < total_pages %}
+                        <a class="page-link" href="/search?page={{ page + 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}">Вперед</a>
+                        {% else %}
+                        <span class="page-link">Вперед</span>
+                        {% endif %}
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
             <div class="row">
-                <div class="col-12 text-center">
-                    <h3 class="text-black-50">Объекты не найдены. Попробуйте изменить параметры.</h3>
+                <div class="col-12 text-center py-5">
+                    <h3 class="text-black-50">Объектов не найдено</h3>
+                    <p class="text-muted mt-2">Попробуйте изменить параметры поиска.</p>
                 </div>
-            </div>
-            {% endif %}
-
-            {% if range_filter_used and other_properties %}
-            <div class="my-5 py-4 text-center border-top">
-                <h3 class="fw-bold mb-2">Остальные предложения</h3>
-                <p class="text-muted mb-0">Объекты вне указанного диапазона (±10% по площади и цене), которые могут вас заинтересовать</p>
-            </div>
-            <div class="row g-4">
-                {% for property in other_properties %}
-                <div class="col-12 col-sm-6 col-lg-4 d-flex">
-                    <div class="vitrina-search-property-card w-100">
-                        <a href="/property/{{ property.id }}" class="vitrina-property-img">
-                            <img src="{% if property.main_image %}{{ property.main_image }}{% else %}/static/images/hero_bg_1.jpg{% endif %}" alt="{{ property.title }}">
-                        </a>
-                        <div class="vitrina-property-body">
-                            <div class="vitrina-property-price">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
-                            <span class="d-block vitrina-property-meta mb-1">{{ property.address }}</span>
-                            <span class="d-block vitrina-property-meta mb-3">{{ property.title }}</span>
-                            <div class="specs d-flex mb-3">
-                                <span class="d-flex align-items-center me-3 vitrina-property-meta">
-                                    <span class="icon-bed me-2"></span>
-                                    <span class="caption">{{ property.area }} м²</span>
-                                </span>
-                            </div>
-                            <a href="/property/{{ property.id }}" class="btn btn-primary py-2 px-3">Подробнее</a>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
             </div>
             {% endif %}
 
         </div>
     </div>
 
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=b12b8ad7-ed0d-4c53-8da4-7dd2f2a42c3d&lang=ru_RU" type="text/javascript"></script>
     <script src="/static/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/tiny-slider.js"></script>
     <script src="/static/js/aos.js"></script>
     <script src="/static/js/navbar.js"></script>
     <script src="/static/js/custom.js"></script>
+    <script>
+      (function() {
+        function esc(s) { if (s == null || s === '') return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        var mapProperties = {{ (map_properties_json | default('[]')) | safe }};
+        if (!Array.isArray(mapProperties)) mapProperties = [];
+        function init() {
+          var mapEl = document.getElementById('map');
+          if (!mapEl) return;
+          if (typeof ymaps === 'undefined') { console.error('Yandex Maps API не загружен'); return; }
+          var map = new ymaps.Map('map', {
+            center: [55.7558, 37.6173],
+            zoom: 10
+          });
+          for (var i = 0; i < mapProperties.length; i++) {
+            var p = mapProperties[i];
+            if (p.latitude == null || p.longitude == null) continue;
+            var slugOrId = (p.slug != null && p.slug !== '') ? p.slug : p.id;
+            var balloonBody = '<div style="font-family: \'Work Sans\', sans-serif; padding: 5px;">' +
+              (p.category ? '<div style="font-size: 10px; color: #6c757d; text-transform: uppercase; font-weight: 700; margin-bottom: 2px;">' + esc(p.category) + '</div>' : '') +
+              '<div style="font-weight: 700; color: #1a1e21; margin-bottom: 4px; font-size: 14px;">' + esc(p.title || 'Объект #' + p.id) + '</div>' +
+              '<div style="color: #5a6c7d; font-weight: 600; font-size: 13px; margin-bottom: 8px;">' + (p.price != null ? Number(p.price).toLocaleString('ru-RU') + ' ₽' : '') + '</div>' +
+              '<a href="/property/' + esc(String(slugOrId)) + '" style="display: inline-block; background: #5a6c7d; color: #fff; text-decoration: none; padding: 4px 10px; border-radius: 4px; font-size: 12px;">Подробнее</a>' +
+              '</div>';
+            var placemark = new ymaps.Placemark(
+              [p.latitude, p.longitude],
+              { balloonContent: balloonBody },
+              { preset: 'islands#redDotIcon' }
+            );
+            map.geoObjects.add(placemark);
+          }
+          if (map.geoObjects.getLength() > 0) {
+            try {
+              var b = map.geoObjects.getBounds();
+              if (b) map.setBounds(b, { checkZoomRange: true, zoomMargin: 50 });
+            } catch (e) { console.warn('setBounds:', e); }
+          }
+        }
+        if (typeof ymaps !== 'undefined') {
+          ymaps.ready(init);
+        } else {
+          function waitYmaps() {
+            if (typeof ymaps !== 'undefined') { ymaps.ready(init); return; }
+            setTimeout(waitYmaps, 100);
+          }
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', waitYmaps);
+          } else {
+            waitYmaps();
+          }
+        }
+      })();
+    </script>
 </body>
 
 </html>

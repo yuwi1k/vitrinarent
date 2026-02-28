@@ -341,14 +341,15 @@
           {% for property in properties %}
           <div class="col-12 col-sm-6 col-lg-4 d-flex">
             <div class="vitrina-property-card w-100">
-              <a href="/property/{{ property.id }}" class="vitrina-property-img">
+              <a href="/property/{{ property.slug or property.id }}" class="vitrina-property-img">
                 {% if property.main_image %}
-                  <img src="{{ property.main_image }}" alt="{{ property.title }}">
+                  <img src="{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" alt="{{ property.title }}" class="img-fluid" width="400" height="220" loading="lazy">
                 {% else %}
-                  <img src="/static/images/hero_bg_1.jpg" alt="{{ property.title }}">
+                  <img src="/static/images/hero_bg_1.jpg" alt="{{ property.title }}" class="img-fluid" width="400" height="220" loading="lazy">
                 {% endif %}
               </a>
               <div class="vitrina-property-body">
+                {% if property.category %}<span class="d-block text-uppercase small fw-bold text-muted mb-1" style="letter-spacing: 0.05em;">{{ property.category }}</span>{% endif %}
                 <div class="vitrina-property-price">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
                 <span class="d-block vitrina-property-meta mb-1">{{ property.address }}</span>
                 <span class="d-block vitrina-property-meta mb-3">{{ property.title }}</span>
@@ -358,7 +359,7 @@
                     <span class="caption">{{ property.area }} м²</span>
                   </span>
                 </div>
-                <a href="/property/{{ property.id }}" class="btn btn-primary py-2 px-3">Подробнее</a>
+                <a href="/property/{{ property.slug or property.id }}" class="btn btn-primary py-2 px-3">Подробнее</a>
               </div>
             </div>
           </div>
