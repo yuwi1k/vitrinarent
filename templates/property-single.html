@@ -13,6 +13,16 @@
     <link rel="stylesheet" href="/static/css/aos.css" />
     <link rel="stylesheet" href="/static/css/style.css" />
 
+    <meta name="description" content="{{ (property.description or property.title or 'Объект недвижимости')[:160] }}{% if (property.description or property.title) and (property.description or '')|length > 160 %}...{% endif %}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{{ property.title }} — Vitrina" />
+    <meta property="og:description" content="{{ (property.description or property.title or 'Коммерческая недвижимость')[:200] }}" />
+    <meta property="og:url" content="{{ site_url }}/property/{{ property.slug or property.id }}" />
+    {% if property.main_image %}
+    <meta property="og:image" content="{{ site_url }}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" />
+    {% endif %}
+    <meta property="og:locale" content="ru_RU" />
+
     <style>
       .vitrina-header {
         position: absolute;
@@ -81,11 +91,15 @@
         border-radius: 10px;
         width: 100%;
       }
+      .skip-link { position: absolute; top: -3rem; left: 0.5rem; z-index: 9999; padding: 0.5rem 1rem; background: #5a6c7d; color: #fff; text-decoration: none; border-radius: 4px; }
+      .skip-link:focus { top: 0.5rem; outline: 2px solid #fff; outline-offset: 2px; }
+      a:focus-visible, button:focus-visible { outline: 2px solid #5a6c7d; outline-offset: 2px; }
     </style>
 
     <title>{{ property.title }} — Vitrina</title>
   </head>
   <body>
+    <a href="#main-content" class="skip-link">Перейти к содержимому</a>
     <div class="site-mobile-menu site-navbar-target">
       <div class="site-mobile-menu-header">
         <div class="site-mobile-menu-close">
@@ -105,7 +119,7 @@
             <li><a href="/search" class="active">Поиск</a></li>
             <li><a href="/faq">FAQ</a></li>
           </ul>
-          <a href="#" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Меню"><span></span></a>
+          <button type="button" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Открыть меню" aria-expanded="false"><span></span></button>
         </div>
       </div>
     </header>
@@ -134,7 +148,7 @@
       </div>
     </div>
 
-    <div class="section">
+    <main id="main-content" class="section" tabindex="-1">
       <div class="container">
         <div class="row justify-content-between">
           
@@ -173,7 +187,7 @@
 
             <h2 class="heading text-primary mb-4">Описание объекта</h2>
             <div class="text-black-50 mb-5">
-              {{ property.description | safe if property.description else "Описание пока не добавлено." }}
+              {{ (property.description | sanitize_html) if property.description else "Описание пока не добавлено." }}
             </div>
 
             {% if available_units %}
@@ -252,9 +266,9 @@
 
         </div>
       </div>
-    </div>
+    </main>
 
-    <div class="site-footer section py-4">
+    <footer class="site-footer section py-4">
       <div class="container">
         <div class="row">
           <div class="col-12 text-center">
@@ -265,7 +279,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </footer>
 
     <script src="/static/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/aos.js"></script>

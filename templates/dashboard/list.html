@@ -14,11 +14,72 @@
     </div>
 </div>
 
+<form method="get" action="/dashboard/properties" class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Поиск</label>
+                <input type="text" name="q" class="form-control" placeholder="Название или адрес" value="{{ q or '' }}" aria-label="Поиск по названию или адресу">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Тип сделки</label>
+                <select name="deal_type" class="form-select" aria-label="Тип сделки">
+                    <option value="Все" {% if (deal_type or 'Все') == 'Все' %}selected{% endif %}>Все</option>
+                    <option value="Аренда" {% if deal_type == 'Аренда' %}selected{% endif %}>Аренда</option>
+                    <option value="Продажа" {% if deal_type == 'Продажа' %}selected{% endif %}>Продажа</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Категория</label>
+                <select name="category" class="form-select" aria-label="Категория">
+                    <option value="Все" {% if (category or 'Все') == 'Все' %}selected{% endif %}>Все</option>
+                    <option value="Офис" {% if category == 'Офис' %}selected{% endif %}>Офис</option>
+                    <option value="Торговая площадь" {% if category == 'Торговая площадь' %}selected{% endif %}>Торговая площадь</option>
+                    <option value="Свободного назначения" {% if category == 'Свободного назначения' %}selected{% endif %}>Свободного назначения</option>
+                    <option value="Промышленное" {% if category == 'Промышленное' %}selected{% endif %}>Промышленное</option>
+                    <option value="Склад" {% if category == 'Склад' %}selected{% endif %}>Склад</option>
+                    <option value="ГАБ" {% if category == 'ГАБ' %}selected{% endif %}>ГАБ</option>
+                    <option value="Здание" {% if category == 'Здание' %}selected{% endif %}>Здание</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted">Статус</label>
+                <select name="is_active" class="form-select" aria-label="Статус">
+                    <option value="all" {% if (is_active or 'all') == 'all' %}selected{% endif %}>Все</option>
+                    <option value="1" {% if is_active == '1' %}selected{% endif %}>Активные</option>
+                    <option value="0" {% if is_active == '0' %}selected{% endif %}>Скрытые</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary w-100">Применить</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<form id="bulk-form" method="post" action="/dashboard/properties/bulk">
+    {% if properties %}
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <span class="text-muted small me-2">Массовые действия:</span>
+                <button type="submit" name="action" value="activate" class="btn btn-sm btn-outline-success">Опубликовать</button>
+                <button type="submit" name="action" value="deactivate" class="btn btn-sm btn-outline-warning">Снять с публикации</button>
+                <button type="submit" name="action" value="show_on_main" class="btn btn-sm btn-outline-primary">На главную</button>
+                <button type="submit" name="action" value="hide_from_main" class="btn btn-sm btn-outline-secondary">Убрать с главной</button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 <div class="card">
     <div class="table-responsive">
         <table class="table table-vcenter card-table table-striped">
             <thead>
                 <tr>
+                    <th class="w-1">
+                        <input type="checkbox" id="select-all" class="form-check-input" aria-label="Выбрать все на странице">
+                    </th>
                     <th>ID</th>
                     <th>Фото</th>
                     <th>Название</th>
@@ -31,6 +92,7 @@
             <tbody>
                 {% for p in properties %}
                 <tr>
+                    <td><input type="checkbox" name="ids" value="{{ p.id }}" class="form-check-input row-select"></td>
                     <td class="text-muted">{{ p.id }}</td>
                     <td>
                         {% if p.main_image %}
@@ -55,6 +117,7 @@
                     <td>
                         <div class="btn-list flex-nowrap">
                             <a href="/dashboard/properties/edit/{{ p.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
+                            <a href="/dashboard/properties/copy/{{ p.id }}" class="btn btn-sm btn-outline-secondary" title="Создать копию объекта">Копировать</a>
                             <form action="/dashboard/properties/delete/{{ p.id }}" method="post" class="d-inline" onsubmit="return confirm('Удалить объект?');">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
                             </form>
@@ -63,26 +126,39 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">Нет объектов. <a href="/dashboard/properties/new">Добавить первый</a>.</td>
+                    <td colspan="8" class="text-center text-muted py-4">Нет объектов. <a href="/dashboard/properties/new">Добавить первый</a>.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+</form>
+
+<script>
+(function() {
+    var selectAll = document.getElementById('select-all');
+    var rowChecks = document.querySelectorAll('.row-select');
+    if (selectAll && rowChecks.length) {
+        selectAll.addEventListener('change', function() {
+            rowChecks.forEach(function(c) { c.checked = selectAll.checked; });
+        });
+    }
+})();
+</script>
 
 {% if total_pages > 1 %}
-<div class="d-flex align-items-center mt-3">
-    <p class="text-muted small me-3">Всего: {{ total }}</p>
+<div class="d-flex align-items-center mt-3 flex-wrap gap-2">
+    <p class="text-muted small me-2 mb-0">Всего: {{ total }}</p>
     <ul class="pagination m-0">
         <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-            <a class="page-link" href="?page={{ page - 1 }}">Назад</a>
+            <a class="page-link" href="?page={{ page - 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}">Назад</a>
         </li>
         {% for p in pages %}
-        <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+        <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="?page={{ p }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}">{{ p }}</a></li>
         {% endfor %}
         <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-            <a class="page-link" href="?page={{ page + 1 }}">Вперёд</a>
+            <a class="page-link" href="?page={{ page + 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}">Вперёд</a>
         </li>
     </ul>
 </div>

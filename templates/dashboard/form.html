@@ -1,13 +1,13 @@
 {% extends "dashboard/base.html" %}
 
-{% block title %}{% if model %}Редактирование{% else %}Новый объект{% endif %}{% endblock %}
+{% block title %}{% if is_copy %}Копирование{% elif model %}Редактирование{% else %}Новый объект{% endif %}{% endblock %}
 
 {% block content %}
 <div class="page-header d-print-none mb-4">
-    <h2 class="page-title">{% if model %}Редактирование: {{ model.title or 'Без названия' }}{% else %}Создание объекта{% endif %}</h2>
+    <h2 class="page-title">{% if is_copy %}Копирование: {{ model.title or 'Без названия' }}{% elif model %}Редактирование: {{ model.title or 'Без названия' }}{% else %}Создание объекта{% endif %}</h2>
 </div>
 
-<form method="post" action="{% if model %}/dashboard/properties/edit/{{ model.id }}{% else %}/dashboard/properties/new{% endif %}" enctype="multipart/form-data">
+<form method="post" action="{% if is_copy %}/dashboard/properties/new{% elif model %}/dashboard/properties/edit/{{ model.id }}{% else %}/dashboard/properties/new{% endif %}" enctype="multipart/form-data">
     <ul class="nav nav-tabs mb-3" data-bs-toggle="tabs" role="tablist">
         <li class="nav-item" role="presentation">
             <a href="#pane-main" class="nav-link active" data-bs-toggle="tab" role="tab">Основное</a>
@@ -17,6 +17,9 @@
         </li>
         <li class="nav-item" role="presentation">
             <a href="#pane-media" class="nav-link" data-bs-toggle="tab" role="tab">Медиа</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a href="#pane-avito" class="nav-link" data-bs-toggle="tab" role="tab">Авито</a>
         </li>
         <li class="nav-item" role="presentation">
             <a href="#pane-settings" class="nav-link" data-bs-toggle="tab" role="tab">Настройки</a>
@@ -33,7 +36,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Slug (URL)</label>
-                        <input type="text" name="slug" class="form-control" value="{{ model.slug or '' }}" placeholder="авто">
+                        <input type="text" name="slug" class="form-control" value="{{ '' if is_copy else (model.slug or '') if model else '' }}" placeholder="авто">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Описание</label>
@@ -93,6 +96,18 @@
                         </select>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Тип объекта для Авито</label>
+                        <select name="avito_object_type" class="form-select">
+                            <option value="">— по категории —</option>
+                            <option value="Офисное помещение" {% if (model.avito_object_type or '') == 'Офисное помещение' %}selected{% endif %}>Офисное помещение</option>
+                            <option value="Торговое помещение" {% if (model.avito_object_type or '') == 'Торговое помещение' %}selected{% endif %}>Торговое помещение</option>
+                            <option value="Складское помещение" {% if (model.avito_object_type or '') == 'Складское помещение' %}selected{% endif %}>Складское помещение</option>
+                            <option value="Здание" {% if (model.avito_object_type or '') == 'Здание' %}selected{% endif %}>Здание</option>
+                            <option value="Помещение свободного назначения" {% if (model.avito_object_type or '') == 'Помещение свободного назначения' %}selected{% endif %}>Помещение свободного назначения</option>
+                        </select>
+                        <small class="text-muted">Если не выбрано, в фиде Авито подставляется тип по категории.</small>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label required">Цена (₽)</label>
                         <input type="number" name="price" class="form-control" value="{{ model.price or 0 }}" min="0" required>
                     </div>
@@ -105,13 +120,14 @@
         </div>
 
         <div class="tab-pane" id="pane-media" role="tabpanel">
-            {% if model and model.images %}
+            {% if model and not is_copy and model.images %}
             <div class="card mb-4">
-                <div class="card-header">Уже загруженные фото галереи</div>
+                <div class="card-header">Уже загруженные фото галереи <span class="text-muted small ms-2">— перетащите для смены порядка</span></div>
                 <div class="card-body">
                     <div class="row row-cols-2 row-cols-md-4 g-3" id="existing-gallery">
                         {% for img in model.images %}
-                        <div class="col text-center" id="gallery-img-{{ img.id }}">
+                        <div class="col text-center gallery-item" id="gallery-img-{{ img.id }}" data-image-id="{{ img.id }}">
+                            <span class="sort-handle d-inline-block mb-1 text-muted small cursor-grab" title="Перетащите для смены порядка" style="cursor:grab;">⋮⋮</span>
                             <img src="{{ img.image_url if img.image_url and img.image_url.startswith('/') else '/' + (img.image_url or '') }}" alt="" class="img-thumbnail mb-2 w-100" style="height:120px;object-fit:cover;">
                             <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="deleteImage({{ img.id }})">Удалить</button>
                         </div>
@@ -120,7 +136,7 @@
                 </div>
             </div>
             {% endif %}
-            {% if model and model.documents %}
+            {% if model and not is_copy and model.documents %}
             <div class="card mb-4">
                 <div class="card-header">Прикреплённые документы</div>
                 <div class="list-group list-group-flush">
@@ -134,15 +150,531 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label">Главное фото (превью)</label>
-                        <input type="file" name="main_image" class="form-control" accept="image/*">
+                        <input type="file" name="main_image" id="input-main-image" class="form-control" accept="image/*">
+                        <div id="preview-main-image" class="mt-2 d-flex flex-wrap gap-2"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Доп. фото (несколько)</label>
-                        <input type="file" name="extra_images" class="form-control" accept="image/*" multiple>
+                        <input type="file" name="extra_images" id="input-extra-images" class="form-control" accept="image/*" multiple>
+                        <div id="preview-extra-images" class="mt-2 d-flex flex-wrap gap-2"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Документы (PDF, Word и т.д.)</label>
                         <input type="file" name="extra_documents" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.odt,.ods,.odp" multiple>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane" id="pane-avito" role="tabpanel">
+            {% set avito = (model.avito_data or {}) if model else {} %}
+            {% set deal_rent = (model and (model.deal_type or '') == 'Аренда') %}
+            {% set deal_sale = (model and (model.deal_type or '') == 'Продажа') %}
+            <input type="hidden" name="avito_data_json" id="avito_data_json" value="">
+            <p class="text-muted small mb-3">Параметры Авито «Коммерческая недвижимость». Поля зависят от типа сделки (Аренда = Сдам, Продажа = Продам). Id, Title, Price, Address, Description, Images — из вкладок выше.</p>
+
+            <h5 class="mt-4 mb-2 text-success"><span class="badge bg-success me-2">Обязательные</span></h5>
+            <div class="card border-success mb-4">
+                <div class="card-header bg-success bg-opacity-10"><strong>Обязательные к заполнению</strong></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Право собственности (PropertyRights)</label>
+                                <select class="form-select avito-field" name="avito_PropertyRights" data-key="PropertyRights">
+                                    <option value="">— выберите —</option>
+                                    <option value="Собственник" {% if avito.get('PropertyRights') == 'Собственник' %}selected{% endif %}>Собственник</option>
+                                    <option value="Посредник" {% if avito.get('PropertyRights') == 'Посредник' %}selected{% endif %}>Посредник</option>
+                                </select>
+                                <small class="text-muted">Обязательно для Продам; для Сдам — необязательно.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Тип здания (BuildingType)</label>
+                                <select class="form-select avito-field" name="avito_BuildingType" data-key="BuildingType">
+                                    <option value="">— выберите —</option>
+                                    <option value="Бизнес-центр" {% if avito.get('BuildingType') == 'Бизнес-центр' %}selected{% endif %}>Бизнес-центр</option>
+                                    <option value="Торговый центр" {% if avito.get('BuildingType') == 'Торговый центр' %}selected{% endif %}>Торговый центр</option>
+                                    <option value="Административное здание" {% if avito.get('BuildingType') == 'Административное здание' %}selected{% endif %}>Административное здание</option>
+                                    <option value="Жилой дом" {% if avito.get('BuildingType') == 'Жилой дом' %}selected{% endif %}>Жилой дом</option>
+                                    <option value="Другой" {% if avito.get('BuildingType') == 'Другой' %}selected{% endif %}>Другой</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Вход (Entrance)</label>
+                                <select class="form-select avito-field" name="avito_Entrance" data-key="Entrance">
+                                    <option value="">— выберите —</option>
+                                    <option value="С улицы" {% if avito.get('Entrance') == 'С улицы' %}selected{% endif %}>С улицы</option>
+                                    <option value="Со двора" {% if avito.get('Entrance') == 'Со двора' %}selected{% endif %}>Со двора</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Этаж (Floor)</label>
+                                <input type="text" class="form-control avito-field" name="avito_Floor" data-key="Floor" value="{{ avito.get('Floor', '') }}" placeholder="1">
+                                <small class="text-muted">Для вида «Здание» не применяется.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Отделка (Decoration)</label>
+                                <select class="form-select avito-field" name="avito_Decoration" data-key="Decoration">
+                                    <option value="">— выберите —</option>
+                                    <option value="Без отделки" {% if avito.get('Decoration') == 'Без отделки' %}selected{% endif %}>Без отделки</option>
+                                    <option value="Чистовая" {% if avito.get('Decoration') == 'Чистовая' %}selected{% endif %}>Чистовая</option>
+                                    <option value="Офисная" {% if avito.get('Decoration') == 'Офисная' %}selected{% endif %}>Офисная</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Тип парковки (ParkingType)</label>
+                                <select class="form-select avito-field" name="avito_ParkingType" data-key="ParkingType">
+                                    <option value="">— выберите —</option>
+                                    <option value="Нет" {% if avito.get('ParkingType') == 'Нет' %}selected{% endif %}>Нет</option>
+                                    <option value="На улице" {% if avito.get('ParkingType') == 'На улице' %}selected{% endif %}>На улице</option>
+                                    <option value="В здании" {% if avito.get('ParkingType') == 'В здании' %}selected{% endif %}>В здании</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Планировка (Layout) — для офиса</label>
+                                <input type="text" class="form-control avito-field" name="avito_Layout" data-key="Layout" value="{{ avito.get('Layout', '') }}" placeholder="Кабинетная|Открытая">
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4" id="avito-required-rent" style="display:{% if deal_sale %}none{% else %}block{% endif %};">
+                            <div class="mb-3">
+                                <label class="form-label">Тип аренды (RentalType) — только для «Сдам»</label>
+                                <select class="form-select avito-field" name="avito_RentalType" data-key="RentalType">
+                                    <option value="">— по умолчанию Прямая —</option>
+                                    <option value="Прямая" {% if avito.get('RentalType') == 'Прямая' %}selected{% endif %}>Прямая</option>
+                                    <option value="Субаренда" {% if avito.get('RentalType') == 'Субаренда' %}selected{% endif %}>Субаренда</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4" id="avito-required-sale" style="display:{% if deal_rent %}none{% else %}block{% endif %};">
+                            <div class="mb-3">
+                                <label class="form-label">Тип сделки (TransactionType) — только для «Продам»</label>
+                                <select class="form-select avito-field" name="avito_TransactionType" data-key="TransactionType">
+                                    <option value="">— по умолчанию Продажа —</option>
+                                    <option value="Продажа" {% if avito.get('TransactionType') == 'Продажа' %}selected{% endif %}>Продажа</option>
+                                    <option value="Переуступка права аренды" {% if avito.get('TransactionType') == 'Переуступка права аренды' %}selected{% endif %}>Переуступка права аренды</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-4 mb-2 text-secondary"><span class="badge bg-secondary me-2">Необязательные</span> Дополнительные параметры</h5>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Общие элементы</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Дата размещения (DateBegin)</label>
+                                <input type="text" class="form-control avito-field" name="avito_DateBegin" data-key="DateBegin" value="{{ avito.get('DateBegin', '') }}" placeholder="dd.MM.yyyy или dd.MM.yy HH:mm">
+                                <small class="text-muted">Дата и время публикации. Форматы: dd.MM.yyyy, dd.MM.yy, yyyy-MM-dd; время HH:mm или HH:mm:ss через пробел.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Дата окончания (DateEnd)</label>
+                                <input type="text" class="form-control avito-field" name="avito_DateEnd" data-key="DateEnd" value="{{ avito.get('DateEnd', '') }}" placeholder="dd.MM.yyyy HH:mm">
+                                <small class="text-muted">Дата и время снятия с публикации.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Вариант размещения (ListingFee)</label>
+                                <select class="form-select avito-field" name="avito_ListingFee" data-key="ListingFee">
+                                    <option value="">— по умолчанию Package —</option>
+                                    <option value="Package" {% if avito.get('ListingFee') == 'Package' %}selected{% endif %}>Package — только пакет</option>
+                                    <option value="PackageSingle" {% if avito.get('ListingFee') == 'PackageSingle' %}selected{% endif %}>PackageSingle — пакет или разовое с кошелька</option>
+                                    <option value="Single" {% if avito.get('ListingFee') == 'Single' %}selected{% endif %}>Single — только разовое с кошелька</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Услуга продвижения (AdStatus)</label>
+                                <select class="form-select avito-field" name="avito_AdStatus" data-key="AdStatus">
+                                    <option value="">— Free (обычное) —</option>
+                                    <option value="Free" {% if avito.get('AdStatus') == 'Free' %}selected{% endif %}>Free — обычное</option>
+                                    <option value="Highlight" {% if avito.get('AdStatus') == 'Highlight' %}selected{% endif %}>Highlight — выделение 7 дн.</option>
+                                    <option value="XL" {% if avito.get('AdStatus') == 'XL' %}selected{% endif %}>XL — 7 дн.</option>
+                                    <option value="x2_1" {% if avito.get('AdStatus') == 'x2_1' %}selected{% endif %}>x2_1 — до 2× просмотров 1 дн.</option>
+                                    <option value="x2_7" {% if avito.get('AdStatus') == 'x2_7' %}selected{% endif %}>x2_7 — до 2× просмотров 7 дн.</option>
+                                    <option value="x5_1" {% if avito.get('AdStatus') == 'x5_1' %}selected{% endif %}>x5_1</option>
+                                    <option value="x5_7" {% if avito.get('AdStatus') == 'x5_7' %}selected{% endif %}>x5_7</option>
+                                    <option value="x10_1" {% if avito.get('AdStatus') == 'x10_1' %}selected{% endif %}>x10_1</option>
+                                    <option value="x10_7" {% if avito.get('AdStatus') == 'x10_7' %}selected{% endif %}>x10_7</option>
+                                </select>
+                                <small class="text-muted">Одна услуга на объявление. Нужны рубли или бонусы на кошельке Авито.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Номер объявления на Авито (AvitoId)</label>
+                                <input type="text" class="form-control avito-field" name="avito_AvitoId" data-key="AvitoId" value="{{ avito.get('AvitoId', '') }}" placeholder="742817810">
+                                <small class="text-muted">Заполнять только для уже размещённого объявления — чтобы Авито сопоставил его с вашим Id. Для нового оставьте пустым.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">НДС в цене (PriceWithVAT)</label>
+                                <select class="form-select avito-field" name="avito_PriceWithVAT" data-key="PriceWithVAT">
+                                    <option value="">— не указано —</option>
+                                    <option value="Да" {% if avito.get('PriceWithVAT') == 'Да' %}selected{% endif %}>Да</option>
+                                    <option value="Нет" {% if avito.get('PriceWithVAT') == 'Нет' %}selected{% endif %}>Нет</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Способ связи (ContactMethod)</label>
+                                <select class="form-select avito-field" name="avito_ContactMethod" data-key="ContactMethod">
+                                    <option value="">— по умолчанию «По телефону и в сообщениях» —</option>
+                                    <option value="По телефону и в сообщениях" {% if avito.get('ContactMethod') == 'По телефону и в сообщениях' %}selected{% endif %}>По телефону и в сообщениях</option>
+                                    <option value="По телефону" {% if avito.get('ContactMethod') == 'По телефону' %}selected{% endif %}>По телефону</option>
+                                    <option value="В сообщениях" {% if avito.get('ContactMethod') == 'В сообщениях' %}selected{% endif %}>В сообщениях</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Интернет-звонки (InternetCalls)</label>
+                                <select class="form-select avito-field" name="avito_InternetCalls" data-key="InternetCalls">
+                                    <option value="">— не указано —</option>
+                                    <option value="Да" {% if avito.get('InternetCalls') == 'Да' %}selected{% endif %}>Да</option>
+                                    <option value="Нет" {% if avito.get('InternetCalls') == 'Нет' %}selected{% endif %}>Нет</option>
+                                </select>
+                                <small class="text-muted">Звонки через Авито. Для приёма укажите устройство в CallsDevices (в настройках Авито).</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">ID устройств для звонков (CallsDevices)</label>
+                                <input type="text" class="form-control avito-field" name="avito_CallsDevices" data-key="CallsDevices" value="{{ avito.get('CallsDevices', '') }}" placeholder="123456789 | 67890123">
+                                <small class="text-muted">ID из Настроек → Устройства для приёма звонков через Авито. Через « | » несколько.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>О помещении: этаж и вход (доп.)</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Этаж дополнительно (FloorAdditionally)</label>
+                                <select class="form-select avito-field" name="avito_FloorAdditionally" data-key="FloorAdditionally">
+                                    <option value="">— не указано —</option>
+                                    <option value="Несколько этажей" {% if avito.get('FloorAdditionally') == 'Несколько этажей' %}selected{% endif %}>Несколько этажей</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Вход дополнительно (EntranceAdditionally)</label>
+                                <select class="form-select avito-field" name="avito_EntranceAdditionally" data-key="EntranceAdditionally">
+                                    <option value="">— не указано —</option>
+                                    <option value="Отдельный вход" {% if avito.get('EntranceAdditionally') == 'Отдельный вход' %}selected{% endif %}>Отдельный вход</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Тип помещения (PremisesType) — только для Торговое помещение</label>
+                                <select class="form-select avito-field" name="avito_PremisesType" data-key="PremisesType">
+                                    <option value="">— не указано —</option>
+                                    <option value="Для уличной торговли" {% if avito.get('PremisesType') == 'Для уличной торговли' %}selected{% endif %}>Для уличной торговли</option>
+                                    <option value="В торговом комплексе" {% if avito.get('PremisesType') == 'В торговом комплексе' %}selected{% endif %}>В торговом комплексе</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Планировка и площадь (общее)</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Высота потолков, м (CeilingHeight)</label>
+                                <input type="text" class="form-control avito-field" name="avito_CeilingHeight" data-key="CeilingHeight" value="{{ avito.get('CeilingHeight', '') }}" placeholder="2.5">
+                                <small class="text-muted">Десятичное число, до 100 м.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="avito-block-sale" style="display:{% if deal_rent %}none{% else %}block{% endif %};">
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Только для «Продам»: помещение сдано</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Помещение сдано (PlaceIsRented)</label>
+                                <select class="form-select avito-field" name="avito_PlaceIsRented" data-key="PlaceIsRented">
+                                    <option value="">— не указано —</option>
+                                    <option value="Да" {% if avito.get('PlaceIsRented') == 'Да' %}selected{% endif %}>Да</option>
+                                    <option value="Нет" {% if avito.get('PlaceIsRented') == 'Нет' %}selected{% endif %}>Нет</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Кто арендует (RenterName)</label>
+                                <input type="text" class="form-control avito-field" name="avito_RenterName" data-key="RenterName" value="{{ avito.get('RenterName', '') }}" placeholder="магазин «Продукты»">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Месячный платёж арендатора (RenterMonthPayment)</label>
+                                <input type="text" class="form-control avito-field" name="avito_RenterMonthPayment" data-key="RenterMonthPayment" value="{{ avito.get('RenterMonthPayment', '') }}" placeholder="200000">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Дата окончания договора (RentContractExpireDate)</label>
+                                <input type="text" class="form-control avito-field" name="avito_RentContractExpireDate" data-key="RentContractExpireDate" value="{{ avito.get('RentContractExpireDate', '') }}" placeholder="2027-03-25">
+                                <small class="text-muted">ГГГГ-ММ-ДД.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Годовая индексация (PaymentIndexation)</label>
+                                <select class="form-select avito-field" name="avito_PaymentIndexation" data-key="PaymentIndexation">
+                                    <option value="">— не указано —</option>
+                                    <option value="Есть" {% if avito.get('PaymentIndexation') == 'Есть' %}selected{% endif %}>Есть</option>
+                                    <option value="Нет" {% if avito.get('PaymentIndexation') == 'Нет' %}selected{% endif %}>Нет</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Процент с товарооборота (PercentOfTrade)</label>
+                                <select class="form-select avito-field" name="avito_PercentOfTrade" data-key="PercentOfTrade">
+                                    <option value="">— не указано —</option>
+                                    <option value="Есть" {% if avito.get('PercentOfTrade') == 'Есть' %}selected{% endif %}>Есть</option>
+                                    <option value="Нет" {% if avito.get('PercentOfTrade') == 'Нет' %}selected{% endif %}>Нет</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Только для «Продам»: статус здания</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Статус готовности (ReadinessStatus)</label>
+                                <select class="form-select avito-field" name="avito_ReadinessStatus" data-key="ReadinessStatus">
+                                    <option value="">— не указано —</option>
+                                    <option value="Проект" {% if avito.get('ReadinessStatus') == 'Проект' %}selected{% endif %}>Проект</option>
+                                    <option value="Строится" {% if avito.get('ReadinessStatus') == 'Строится' %}selected{% endif %}>Строится</option>
+                                    <option value="В эксплуатации" {% if avito.get('ReadinessStatus') == 'В эксплуатации' %}selected{% endif %}>В эксплуатации</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Условия сделки — только для «Продам»</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Вариант цены (PriceType)</label>
+                                <select class="form-select avito-field" name="avito_PriceType" data-key="PriceType">
+                                    <option value="">— не указано —</option>
+                                    <option value="за всё" {% if avito.get('PriceType') == 'за всё' %}selected{% endif %}>за всё</option>
+                                    <option value="за м2" {% if avito.get('PriceType') == 'за м2' %}selected{% endif %}>за м2</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Способ продажи (SaleOptions)</label>
+                                <input type="text" class="form-control avito-field" name="avito_SaleOptions" data-key="SaleOptions" value="{{ avito.get('SaleOptions', '') }}" placeholder="Аукцион">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Агентская комиссия (AgentSellCommissionPresence)</label>
+                                <select class="form-select avito-field" name="avito_AgentSellCommissionPresence" data-key="AgentSellCommissionPresence">
+                                    <option value="">— не указано —</option>
+                                    <option value="Да" {% if avito.get('AgentSellCommissionPresence') == 'Да' %}selected{% endif %}>Да</option>
+                                    <option value="Нет" {% if avito.get('AgentSellCommissionPresence') == 'Нет' %}selected{% endif %}>Нет</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Размер комиссии, % (AgentSellCommissionSize)</label>
+                                <input type="text" class="form-control avito-field" name="avito_AgentSellCommissionSize" data-key="AgentSellCommissionSize" value="{{ avito.get('AgentSellCommissionSize', '') }}" placeholder="2">
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Отделка и коммуникации</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Мощность электросети, кВт (PowerGridCapacity)</label>
+                                <input type="text" class="form-control avito-field" name="avito_PowerGridCapacity" data-key="PowerGridCapacity" value="{{ avito.get('PowerGridCapacity', '') }}" placeholder="12">
+                                <small class="text-muted">Целое число.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Электросеть дополнительно (PowerGridAdditionally)</label>
+                                <select class="form-select avito-field" name="avito_PowerGridAdditionally" data-key="PowerGridAdditionally">
+                                    <option value="">— не указано —</option>
+                                    <option value="Возможно увеличение мощности" {% if avito.get('PowerGridAdditionally') == 'Возможно увеличение мощности' %}selected{% endif %}>Возможно увеличение мощности</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Отопление (Heating)</label>
+                                <select class="form-select avito-field" name="avito_Heating" data-key="Heating">
+                                    <option value="">— не указано —</option>
+                                    <option value="Нет" {% if avito.get('Heating') == 'Нет' %}selected{% endif %}>Нет</option>
+                                    <option value="Центральное" {% if avito.get('Heating') == 'Центральное' %}selected{% endif %}>Центральное</option>
+                                    <option value="Автономное" {% if avito.get('Heating') == 'Автономное' %}selected{% endif %}>Автономное</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>О здании</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Класс здания (BuildingClass)</label>
+                                <select class="form-select avito-field" name="avito_BuildingClass" data-key="BuildingClass">
+                                    <option value="">— не указано —</option>
+                                    <option value="A" {% if avito.get('BuildingClass') == 'A' %}selected{% endif %}>A</option>
+                                    <option value="B" {% if avito.get('BuildingClass') == 'B' %}selected{% endif %}>B</option>
+                                    <option value="C" {% if avito.get('BuildingClass') == 'C' %}selected{% endif %}>C</option>
+                                </select>
+                                <small class="text-muted">Для офиса/склада при типах Бизнес-центр, Торговый центр, Другой.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Удалённость от дороги (DistanceFromRoad)</label>
+                                <select class="form-select avito-field" name="avito_DistanceFromRoad" data-key="DistanceFromRoad">
+                                    <option value="">— не указано —</option>
+                                    <option value="Первая линия" {% if avito.get('DistanceFromRoad') == 'Первая линия' %}selected{% endif %}>Первая линия</option>
+                                    <option value="Вторая линия и дальше" {% if avito.get('DistanceFromRoad') == 'Вторая линия и дальше' %}selected{% endif %}>Вторая линия и дальше</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Парковка (доп.)</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Парковка дополнительно (ParkingAdditionally)</label>
+                                <input type="text" class="form-control avito-field" name="avito_ParkingAdditionally" data-key="ParkingAdditionally" value="{{ avito.get('ParkingAdditionally', '') }}" placeholder="Бесплатная | Подходит для грузового транспорта">
+                                <small class="text-muted">Одно или несколько через «|»: Бесплатная, Подходит для грузового транспорта.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Количество мест (ParkingSpaces)</label>
+                                <input type="number" class="form-control avito-field" name="avito_ParkingSpaces" data-key="ParkingSpaces" value="{{ avito.get('ParkingSpaces', '') }}" min="0" max="10000" placeholder="10">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Доп. вид объекта (AdditionalObjectTypes)</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Доп. виды (не более 2)</label>
+                                <input type="text" class="form-control avito-field" name="avito_AdditionalObjectTypes" data-key="AdditionalObjectTypes" value="{{ avito.get('AdditionalObjectTypes', '') }}" placeholder="Офис|Склад">
+                                <small class="text-muted">До 2 значений через «|»: Офис, Свободного назначения, Торговое помещение, Склад, Производство, Общепит, Гостиница, Автосервис, Здание, Коворкинг (зависит от ObjectType и OperationType).</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="avito-block-rent" style="display:{% if deal_sale %}none{% else %}block{% endif %};">
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Только для «Сдам»: площадь и офис</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Доп. площадь (SquareAdditionally)</label>
+                                <input type="text" class="form-control avito-field" name="avito_SquareAdditionally" data-key="SquareAdditionally" value="{{ avito.get('SquareAdditionally', '') }}" placeholder="Возможная нарезка">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Что сдаёте (OfficeType) — для офиса</label>
+                                <select class="form-select avito-field" name="avito_OfficeType" data-key="OfficeType">
+                                    <option value="">— не указано —</option>
+                                    <option value="Помещение под офис" {% if avito.get('OfficeType') == 'Помещение под офис' %}selected{% endif %}>Помещение под офис</option>
+                                    <option value="Только юридический адрес" {% if avito.get('OfficeType') == 'Только юридический адрес' %}selected{% endif %}>Только юридический адрес</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Номер ИФНС (NumTax) — для юр. адреса</label>
+                                <input type="text" class="form-control avito-field" name="avito_NumTax" data-key="NumTax" value="{{ avito.get('NumTax', '') }}" placeholder="13">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Гарантийное письмо (GuaranteeLetter)</label>
+                                <select class="form-select avito-field" name="avito_GuaranteeLetter" data-key="GuaranteeLetter">
+                                    <option value="">— не указано —</option>
+                                    <option value="Есть" {% if avito.get('GuaranteeLetter') == 'Есть' %}selected{% endif %}>Есть</option>
+                                    <option value="Нет" {% if avito.get('GuaranteeLetter') == 'Нет' %}selected{% endif %}>Нет</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Стационарный телефон (LandlinePhone)</label>
+                                <select class="form-select avito-field" name="avito_LandlinePhone" data-key="LandlinePhone">
+                                    <option value="">— не указано —</option>
+                                    <option value="Есть" {% if avito.get('LandlinePhone') == 'Есть' %}selected{% endif %}>Есть</option>
+                                    <option value="Нет" {% if avito.get('LandlinePhone') == 'Нет' %}selected{% endif %}>Нет</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Почтовый сервис (MailService)</label>
+                                <select class="form-select avito-field" name="avito_MailService" data-key="MailService">
+                                    <option value="">— не указано —</option>
+                                    <option value="Есть" {% if avito.get('MailService') == 'Есть' %}selected{% endif %}>Есть</option>
+                                    <option value="Нет" {% if avito.get('MailService') == 'Нет' %}selected{% endif %}>Нет</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Секретарь (Secretary)</label>
+                                <select class="form-select avito-field" name="avito_Secretary" data-key="Secretary">
+                                    <option value="">— не указано —</option>
+                                    <option value="Есть" {% if avito.get('Secretary') == 'Есть' %}selected{% endif %}>Есть</option>
+                                    <option value="Нет" {% if avito.get('Secretary') == 'Нет' %}selected{% endif %}>Нет</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Только для «Сдам»: условия аренды</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Мин. срок аренды (RentalMinimumPeriod)</label>
+                                <input type="text" class="form-control avito-field" name="avito_RentalMinimumPeriod" data-key="RentalMinimumPeriod" value="{{ avito.get('RentalMinimumPeriod', '') }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Арендные каникулы (RentalHolidays)</label>
+                                <input type="text" class="form-control avito-field" name="avito_RentalHolidays" data-key="RentalHolidays" value="{{ avito.get('RentalHolidays', '') }}" placeholder="Арендные каникулы">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Цена дополнительно (LeasePriceOptions)</label>
+                                <input type="text" class="form-control avito-field" name="avito_LeasePriceOptions" data-key="LeasePriceOptions" value="{{ avito.get('LeasePriceOptions', '') }}" placeholder="Оплата по счётчикам включена | Коммунальные услуги включены">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Размерность цены (PriceType) — для Сдам</label>
+                                <select class="form-select avito-field" name="avito_PriceType" data-key="PriceType">
+                                    <option value="">— не указано —</option>
+                                    <option value="в месяц" {% if avito.get('PriceType') == 'в месяц' %}selected{% endif %}>в месяц</option>
+                                    <option value="в месяц за м2" {% if avito.get('PriceType') == 'в месяц за м2' %}selected{% endif %}>в месяц за м2</option>
+                                    <option value="в год" {% if avito.get('PriceType') == 'в год' %}selected{% endif %}>в год</option>
+                                    <option value="в год за м2" {% if avito.get('PriceType') == 'в год за м2' %}selected{% endif %}>в год за м2</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Залог (LeaseDeposit)</label>
+                                <select class="form-select avito-field" name="avito_LeaseDeposit" data-key="LeaseDeposit">
+                                    <option value="">— не указано —</option>
+                                    <option value="Без залога" {% if avito.get('LeaseDeposit') == 'Без залога' %}selected{% endif %}>Без залога</option>
+                                    <option value="0,5 месяца" {% if avito.get('LeaseDeposit') == '0,5 месяца' %}selected{% endif %}>0,5 месяца</option>
+                                    <option value="1 месяц" {% if avito.get('LeaseDeposit') == '1 месяц' %}selected{% endif %}>1 месяц</option>
+                                    <option value="1,5 месяца" {% if avito.get('LeaseDeposit') == '1,5 месяца' %}selected{% endif %}>1,5 месяца</option>
+                                    <option value="2 месяца" {% if avito.get('LeaseDeposit') == '2 месяца' %}selected{% endif %}>2 месяца</option>
+                                    <option value="2,5 месяца" {% if avito.get('LeaseDeposit') == '2,5 месяца' %}selected{% endif %}>2,5 месяца</option>
+                                    <option value="3 месяца" {% if avito.get('LeaseDeposit') == '3 месяца' %}selected{% endif %}>3 месяца</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Агентская комиссия (AgentLeaseCommissionPresence)</label>
+                                <select class="form-select avito-field" name="avito_AgentLeaseCommissionPresence" data-key="AgentLeaseCommissionPresence">
+                                    <option value="">— не указано —</option>
+                                    <option value="Да" {% if avito.get('AgentLeaseCommissionPresence') == 'Да' %}selected{% endif %}>Да</option>
+                                    <option value="Нет" {% if avito.get('AgentLeaseCommissionPresence') == 'Нет' %}selected{% endif %}>Нет</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Размер комиссии, % (AgentLeaseCommissionSize)</label>
+                                <input type="text" class="form-control avito-field" name="avito_AgentLeaseCommissionSize" data-key="AgentLeaseCommissionSize" value="{{ avito.get('AgentLeaseCommissionSize', '') }}" placeholder="50">
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Видео и ссылки</strong></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Ссылка на видео (VideoURL)</label>
+                                <input type="url" class="form-control avito-field" name="avito_VideoURL" data-key="VideoURL" value="{{ avito.get('VideoURL', '') }}" placeholder="https://www.youtube.com/watch?v=...">
+                                <small class="text-muted">YouTube, Rutube или VK Видео в указанных форматах.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ссылка на видеофайл (VideoFileURL)</label>
+                                <input type="url" class="form-control avito-field" name="avito_VideoFileURL" data-key="VideoFileURL" value="{{ avito.get('VideoFileURL', '') }}" placeholder="https://.../file.mp4">
+                                <small class="text-muted">Прямая HTTP-ссылка на .mp4, .mov и т.д. или Яндекс.Диск. 5 сек – 3 мин, до 500 МБ.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ссылка на выписку ЕГРН (EgrnExtractionLink)</label>
+                                <input type="url" class="form-control avito-field" name="avito_EgrnExtractionLink" data-key="EgrnExtractionLink" value="{{ avito.get('EgrnExtractionLink', '') }}" placeholder="https://.../archive.zip">
+                                <small class="text-muted">HTTPS на .zip (до 1 МБ). Запускает верификацию объекта.</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -169,13 +701,47 @@
     </div>
 
     <div class="mt-4">
-        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <button type="submit" class="btn btn-primary">{% if is_copy %}Создать копию{% else %}Сохранить{% endif %}</button>
         <a href="/dashboard/properties" class="btn btn-outline-secondary ms-2">Отмена</a>
     </div>
 </form>
+<script>
+(function() {
+    var form = document.querySelector('form[action*="/dashboard/properties"]');
+    var hidden = document.getElementById('avito_data_json');
+    if (!form || !hidden) return;
+    form.addEventListener('submit', function() {
+        var data = {};
+        form.querySelectorAll('.avito-field').forEach(function(el) {
+            var key = el.getAttribute('data-key');
+            var val = (el.value || '').trim();
+            if (key && val) data[key] = val;
+        });
+        hidden.value = JSON.stringify(data);
+    });
+
+    function toggleAvitoByDealType() {
+        var sel = form.querySelector('select[name="deal_type"]');
+        var isRent = sel && sel.value === 'Аренда';
+        var rentReq = document.getElementById('avito-required-rent');
+        var saleReq = document.getElementById('avito-required-sale');
+        var rentBlock = document.getElementById('avito-block-rent');
+        var saleBlock = document.getElementById('avito-block-sale');
+        if (rentReq) rentReq.style.display = isRent ? 'block' : 'none';
+        if (saleReq) saleReq.style.display = isRent ? 'none' : 'block';
+        if (rentBlock) rentBlock.style.display = isRent ? 'block' : 'none';
+        if (saleBlock) saleBlock.style.display = isRent ? 'none' : 'block';
+    }
+    if (form.querySelector('select[name="deal_type"]')) {
+        form.querySelector('select[name="deal_type"]').addEventListener('change', toggleAvitoByDealType);
+        toggleAvitoByDealType();
+    }
+})();
+</script>
 {% endblock %}
 
 {% block tail %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
 <script>
 (function() {
@@ -219,5 +785,71 @@ async function deleteImage(imageId) {
         console.error(e);
     }
 }
+
+(function() {
+    var gallery = document.getElementById('existing-gallery');
+    if (gallery && typeof Sortable !== 'undefined') {
+        new Sortable(gallery, {
+            animation: 150,
+            handle: '.sort-handle',
+            draggable: '.gallery-item',
+            onEnd: function() {
+                var items = gallery.querySelectorAll('.gallery-item');
+                var order = [];
+                for (var i = 0; i < items.length; i++) {
+                    var id = items[i].getAttribute('data-image-id');
+                    if (id) order.push(parseInt(id, 10));
+                }
+                if (order.length === 0) return;
+                fetch('/dashboard/ajax/images/reorder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify({ order: order })
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.status !== 'ok') alert('Не удалось сохранить порядок');
+                }).catch(function() { alert('Ошибка сети'); });
+            }
+        });
+    }
+
+    function previewImages(input, containerId) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        var files = input.files;
+        for (var i = 0; i < files.length; i++) {
+            var f = files[i];
+            if (!f.type || !f.type.startsWith('image/')) continue;
+            var reader = new FileReader();
+            reader.onload = (function(el) {
+                return function(e) {
+                    var div = document.createElement('div');
+                    div.className = 'border rounded p-1 bg-light';
+                    var img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = '';
+                    img.style.width = '80px';
+                    img.style.height = '80px';
+                    img.style.objectFit = 'cover';
+                    div.appendChild(img);
+                    container.appendChild(div);
+                };
+            })(f);
+            reader.readAsDataURL(f);
+        }
+    }
+    var mainInput = document.getElementById('input-main-image');
+    var extraInput = document.getElementById('input-extra-images');
+    if (mainInput) {
+        mainInput.addEventListener('change', function() {
+            previewImages(mainInput, 'preview-main-image');
+        });
+    }
+    if (extraInput) {
+        extraInput.addEventListener('change', function() {
+            previewImages(extraInput, 'preview-extra-images');
+        });
+    }
+})();
 </script>
 {% endblock %}

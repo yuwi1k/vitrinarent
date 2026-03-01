@@ -2,16 +2,12 @@
 Админ-панель (SQLAdmin): аутентификация, базовые ModelView для Property/PropertyImage/PropertyDocument, BaseView для папок.
 Кастомная панель менеджеров — в app/dashboard.py.
 """
-import asyncio
-import io
 import os
-import re
 import shutil
 import uuid
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
 from fastapi.responses import RedirectResponse, Response, JSONResponse
-from PIL import Image
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqladmin import BaseView, ModelView, action, expose
@@ -23,83 +19,23 @@ from wtforms import FileField
 from markupsafe import Markup
 
 from app.database import SessionLocal
+from app.admin_password import get_admin_password
 from app.models import Property, PropertyImage, PropertyDocument
 from app.feed import generate_avito_feed
-
-
-def _property_folder_name(property_id: int, title: Optional[str] = None) -> str:
-    if title is None:
-        with SessionLocal() as session:
-            prop = session.query(Property).filter(Property.id == property_id).first()
-            title = (prop.title if prop else "") or ""
-    slug = re.sub(r"[^\w\s\-]", "", title, flags=re.UNICODE)
-    slug = re.sub(r"[-\s]+", "_", slug).strip()[:50] or str(property_id)
-    return f"{property_id}_{slug}"
+from app.file_utils import (
+    get_upload_dirs,
+    get_property_folder_name,
+    resize_image_async,
+    normalize_image_url,
+)
 
 
 def _get_property_upload_dirs(property_id: int) -> Tuple[str, str]:
+    """Получить пути папок объекта (для SQLAdmin, загружает title из БД)."""
     with SessionLocal() as session:
         prop = session.query(Property).filter(Property.id == property_id).first()
-        title = (prop.title if prop else "") or ""
-    slug = re.sub(r"[^\w\s\-]", "", title, flags=re.UNICODE)
-    slug = re.sub(r"[-\s]+", "_", slug).strip()[:50] or str(property_id)
-    folder_name = f"{property_id}_{slug}"
-    base = os.path.join("static", "uploads", "properties", folder_name)
-    images_dir = os.path.join(base, "images")
-    documents_dir = os.path.join(base, "documents")
-    os.makedirs(images_dir, exist_ok=True)
-    os.makedirs(documents_dir, exist_ok=True)
-    return images_dir, documents_dir
-
-
-IMAGE_MAX_WIDTH = 1600
-IMAGE_JPEG_QUALITY = 85
-
-
-def _resize_image_sync(
-    source: Union[str, bytes], dest_path: str,
-    max_width: int = IMAGE_MAX_WIDTH, quality: int = IMAGE_JPEG_QUALITY,
-) -> bool:
-    try:
-        if isinstance(source, bytes):
-            img = Image.open(io.BytesIO(source))
-        else:
-            img = Image.open(source)
-        img.load()
-    except Exception:
-        return False
-    if img.mode in ("RGBA", "P"):
-        img = img.convert("RGB")
-    elif img.mode != "RGB":
-        img = img.convert("RGB")
-    w, h = img.size
-    if w > max_width:
-        ratio = max_width / w
-        new_h = max(1, int(h * ratio))
-        img = img.resize((max_width, new_h), Image.Resampling.LANCZOS)
-    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-    try:
-        img.save(dest_path, "JPEG", quality=quality, optimize=True)
-    except Exception:
-        return False
-    return True
-
-
-async def _resize_image_async(
-    source: Union[str, bytes], dest_path: str,
-    max_width: int = IMAGE_MAX_WIDTH, quality: int = IMAGE_JPEG_QUALITY,
-) -> bool:
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(
-        None, lambda: _resize_image_sync(source, dest_path, max_width, quality)
-    )
-
-
-def _normalize_image_url(file_path: str) -> str:
-    path = file_path.replace(os.sep, "/").lstrip("/")
-    if not path.startswith("static/"):
-        path = "static/" + path.lstrip("/") if path else "static"
-    return "/" + path
+        title = (prop.title if prop else "") or None
+    return get_upload_dirs(property_id, title)
 
 
 # --- АУТЕНТИФИКАЦИЯ ---
@@ -109,7 +45,7 @@ class AdminAuth(AuthenticationBackend):
         username = form.get("username")
         password = form.get("password")
         expected_username = os.getenv("ADMIN_USERNAME", "admin")
-        expected_password = os.getenv("ADMIN_PASSWORD", "admin")
+        expected_password = get_admin_password()
         if username == expected_username and password == expected_password:
             request.session.update({"is_admin": True})
             return True
@@ -133,7 +69,7 @@ class PropertyImageAdmin(ModelView, model=PropertyImage):
     column_filters = [ForeignKeyFilter(PropertyImage.property_id, Property.title, Property, title="Папка (объект)")]
     column_formatters = {
         PropertyImage.property: lambda m, a: Markup(
-            f'<span title="Папка: {_property_folder_name(m.property_id, getattr(m.property, "title", None))}">'
+            f'<span title="Папка: {get_property_folder_name(m.property_id, getattr(m.property, "title", None))}">'
             f"{(m.property.title if m.property else '') or ('Объект #' + str(m.property_id))}</span>"
         ),
         PropertyImage.image_url: lambda m, a: Markup(f'<img src="{m.image_url}" style="height: 50px;">') if m.image_url else "",
@@ -152,12 +88,12 @@ class PropertyImageAdmin(ModelView, model=PropertyImage):
             file.file.seek(0)
             raw_bytes = file.file.read()
             dest_path = os.path.join(upload_dir, f"{uuid.uuid4()}.jpg")
-            ok = await _resize_image_async(raw_bytes, dest_path)
+            ok = await resize_image_async(raw_bytes, dest_path)
             if not ok:
                 dest_path = os.path.join(upload_dir, f"{uuid.uuid4()}{os.path.splitext(file.filename)[1] or '.jpg'}")
                 with open(dest_path, "wb") as f:
                     f.write(raw_bytes)
-            data["image_url"] = _normalize_image_url(dest_path)
+            data["image_url"] = normalize_image_url(dest_path)
 
 
 class PropertyDocumentAdmin(ModelView, model=PropertyDocument):
@@ -169,7 +105,7 @@ class PropertyDocumentAdmin(ModelView, model=PropertyDocument):
     column_filters = [ForeignKeyFilter(PropertyDocument.property_id, Property.title, Property, title="Папка (объект)")]
     column_formatters = {
         PropertyDocument.property: lambda m, a: Markup(
-            f'<span title="Папка: {_property_folder_name(m.property_id, getattr(m.property, "title", None))}">'
+            f'<span title="Папка: {get_property_folder_name(m.property_id, getattr(m.property, "title", None))}">'
             f"{(m.property.title if m.property else '') or ('Объект #' + str(m.property_id))}</span>"
         ),
         PropertyDocument.title: lambda m, a: (

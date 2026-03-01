@@ -3,8 +3,10 @@
 """
 import json
 import math
+import os
 from typing import Optional
 
+import bleach
 from fastapi import APIRouter, Request, Depends, HTTPException, Query, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select, func
@@ -18,6 +20,24 @@ from app.services import build_search_query
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+
+# Разрешённые теги и атрибуты для описания объекта (защита от XSS)
+ALLOWED_TAGS = ["p", "br", "strong", "b", "em", "i", "u", "ul", "ol", "li", "a", "span"]
+ALLOWED_ATTRS = {"a": ["href", "title", "target", "rel"]}
+
+
+def _sanitize_html(value: Optional[str]) -> str:
+    if not value or not value.strip():
+        return ""
+    return bleach.clean(
+        value,
+        tags=ALLOWED_TAGS,
+        attributes=ALLOWED_ATTRS,
+        strip=True,
+    )
+
+
+templates.env.filters["sanitize_html"] = _sanitize_html
 
 
 @router.get("/")
@@ -52,6 +72,21 @@ async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
 PAGE_SIZE = 12
 
 
+def _search_order_by(stmt, sort: Optional[str]):
+    """Применяет сортировку к запросу поиска."""
+    if sort == "price_asc":
+        return stmt.order_by(Property.price.asc(), Property.id.desc())
+    if sort == "price_desc":
+        return stmt.order_by(Property.price.desc(), Property.id.desc())
+    if sort == "area_asc":
+        return stmt.order_by(Property.area.asc(), Property.id.desc())
+    if sort == "area_desc":
+        return stmt.order_by(Property.area.desc(), Property.id.desc())
+    if sort == "date_asc":
+        return stmt.order_by(Property.id.asc())
+    return stmt.order_by(Property.id.desc())
+
+
 @router.get("/search")
 async def search_page(
     request: Request,
@@ -64,6 +99,7 @@ async def search_page(
     max_price: Optional[str] = None,
     min_area: Optional[str] = None,
     max_area: Optional[str] = None,
+    sort: Optional[str] = Query("date_desc", description="price_asc|price_desc|area_asc|area_desc|date_desc|date_asc"),
 ):
     stmt = build_search_query(q, deal_type, category, min_price, max_price, min_area, max_area)
 
@@ -71,9 +107,10 @@ async def search_page(
     total_items = (await db.execute(count_stmt)).scalar() or 0
     total_pages = math.ceil(total_items / PAGE_SIZE) if total_items > 0 else 1
 
+    stmt_ordered = _search_order_by(stmt, sort)
+
     # Все отфильтрованные объекты для карты (без пагинации)
-    stmt_map = stmt.order_by(Property.id.desc())
-    result_map = await db.execute(stmt_map)
+    result_map = await db.execute(stmt_ordered)
     all_filtered = result_map.scalars().all()
     map_properties = [
         {
@@ -91,8 +128,8 @@ async def search_page(
         if p.latitude is not None and p.longitude is not None
     ]
 
-    stmt = stmt.order_by(Property.id.desc()).offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE)
-    result = await db.execute(stmt)
+    stmt_page = stmt_ordered.offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE)
+    result = await db.execute(stmt_page)
     properties = result.scalars().all()
     pages = list(range(1, total_pages + 1))
 
@@ -107,6 +144,7 @@ async def search_page(
             "pages": pages,
             "map_properties": map_properties,
             "map_properties_json": json.dumps(map_properties),
+            "yandex_maps_api_key": os.getenv("YANDEX_MAPS_API_KEY", ""),
             "q": q,
             "deal_type": deal_type,
             "category": category,
@@ -114,6 +152,7 @@ async def search_page(
             "max_price": max_price,
             "min_area": min_area,
             "max_area": max_area,
+            "sort": sort or "date_desc",
         },
     )
 
@@ -167,12 +206,14 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
         building = property
         available_units = [child for child in (building.children or []) if child.is_active]
 
+    site_url = os.getenv("SITE_URL", "http://127.0.0.1:8000").rstrip("/")
     return templates.TemplateResponse(
         "property-single.html",
         {
             "request": request,
             "property": property,
             "available_units": available_units,
+            "site_url": site_url,
         },
     )
 

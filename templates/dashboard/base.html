@@ -15,9 +15,10 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-                    <a href="/dashboard/properties">Vitrina</a>
+                    <a href="/dashboard">Vitrina</a>
                 </h1>
-                <div class="navbar-nav flex-row order-md-last">
+                <div class="navbar-nav flex-row order-md-last gap-2">
+                    <a href="/dashboard/export/avito" class="btn btn-outline-primary btn-sm" download="avito_feed.xml">Скачать фид Авито</a>
                     <a href="/admin/logout" class="btn btn-outline-danger btn-sm">Выйти</a>
                 </div>
                 <div class="collapse navbar-collapse" id="navbar-menu">
@@ -26,10 +27,16 @@
                             <a class="nav-link" href="/">На сайт</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if request.url.path == '/dashboard' %}active{% endif %}" href="/dashboard">Главная</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if request.url.path.startswith('/dashboard/properties') %}active{% endif %}" href="/dashboard/properties">Объекты</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.url.path.startswith('/dashboard/folders') %}active{% endif %}" href="/dashboard/folders">Файлы</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.url.path.startswith('/dashboard/settings') %}active{% endif %}" href="/dashboard/settings/password">Сменить пароль</a>
                         </li>
                     </ul>
                 </div>

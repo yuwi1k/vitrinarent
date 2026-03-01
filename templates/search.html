@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Поиск коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа." />
     <title>Vitrina — поиск недвижимости</title>
     <link rel="shortcut icon" href="/static/images/favicon.png" />
 
@@ -154,11 +155,14 @@
         .vitrina-search-btn { width: 100%; }
       }
       .vitrina-map { overflow: hidden; }
+      .skip-link { position: absolute; top: -3rem; left: 0.5rem; z-index: 9999; padding: 0.5rem 1rem; background: #5a6c7d; color: #fff; text-decoration: none; border-radius: 4px; }
+      .skip-link:focus { top: 0.5rem; outline: 2px solid #fff; outline-offset: 2px; }
+      a:focus-visible, button:focus-visible { outline: 2px solid #5a6c7d; outline-offset: 2px; }
     </style>
 </head>
 
 <body>
-
+    <a href="#main-content" class="skip-link">Перейти к содержимому</a>
     <div class="site-mobile-menu site-navbar-target">
       <div class="site-mobile-menu-header">
         <div class="site-mobile-menu-close">
@@ -177,7 +181,7 @@
             <li><a href="/search" class="active">Поиск</a></li>
             <li><a href="/faq">FAQ</a></li>
           </ul>
-          <a href="#" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Меню"><span></span></a>
+          <button type="button" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Открыть меню" aria-expanded="false"><span></span></button>
         </div>
       </div>
     </header>
@@ -195,7 +199,7 @@
       </div>
     </div>
 
-    <div class="section">
+    <main id="main-content" class="section" tabindex="-1">
         <div class="container">
 
             <div class="row mb-4">
@@ -243,6 +247,17 @@
                           <label class="form-label small text-muted mb-1">Цена до (₽)</label>
                           <input type="number" name="max_price" class="form-control" placeholder="До" min="0" value="{{ request.query_params.get('max_price', '') or max_price or '' }}">
                         </div>
+                        <div class="col-6 col-md-3">
+                          <label class="form-label small text-muted mb-1">Сортировка</label>
+                          <select name="sort" class="form-select" aria-label="Сортировка результатов">
+                            <option value="date_desc" {% if (sort or 'date_desc') == 'date_desc' %}selected{% endif %}>Сначала новые</option>
+                            <option value="date_asc" {% if sort == 'date_asc' %}selected{% endif %}>Сначала старые</option>
+                            <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Цена: по возрастанию</option>
+                            <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Цена: по убыванию</option>
+                            <option value="area_asc" {% if sort == 'area_asc' %}selected{% endif %}>Площадь: по возрастанию</option>
+                            <option value="area_desc" {% if sort == 'area_desc' %}selected{% endif %}>Площадь: по убыванию</option>
+                          </select>
+                        </div>
                         <div class="col-6 col-md-3 d-flex align-items-end">
                           <button type="submit" class="vitrina-search-btn btn w-100">Найти</button>
                         </div>
@@ -286,19 +301,19 @@
                 <ul class="pagination justify-content-center flex-wrap">
                     <li class="page-item {% if page <= 1 %}disabled{% endif %}">
                         {% if page > 1 %}
-                        <a class="page-link" href="/search?page={{ page - 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}">Назад</a>
+                        <a class="page-link" href="/search?page={{ page - 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ (sort or 'date_desc')|urlencode }}">Назад</a>
                         {% else %}
                         <span class="page-link">Назад</span>
                         {% endif %}
                     </li>
                     {% for p in pages %}
                     <li class="page-item {% if p == page %}active{% endif %}">
-                        <a class="page-link" href="/search?page={{ p }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}">{{ p }}</a>
+                        <a class="page-link" href="/search?page={{ p }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ (sort or 'date_desc')|urlencode }}">{{ p }}</a>
                     </li>
                     {% endfor %}
                     <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
                         {% if page < total_pages %}
-                        <a class="page-link" href="/search?page={{ page + 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}">Вперед</a>
+                        <a class="page-link" href="/search?page={{ page + 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ (sort or 'date_desc')|urlencode }}">Вперед</a>
                         {% else %}
                         <span class="page-link">Вперед</span>
                         {% endif %}
@@ -317,9 +332,9 @@
             {% endif %}
 
         </div>
-    </div>
+    </main>
 
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=b12b8ad7-ed0d-4c53-8da4-7dd2f2a42c3d&lang=ru_RU" type="text/javascript"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU{% if yandex_maps_api_key %}&apikey={{ yandex_maps_api_key }}{% endif %}" type="text/javascript"></script>
     <script src="/static/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/tiny-slider.js"></script>
     <script src="/static/js/aos.js"></script>

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Boolean, Text, ForeignKey, JSON
 from sqlalchemy.orm import relationship, backref
 from app.database import Base
 
@@ -23,8 +23,12 @@ class Property(Base):
     
     # Поля для агентства
     deal_type = Column(String, default="Аренда", index=True) 
-    category = Column(String, default="Офис", index=True) 
-    
+    category = Column(String, default="Офис", index=True)
+    # Тип объекта для фида Авито (если пусто — подставляется по category)
+    avito_object_type = Column(String, nullable=True)
+    # Доп. поля шаблона Авито (ключи — имена тегов, значения — строки/числа для XML)
+    avito_data = Column(JSON, nullable=True)
+
     # Координаты для карты
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
@@ -33,9 +37,10 @@ class Property(Base):
     parent_id = Column(Integer, ForeignKey("properties.id"), nullable=True)
 
     # --- СВЯЗИ С НОВЫМИ ТАБЛИЦАМИ ---
-    # lazy="selectin" подходит для асинхронной работы (предзагрузка связей)
+    # lazy="selectin" подходит для асинхронной работы (предзагрузка связей). order_by — порядок фото в галерее.
     images = relationship(
-        "PropertyImage", back_populates="property", cascade="all, delete-orphan", lazy="selectin"
+        "PropertyImage", back_populates="property", cascade="all, delete-orphan", lazy="selectin",
+        order_by="PropertyImage.sort_order",
     )
     documents = relationship(
         "PropertyDocument", back_populates="property", cascade="all, delete-orphan", lazy="selectin"
@@ -72,7 +77,8 @@ class PropertyImage(Base):
     id = Column(Integer, primary_key=True, index=True)
     property_id = Column(Integer, ForeignKey("properties.id"))
     image_url = Column(String)  # URL картинки, например /static/uploads/properties/1_xxx/images/uuid.jpg
-    
+    sort_order = Column(Integer, default=0, nullable=False)  # порядок вывода в галерее (меньше — выше)
+
     property = relationship("Property", back_populates="images", lazy="selectin")
 
 

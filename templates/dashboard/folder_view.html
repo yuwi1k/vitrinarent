@@ -22,7 +22,8 @@
         <form action="/dashboard/folders/{{ property_obj.id }}/upload" method="post" enctype="multipart/form-data" class="row g-3">
             <div class="col-md-6">
                 <label class="form-label">Фото</label>
-                <input type="file" name="new_photos" class="form-control" accept="image/*" multiple>
+                <input type="file" name="new_photos" id="input-new-photos" class="form-control" accept="image/*" multiple>
+                <div id="preview-new-photos" class="mt-2 d-flex flex-wrap gap-2"></div>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Документы</label>
@@ -124,5 +125,40 @@ async function deleteDocument(docId) {
         console.error(e);
     }
 }
+
+(function() {
+    function previewImages(input, containerId) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        var files = input.files;
+        for (var i = 0; i < files.length; i++) {
+            var f = files[i];
+            if (!f.type || !f.type.startsWith('image/')) continue;
+            var reader = new FileReader();
+            reader.onload = (function() {
+                return function(e) {
+                    var div = document.createElement('div');
+                    div.className = 'border rounded p-1 bg-light';
+                    var img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = '';
+                    img.style.width = '80px';
+                    img.style.height = '80px';
+                    img.style.objectFit = 'cover';
+                    div.appendChild(img);
+                    container.appendChild(div);
+                };
+            })();
+            reader.readAsDataURL(f);
+        }
+    }
+    var input = document.getElementById('input-new-photos');
+    if (input) {
+        input.addEventListener('change', function() {
+            previewImages(input, 'preview-new-photos');
+        });
+    }
+})();
 </script>
 {% endblock %}

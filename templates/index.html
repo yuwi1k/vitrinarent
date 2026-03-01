@@ -6,8 +6,8 @@
     <meta name="author" content="Untree.co" />
     <link rel="shortcut icon" href="/static/images/favicon.png" />
 
-    <meta name="description" content="" />
-    <meta name="keywords" content="bootstrap, bootstrap5" />
+    <meta name="description" content="Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа. Сервис для агентов." />
+    <meta name="keywords" content="коммерческая недвижимость, аренда офиса, продажа склада, торговые площади, Vitrina" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -27,6 +27,9 @@
 
     <style>
       html { scroll-behavior: smooth; }
+      .skip-link { position: absolute; top: -3rem; left: 0.5rem; z-index: 9999; padding: 0.5rem 1rem; background: #5a6c7d; color: #fff; text-decoration: none; border-radius: 4px; }
+      .skip-link:focus { top: 0.5rem; outline: 2px solid #fff; outline-offset: 2px; }
+      a:focus-visible, button:focus-visible { outline: 2px solid #5a6c7d; outline-offset: 2px; }
       /* --- Hero & Header: B2B redesign --- */
       .vitrina-hero-wrap {
         position: relative;
@@ -158,8 +161,8 @@
         .vitrina-hero-cta { width: 100%; }
       }
       /* --- Каталог на главной: ровные карточки и цвета под дизайн --- */
-      #catalog-preview .heading { color: #5a6c7d !important; font-weight: 700; }
-      #catalog-preview .vitrina-stat-card {
+      .catalog-preview .heading { color: #5a6c7d !important; font-weight: 700; }
+      .catalog-preview .vitrina-stat-card {
         background: rgba(90, 108, 125, 0.06);
         border: 1px solid rgba(90, 108, 125, 0.12);
         border-radius: 12px;
@@ -167,9 +170,9 @@
         height: 100%;
         text-align: center;
       }
-      #catalog-preview .vitrina-stat-card .small { color: #495057; }
-      #catalog-preview .vitrina-stat-card .h4 { color: #5a6c7d; font-weight: 600; }
-      #catalog-preview .vitrina-property-card {
+      .catalog-preview .vitrina-stat-card .small { color: #495057; }
+      .catalog-preview .vitrina-stat-card .h4 { color: #5a6c7d; font-weight: 600; }
+      .catalog-preview .vitrina-property-card {
         height: 100%;
         display: flex;
         flex-direction: column;
@@ -179,50 +182,51 @@
         box-shadow: 0 4px 20px rgba(0,0,0,0.06);
         border: 1px solid rgba(0,0,0,0.06);
       }
-      #catalog-preview .vitrina-property-card .vitrina-property-img {
+      .catalog-preview .vitrina-property-card .vitrina-property-img {
         flex-shrink: 0;
         height: 220px;
         overflow: hidden;
       }
-      #catalog-preview .vitrina-property-card .vitrina-property-img img {
+      .catalog-preview .vitrina-property-card .vitrina-property-img img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
       }
-      #catalog-preview .vitrina-property-card .vitrina-property-body {
+      .catalog-preview .vitrina-property-card .vitrina-property-body {
         flex: 1;
         display: flex;
         flex-direction: column;
         padding: 1.25rem;
       }
-      #catalog-preview .vitrina-property-card .vitrina-property-body .vitrina-property-price {
+      .catalog-preview .vitrina-property-card .vitrina-property-body .vitrina-property-price {
         color: #5a6c7d;
         font-weight: 600;
         font-size: 1.15rem;
         margin-bottom: 0.5rem;
       }
-      #catalog-preview .vitrina-property-card .vitrina-property-body .vitrina-property-meta { color: #6c757d; font-size: 0.9rem; }
-      #catalog-preview .vitrina-property-card .vitrina-property-body .btn-primary {
+      .catalog-preview .vitrina-property-card .vitrina-property-body .vitrina-property-meta { color: #6c757d; font-size: 0.9rem; }
+      .catalog-preview .vitrina-property-card .vitrina-property-body .btn-primary {
         margin-top: auto;
         background: #5a6c7d;
         border-color: #5a6c7d;
       }
-      #catalog-preview .vitrina-property-card .vitrina-property-body .btn-primary:hover {
+      .catalog-preview .vitrina-property-card .vitrina-property-body .btn-primary:hover {
         background: #4a5568;
         border-color: #4a5568;
       }
-      #catalog-preview .vitrina-catalog-cta.btn-primary {
+      .catalog-preview .vitrina-catalog-cta.btn-primary {
         background: #5a6c7d;
         border-color: #5a6c7d;
       }
-      #catalog-preview .vitrina-catalog-cta.btn-primary:hover {
+      .catalog-preview .vitrina-catalog-cta.btn-primary:hover {
         background: #4a5568;
         border-color: #4a5568;
       }
     </style>
   </head>
   <body>
+    <a href="#main-content" class="skip-link">Перейти к содержимому</a>
     <div class="site-mobile-menu site-navbar-target">
       <div class="site-mobile-menu-header">
         <div class="site-mobile-menu-close">
@@ -244,9 +248,9 @@
               <li><a href="/search">Поиск</a></li>
               <li><a href="/faq">FAQ</a></li>
             </ul>
-            <a href="#" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-inline-block d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Меню">
+            <button type="button" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-inline-block d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Открыть меню" aria-expanded="false">
               <span></span>
-            </a>
+            </button>
           </div>
         </div>
       </header>
@@ -308,7 +312,7 @@
       </div>
     </div>
 
-    <div class="section" id="catalog-preview">
+    <main id="main-content" class="section catalog-preview" tabindex="-1">
       <div class="container">
         <div class="row mb-4 align-items-center">
           <div class="col-lg-6">
@@ -371,9 +375,9 @@
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
-    <div class="site-footer section py-4">
+    <footer class="site-footer section py-4">
       <div class="container">
         <div class="row">
           <div class="col-12 text-center">
@@ -384,7 +388,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </footer>
 
     <script src="/static/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/tiny-slider.js"></script>

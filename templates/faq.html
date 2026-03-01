@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Часто задаваемые вопросы о сервисе Vitrina: коммерческая недвижимость, аренда и продажа." />
     <title>Vitrina — FAQ</title>
     <link rel="shortcut icon" href="/static/images/favicon.png" />
 
@@ -91,9 +92,13 @@
         font-family: 'Work Sans', sans-serif;
       }
       .vitrina-faq-card ul { font-size: 0.9rem; color: #555; }
+      .skip-link { position: absolute; top: -3rem; left: 0.5rem; z-index: 9999; padding: 0.5rem 1rem; background: #5a6c7d; color: #fff; text-decoration: none; border-radius: 4px; }
+      .skip-link:focus { top: 0.5rem; outline: 2px solid #fff; outline-offset: 2px; }
+      a:focus-visible, button:focus-visible { outline: 2px solid #5a6c7d; outline-offset: 2px; }
     </style>
   </head>
   <body>
+    <a href="#main-content" class="skip-link">Перейти к содержимому</a>
     <div class="site-mobile-menu site-navbar-target">
       <div class="site-mobile-menu-header">
         <div class="site-mobile-menu-close">
@@ -112,7 +117,7 @@
             <li><a href="/search">Поиск</a></li>
             <li><a href="/faq" class="active">FAQ</a></li>
           </ul>
-          <a href="#" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Меню"><span></span></a>
+          <button type="button" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Открыть меню" aria-expanded="false"><span></span></button>
         </div>
       </div>
     </header>
@@ -124,7 +129,7 @@
       </div>
     </div>
 
-    <div class="section">
+    <main id="main-content" class="section" tabindex="-1">
       <div class="container">
         <div class="row g-4">
           <div class="col-md-6 col-lg-4">
@@ -164,7 +169,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
     <script src="/static/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/tiny-slider.js"></script>
