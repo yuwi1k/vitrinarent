@@ -1,5 +1,6 @@
-from lxml import etree
+import os
 from datetime import datetime
+from lxml import etree
 
 # Функция для создания XML
 def generate_avito_feed(properties):
@@ -31,9 +32,8 @@ def generate_avito_feed(properties):
         # Картинки
         if prop.main_image:
             images = etree.SubElement(ad, "Images")
-            # Авито требует полные ссылки (с http), поэтому добавляем домен
-            # Замени 'http://mysite.com' на свой реальный домен при деплое
-            full_url = "http://127.0.0.1:8000" + prop.main_image
+            site_url = os.getenv("SITE_URL", "http://127.0.0.1:8000").rstrip("/")
+            full_url = site_url + prop.main_image
             etree.SubElement(images, "Image", url=full_url)
 
     # Превращаем в строку

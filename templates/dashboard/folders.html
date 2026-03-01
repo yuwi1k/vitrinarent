@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Файлы{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none mb-4">
+    <h2 class="page-title">Файлы</h2>
+    <p class="text-muted">Папки объектов недвижимости</p>
+</div>
+
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+    {% for p in properties %}
+    <div class="col">
+        <a href="/dashboard/folders/{{ p.id }}" class="card card-link card-link-pop text-center text-decoration-none" style="min-height: 140px;">
+            <div class="card-body d-flex flex-column justify-content-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-yellow mb-2 mx-auto" width="48" height="48" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
+                </svg>
+                <h3 class="card-title mb-0 text-reset">{{ p.title or 'Объект #' ~ p.id }}</h3>
+                <p class="text-muted small mb-0">ID: {{ p.id }}</p>
+            </div>
+        </a>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="empty">
+            <p class="empty-title">Нет папок</p>
+            <p class="empty-subtitle text-muted">Создайте объекты в разделе «Объекты», чтобы здесь появились папки.</p>
+            <a href="/dashboard/properties/new" class="btn btn-primary">Добавить объект</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

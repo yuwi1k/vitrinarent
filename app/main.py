@@ -1,9 +1,12 @@
 import os
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
+
+load_dotenv()
 
 from app.database import engine
 from app.admin_views import (
@@ -14,6 +17,7 @@ from app.admin_views import (
     ObjectFoldersView,
 )
 from app.routers import router as public_router
+from app.dashboard import router as dashboard_router
 
 # Инициализируем приложение (схема БД — через миграции Alembic)
 app = FastAPI(
@@ -27,16 +31,19 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Сессионный middleware для хранения логина админа
 app.add_middleware(
     SessionMiddleware,
-    secret_key=os.getenv("SESSION_SECRET_KEY", "123"),
+    secret_key=os.getenv("SESSION_SECRET_KEY", "supersecretkey123"),
 )
 
 
 # --- ПУБЛИЧНЫЕ МАРШРУТЫ ---
 app.include_router(public_router)
 
+# --- ДАШБОРД МЕНЕДЖЕРОВ ---
+app.include_router(dashboard_router)
+
 # --- ПОДКЛЮЧЕНИЕ АДМИНКИ ---
 authentication_backend = AdminAuth(
-    secret_key=os.getenv("ADMIN_SECRET_KEY", "123")
+    secret_key=os.getenv("SESSION_SECRET_KEY", "supersecretkey123")
 )
 admin = Admin(app, engine, authentication_backend=authentication_backend)
 admin.add_base_view(ObjectFoldersView)

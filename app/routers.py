@@ -7,26 +7,17 @@ from typing import Optional
 
 from fastapi import APIRouter, Request, Depends, HTTPException, Query, Response
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import or_, select, func
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.database import get_db
 from app.models import Property
 from app.feed import generate_avito_feed
+from app.services import build_search_query
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
-
-
-def _parse_int(value: Optional[str]) -> Optional[int]:
-    """Безопасный парсинг целого из строки (для цены)."""
-    if not value or not value.strip():
-        return None
-    try:
-        return int(value.strip())
-    except ValueError:
-        return None
 
 
 @router.get("/")
@@ -74,41 +65,7 @@ async def search_page(
     min_area: Optional[str] = None,
     max_area: Optional[str] = None,
 ):
-    # Базовый запрос: активные объекты + все фильтры (строгие >= и <= для цены и площади)
-    stmt = select(Property).where(Property.is_active == True)
-
-    if q and q.strip():
-        pattern = f"%{q.strip()}%"
-        stmt = stmt.where(
-            or_(
-                Property.title.ilike(pattern),
-                Property.address.ilike(pattern),
-            )
-        )
-    if deal_type and deal_type != "Все":
-        stmt = stmt.where(Property.deal_type == deal_type)
-    if category and category != "Все":
-        stmt = stmt.where(Property.category == category)
-
-    min_price_val = _parse_int(min_price)
-    max_price_val = _parse_int(max_price)
-    if min_price_val is not None:
-        stmt = stmt.where(Property.price >= min_price_val)
-    if max_price_val is not None:
-        stmt = stmt.where(Property.price <= max_price_val)
-
-    if min_area and min_area.strip():
-        try:
-            low_a = float(min_area.strip())
-            stmt = stmt.where(Property.area >= low_a)
-        except ValueError:
-            pass
-    if max_area and max_area.strip():
-        try:
-            high_a = float(max_area.strip())
-            stmt = stmt.where(Property.area <= high_a)
-        except ValueError:
-            pass
+    stmt = build_search_query(q, deal_type, category, min_price, max_price, min_area, max_area)
 
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total_items = (await db.execute(count_stmt)).scalar() or 0

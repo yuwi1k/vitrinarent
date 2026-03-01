@@ -1,0 +1,92 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Объекты{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none mb-4">
+    <div class="row align-items-center">
+        <div class="col">
+            <h2 class="page-title">Объекты недвижимости</h2>
+        </div>
+        <div class="col-auto">
+            <a href="/dashboard/properties/new" class="btn btn-primary">Добавить объект</a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Фото</th>
+                    <th>Название</th>
+                    <th>Тип</th>
+                    <th>Цена</th>
+                    <th>Статус</th>
+                    <th class="w-1">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in properties %}
+                <tr>
+                    <td class="text-muted">{{ p.id }}</td>
+                    <td>
+                        {% if p.main_image %}
+                        <img src="{{ p.main_image if p.main_image.startswith('/') else '/' + p.main_image }}" alt="" class="rounded" style="width:48px;height:48px;object-fit:cover;">
+                        {% else %}
+                        <span class="avatar avatar-sm bg-secondary rounded">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ p.title or '—' }}</td>
+                    <td><span class="badge bg-azure-lt">{{ p.deal_type or '—' }}</span> {{ p.category or '' }}</td>
+                    <td>{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽</td>
+                    <td>
+                        {% if p.is_active %}
+                        <span class="badge bg-green text-white">Активен</span>
+                        {% else %}
+                        <span class="badge bg-red text-white">Скрыт</span>
+                        {% endif %}
+                        {% if p.show_on_main %}
+                        <span class="badge bg-blue-lt">На главной</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-list flex-nowrap">
+                            <a href="/dashboard/properties/edit/{{ p.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
+                            <form action="/dashboard/properties/delete/{{ p.id }}" method="post" class="d-inline" onsubmit="return confirm('Удалить объект?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">Нет объектов. <a href="/dashboard/properties/new">Добавить первый</a>.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if total_pages > 1 %}
+<div class="d-flex align-items-center mt-3">
+    <p class="text-muted small me-3">Всего: {{ total }}</p>
+    <ul class="pagination m-0">
+        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+            <a class="page-link" href="?page={{ page - 1 }}">Назад</a>
+        </li>
+        {% for p in pages %}
+        <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+        {% endfor %}
+        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+            <a class="page-link" href="?page={{ page + 1 }}">Вперёд</a>
+        </li>
+    </ul>
+</div>
+{% else %}
+<p class="text-muted small mt-3">Всего: {{ total }}</p>
+{% endif %}
+{% endblock %}
