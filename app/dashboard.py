@@ -16,15 +16,14 @@ from sqlalchemy.orm import selectinload
 
 from slugify import slugify
 
+from app.config import PAGE_SIZE_DASHBOARD
 from app.database import get_db
 from app.models import Property, PropertyImage, PropertyDocument
-from app.file_utils import get_upload_dirs, resize_image_async, normalize_image_url
+from app.file_utils import get_upload_dirs, get_street_slug, resize_image_async, normalize_image_url
 from app.admin_password import get_admin_password, set_admin_password
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 templates = Jinja2Templates(directory="templates")
-
-PAGE_SIZE = 20
 
 # Маппинг категорий Vitrina -> Авито (Коммерческая недвижимость)
 AVITO_OBJECT_TYPE_MAP = {
@@ -220,6 +219,51 @@ async def check_admin(request: Request):
     return None
 
 
+async def _ensure_unique_slug(db: AsyncSession, slug: str, exclude_id: Optional[int] = None) -> str:
+    """Если slug уже занят другим объектом, добавляет суффикс (-copy, -2, -3, …) пока не станет уникальным."""
+    if not (slug or "").strip():
+        return slug or "object"
+    base = (slug or "").strip()
+    n = 0
+    while True:
+        candidate = f"{base}-copy" if n == 1 else (f"{base}-{n}" if n > 1 else base)
+        stmt = select(Property.id).where(Property.slug == candidate)
+        if exclude_id is not None:
+            stmt = stmt.where(Property.id != exclude_id)
+        r = await db.execute(stmt)
+        if r.scalar_one_or_none() is None:
+            return candidate
+        n += 1
+
+
+async def _get_parent_candidates(db: AsyncSession, exclude_id: Optional[int] = None) -> list:
+    """Список объектов без родителя (корневые) для выбора родителя — (id, title)."""
+    stmt = select(Property.id, Property.title).where(Property.parent_id.is_(None)).order_by(Property.title.asc().nullslast(), Property.id.asc())
+    if exclude_id is not None:
+        stmt = stmt.where(Property.id != exclude_id)
+    result = await db.execute(stmt)
+    rows = result.all()
+    return [(r[0], (r[1] or "")) for r in rows]
+
+
+async def _get_root_property(db: AsyncSession, prop: Property) -> Property:
+    """Корневой объект иерархии (здание/улица)."""
+    root = prop
+    while getattr(root, "parent_id", None):
+        parent_r = await db.execute(select(Property).where(Property.id == root.parent_id))
+        parent = parent_r.scalar_one_or_none()
+        if not parent:
+            break
+        root = parent
+    return root
+
+
+async def _get_street_slug_for_property(db: AsyncSession, prop: Property) -> str:
+    """Слаг папки улицы: по корневому объекту иерархии (адрес или название)."""
+    root = await _get_root_property(db, prop)
+    return get_street_slug(root.address or root.title, str(root.id))
+
+
 # --- Выгрузка фида Авито (XML) ---
 @router.get("/export/avito", dependencies=[Depends(check_admin)])
 async def export_avito_feed(db: AsyncSession = Depends(get_db)):
@@ -282,12 +326,13 @@ async def list_properties(
 ):
     if page < 1:
         page = 1
-    stmt = (
-        select(Property)
-        .where(Property.parent_id.is_(None))
-        .options(selectinload(Property.images), selectinload(Property.children))
+    stmt = select(Property).options(
+        selectinload(Property.images),
+        selectinload(Property.children),
     )
-    count_stmt = select(func.count(Property.id)).where(Property.parent_id.is_(None))
+    count_stmt = select(func.count(Property.id))
+    stmt = stmt.where(Property.parent_id.is_(None))
+    count_stmt = count_stmt.where(Property.parent_id.is_(None))
 
     if q and q.strip():
         pattern = f"%{q.strip()}%"
@@ -309,16 +354,18 @@ async def list_properties(
 
     total_result = await db.execute(count_stmt)
     total = total_result.scalar() or 0
-    total_pages = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
-    stmt = stmt.order_by(Property.id.desc()).offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE)
+    total_pages = max(1, (total + PAGE_SIZE_DASHBOARD - 1) // PAGE_SIZE_DASHBOARD)
+    stmt = stmt.order_by(Property.id.desc()).offset((page - 1) * PAGE_SIZE_DASHBOARD).limit(PAGE_SIZE_DASHBOARD)
     result = await db.execute(stmt)
     properties = result.scalars().all()
     pages = list(range(1, total_pages + 1))
+    property_groups = [(p, sorted(getattr(p, "children", None) or [], key=lambda c: c.id)) for p in properties]
     return templates.TemplateResponse(
         "dashboard/list.html",
         {
             "request": request,
             "properties": properties,
+            "property_groups": property_groups,
             "page": page,
             "total_pages": total_pages,
             "total": total,
@@ -373,10 +420,11 @@ async def settings_password_change(
 
 # --- Создание: GET форма ---
 @router.get("/properties/new", dependencies=[Depends(check_admin)])
-async def new_property_form(request: Request):
+async def new_property_form(request: Request, db: AsyncSession = Depends(get_db)):
+    parents = await _get_parent_candidates(db, exclude_id=None)
     return templates.TemplateResponse(
         "dashboard/form.html",
-        {"request": request, "model": None, "is_edit": False, "is_copy": False},
+        {"request": request, "model": None, "is_edit": False, "is_copy": False, "parent_candidates": parents},
     )
 
 
@@ -391,9 +439,11 @@ async def copy_property_form(
     source = result.scalars().one_or_none()
     if not source:
         raise HTTPException(status_code=404, detail="Объект не найден")
+    # При копировании не исключаем источник: копия — новый объект, его можно привязать к оригиналу как к родителю
+    parents = await _get_parent_candidates(db, exclude_id=None)
     return templates.TemplateResponse(
         "dashboard/form.html",
-        {"request": request, "model": source, "is_edit": False, "is_copy": True},
+        {"request": request, "model": source, "is_edit": False, "is_copy": True, "parent_candidates": parents},
     )
 
 
@@ -416,13 +466,27 @@ async def create_property(
     is_active: Optional[str] = Form(None),
     show_on_main: Optional[str] = Form(None),
     main_page_order: Optional[int] = Form(None),
-    parent_id: Optional[int] = Form(None),
+    parent_id: Optional[str] = Form(None),
     main_image: UploadFile = File(None),
     extra_images: list[UploadFile] = File([]),
     extra_documents: list[UploadFile] = File([]),
     avito_data_json: Optional[str] = Form(None),
+    copy_from_id: Optional[str] = Form(None),
 ):
+    copy_from_val: Optional[int] = None
+    if copy_from_id and str(copy_from_id).strip():
+        try:
+            copy_from_val = int(copy_from_id)
+        except (TypeError, ValueError):
+            pass
+    parent_id_val: Optional[int] = None
+    if parent_id is not None and str(parent_id).strip() != "":
+        try:
+            parent_id_val = int(parent_id)
+        except (TypeError, ValueError):
+            pass
     slug_val = (slug or "").strip() or slugify(title or "object", allow_unicode=False) or "object"
+    slug_val = await _ensure_unique_slug(db, slug_val)
     is_active_val = is_active in ("1", "true", "on", True)
     show_on_main_val = show_on_main in ("1", "true", "on", True)
     main_page_order_val = None
@@ -457,7 +521,7 @@ async def create_property(
         latitude=lat_val,
         longitude=lon_val,
         main_page_order=main_page_order_val,
-        parent_id=parent_id,
+        parent_id=parent_id_val,
         main_image=None,
         is_active=is_active_val,
         show_on_main=show_on_main_val,
@@ -465,7 +529,43 @@ async def create_property(
     db.add(prop)
     await db.flush()
 
-    images_dir, documents_dir = get_upload_dirs(prop.id, prop.title)
+    street_slug = await _get_street_slug_for_property(db, prop)
+    images_dir, documents_dir = get_upload_dirs(prop.id, prop.title, street_slug)
+
+    if copy_from_val and (not main_image or not main_image.filename):
+        source_result = await db.execute(
+            select(Property).options(selectinload(Property.images)).where(Property.id == copy_from_val)
+        )
+        source_prop = source_result.scalar_one_or_none()
+        if source_prop:
+            if source_prop.main_image:
+                src_path = source_prop.main_image.lstrip("/").replace("/", os.sep)
+                if os.path.isfile(src_path):
+                    with open(src_path, "rb") as f:
+                        data = f.read()
+                    dest = os.path.join(images_dir, f"{uuid.uuid4()}.jpg")
+                    ok = await resize_image_async(data, dest)
+                    if not ok:
+                        dest = os.path.join(images_dir, f"{uuid.uuid4()}{os.path.splitext(src_path)[1] or '.jpg'}")
+                        with open(dest, "wb") as out:
+                            out.write(data)
+                    prop.main_image = normalize_image_url(dest)
+            for idx, img in enumerate(sorted(source_prop.images or [], key=lambda x: getattr(x, "sort_order", 0))):
+                if not getattr(img, "image_url", None):
+                    continue
+                src_path = img.image_url.lstrip("/").replace("/", os.sep)
+                if not os.path.isfile(src_path):
+                    continue
+                with open(src_path, "rb") as f:
+                    data = f.read()
+                dest = os.path.join(images_dir, f"{uuid.uuid4()}.jpg")
+                ok = await resize_image_async(data, dest)
+                if not ok:
+                    ext = os.path.splitext(src_path)[1] or ".jpg"
+                    dest = os.path.join(images_dir, f"{uuid.uuid4()}{ext}")
+                    with open(dest, "wb") as out:
+                        out.write(data)
+                db.add(PropertyImage(property_id=prop.id, image_url=normalize_image_url(dest), sort_order=idx))
 
     if main_image and main_image.filename:
         data = await main_image.read()
@@ -503,7 +603,7 @@ async def create_property(
         db.add(doc)
 
     await db.commit()
-    return RedirectResponse(url="/dashboard/properties", status_code=303)
+    return RedirectResponse(url=f"/dashboard/properties/edit/{prop.id}", status_code=303)
 
 
 # --- Редактирование: GET форма ---
@@ -516,14 +616,29 @@ async def edit_property_form(
     stmt = select(Property).options(
         selectinload(Property.images),
         selectinload(Property.documents),
+        selectinload(Property.parent).selectinload(Property.children),
+        selectinload(Property.children),
     ).where(Property.id == id)
     result = await db.execute(stmt)
     model = result.scalars().one_or_none()
     if not model:
         raise HTTPException(status_code=404, detail="Объект не найден")
+    parents = await _get_parent_candidates(db, exclude_id=model.id)
+    building = getattr(model, "parent", None) or model
+    children_list = list(getattr(building, "children", None) or [])
+    building_nav_items = [(building.id, building.title or f"Объект #{building.id}", f"/dashboard/properties/edit/{building.id}")]
+    for c in sorted(children_list, key=lambda x: (getattr(x, "main_page_order") or 999, x.id)):
+        building_nav_items.append((c.id, c.title or f"Объект #{c.id}", f"/dashboard/properties/edit/{c.id}"))
     return templates.TemplateResponse(
         "dashboard/form.html",
-        {"request": request, "model": model, "is_edit": True, "is_copy": False},
+        {
+            "request": request,
+            "model": model,
+            "is_edit": True,
+            "is_copy": False,
+            "parent_candidates": parents,
+            "building_nav_items": building_nav_items,
+        },
     )
 
 
@@ -545,7 +660,7 @@ async def update_property(
     latitude: Optional[str] = Form(None),
     longitude: Optional[str] = Form(None),
     main_page_order: Optional[int] = Form(None),
-    parent_id: Optional[int] = Form(None),
+    parent_id: Optional[str] = Form(None),
     main_image: UploadFile = File(None),
     extra_images: list[UploadFile] = File([]),
     extra_documents: list[UploadFile] = File([]),
@@ -553,12 +668,19 @@ async def update_property(
     show_on_main: Optional[str] = Form(None),
     avito_data_json: Optional[str] = Form(None),
 ):
+    parent_id_val: Optional[int] = None
+    if parent_id is not None and str(parent_id).strip() != "":
+        try:
+            parent_id_val = int(parent_id)
+        except (TypeError, ValueError):
+            pass
     result = await db.execute(select(Property).where(Property.id == id))
     prop = result.scalars().one_or_none()
     if not prop:
         raise HTTPException(status_code=404, detail="Объект не найден")
 
     slug_val = (slug or "").strip() or slugify(title or "object", allow_unicode=False) or "object"
+    slug_val = await _ensure_unique_slug(db, slug_val, exclude_id=id)
     is_active_val = is_active in ("1", "true", "on", True)
     show_on_main_val = show_on_main in ("1", "true", "on", True)
     main_page_order_val = None
@@ -594,9 +716,10 @@ async def update_property(
     prop.is_active = is_active_val
     prop.show_on_main = show_on_main_val
     prop.main_page_order = main_page_order_val
-    prop.parent_id = parent_id
+    prop.parent_id = parent_id_val
 
-    images_dir, documents_dir = get_upload_dirs(prop.id, prop.title)
+    street_slug = await _get_street_slug_for_property(db, prop)
+    images_dir, documents_dir = get_upload_dirs(prop.id, prop.title, street_slug)
 
     if main_image and main_image.filename:
         data = await main_image.read()
@@ -677,11 +800,31 @@ async def delete_property(
     request: Request,
     id: int,
     db: AsyncSession = Depends(get_db),
+    delete_children: Optional[str] = None,
 ):
-    result = await db.execute(select(Property).where(Property.id == id))
+    """delete_children: '1'/'yes'/'true' — удалить и дочерние; '0'/'no' — оставить дочерние (сделать корневыми)."""
+    stmt = (
+        select(Property)
+        .options(
+            selectinload(Property.children),
+            selectinload(Property.images),
+            selectinload(Property.documents),
+        )
+        .where(Property.id == id)
+    )
+    result = await db.execute(stmt)
     prop = result.scalars().one_or_none()
     if not prop:
         raise HTTPException(status_code=404, detail="Объект не найден")
+    children = list(prop.children or [])
+    remove_children = delete_children in ("1", "true", "yes")
+    if children:
+        if remove_children:
+            for child in children:
+                await db.delete(child)
+        else:
+            for child in children:
+                child.parent_id = None
     await db.delete(prop)
     await db.commit()
     return RedirectResponse(url="/dashboard/properties", status_code=303)
@@ -755,14 +898,16 @@ async def list_folders(
 ):
     stmt = (
         select(Property)
+        .options(selectinload(Property.children))
         .where(Property.parent_id.is_(None))
         .order_by(Property.title)
     )
     result = await db.execute(stmt)
     properties = result.scalars().all()
+    property_groups = [(p, sorted(getattr(p, "children", None) or [], key=lambda c: c.id)) for p in properties]
     return templates.TemplateResponse(
         "dashboard/folders.html",
-        {"request": request, "properties": properties},
+        {"request": request, "properties": properties, "property_groups": property_groups},
     )
 
 
@@ -785,9 +930,11 @@ async def folder_view(
     property_obj = result.scalars().one_or_none()
     if not property_obj:
         raise HTTPException(status_code=404, detail="Объект не найден")
+    root = await _get_root_property(db, property_obj)
+    street_display = (root.address or root.title or "").strip() or f"Объект #{root.id}"
     return templates.TemplateResponse(
         "dashboard/folder_view.html",
-        {"request": request, "property_obj": property_obj},
+        {"request": request, "property_obj": property_obj, "street_display": street_display},
     )
 
 
@@ -804,7 +951,8 @@ async def folder_upload(
     prop = result.scalars().one_or_none()
     if not prop:
         raise HTTPException(status_code=404, detail="Объект не найден")
-    images_dir, documents_dir = get_upload_dirs(prop.id, prop.title)
+    street_slug = await _get_street_slug_for_property(db, prop)
+    images_dir, documents_dir = get_upload_dirs(prop.id, prop.title, street_slug)
 
     max_order_r = await db.execute(select(func.max(PropertyImage.sort_order)).where(PropertyImage.property_id == id))
     next_order = (max_order_r.scalar() or 0) + 1

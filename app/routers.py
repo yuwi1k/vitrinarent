@@ -13,6 +13,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
+from app.config import PAGE_SIZE_PUBLIC, MAIN_PAGE_LIMIT
 from app.database import get_db
 from app.models import Property
 from app.feed import generate_avito_feed
@@ -42,12 +43,12 @@ templates.env.filters["sanitize_html"] = _sanitize_html
 
 @router.get("/")
 async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
-    # Ровно 3 объекта, выбранных в админке для показа на главной (порядок по main_page_order)
+    # Объекты для главной (лимит из конфига), порядок по main_page_order
     stmt_main = (
         select(Property)
         .where(Property.is_active == True, Property.show_on_main == True)
         .order_by(Property.main_page_order.is_(None), Property.main_page_order.asc(), Property.id.desc())
-        .limit(3)
+        .limit(MAIN_PAGE_LIMIT)
     )
     result = await db.execute(stmt_main)
     properties = result.scalars().all()
@@ -67,9 +68,6 @@ async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
             "sale_count": sale_count,
         },
     )
-
-
-PAGE_SIZE = 12
 
 
 def _search_order_by(stmt, sort: Optional[str]):
@@ -105,7 +103,7 @@ async def search_page(
 
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total_items = (await db.execute(count_stmt)).scalar() or 0
-    total_pages = math.ceil(total_items / PAGE_SIZE) if total_items > 0 else 1
+    total_pages = math.ceil(total_items / PAGE_SIZE_PUBLIC) if total_items > 0 else 1
 
     stmt_ordered = _search_order_by(stmt, sort)
 
@@ -128,7 +126,7 @@ async def search_page(
         if p.latitude is not None and p.longitude is not None
     ]
 
-    stmt_page = stmt_ordered.offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE)
+    stmt_page = stmt_ordered.offset((page - 1) * PAGE_SIZE_PUBLIC).limit(PAGE_SIZE_PUBLIC)
     result = await db.execute(stmt_page)
     properties = result.scalars().all()
     pages = list(range(1, total_pages + 1))
@@ -170,6 +168,8 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
             joinedload(Property.images),
             joinedload(Property.documents),
             selectinload(Property.children),
+            selectinload(Property.parent).selectinload(Property.children),
+            selectinload(Property.parent).joinedload(Property.images),
         )
         .where(Property.slug == slug)
     )
@@ -182,6 +182,8 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
                 joinedload(Property.images),
                 joinedload(Property.documents),
                 selectinload(Property.children),
+                selectinload(Property.parent).selectinload(Property.children),
+                selectinload(Property.parent).joinedload(Property.images),
             )
             .where(Property.id == int(slug))
         )
@@ -190,12 +192,16 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
     if not property:
         raise HTTPException(status_code=404, detail="Object not found")
 
-    # Логика «Доступные площади в этом здании»:
-    # - если это здание (нет parent) — показываем всех его активных детей;
-    # - если это часть (есть parent) — сначала показываем само здание,
-    #   затем всех его активных детей, кроме текущей части.
+    building = getattr(property, "parent", None) or property
+    children_list = list(building.children or []) if hasattr(building, "children") else []
+    building_nav_items = [(building.id, building.title or f"Объект #{building.id}", f"/property/{building.slug or building.id}")]
+    for c in sorted(children_list, key=lambda x: (getattr(x, "main_page_order") or 999, x.id)):
+        building_nav_items.append((c.id, c.title or f"Объект #{c.id}", f"/property/{c.slug or c.id}"))
+
+    has_own_media = bool(getattr(property, "main_image", None) or (getattr(property, "images", None) and len(property.images) > 0))
+    display_for_media = (getattr(property, "parent", None) if property.parent and not has_own_media else None) or property
+
     if getattr(property, "parent", None):
-        building = property.parent
         available_units = []
         if building.is_active:
             available_units.append(building)
@@ -203,7 +209,6 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
             if child.is_active and child.id != property.id:
                 available_units.append(child)
     else:
-        building = property
         available_units = [child for child in (building.children or []) if child.is_active]
 
     site_url = os.getenv("SITE_URL", "http://127.0.0.1:8000").rstrip("/")
@@ -213,6 +218,8 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
             "request": request,
             "property": property,
             "available_units": available_units,
+            "building_nav_items": building_nav_items,
+            "display_for_media": display_for_media,
             "site_url": site_url,
         },
     )

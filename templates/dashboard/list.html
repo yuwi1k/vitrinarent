@@ -50,7 +50,7 @@
                     <option value="0" {% if is_active == '0' %}selected{% endif %}>Скрытые</option>
                 </select>
             </div>
-            <div class="col-md-2 d-flex align-items-end">
+            <div class="col-md-1 d-flex align-items-end">
                 <button type="submit" class="btn btn-outline-primary w-100">Применить</button>
             </div>
         </div>
@@ -90,40 +90,87 @@
                 </tr>
             </thead>
             <tbody>
-                {% for p in properties %}
-                <tr>
-                    <td><input type="checkbox" name="ids" value="{{ p.id }}" class="form-check-input row-select"></td>
-                    <td class="text-muted">{{ p.id }}</td>
+                {% for parent, children in property_groups %}
+                <tr class="parent-row">
                     <td>
-                        {% if p.main_image %}
-                        <img src="{{ p.main_image if p.main_image.startswith('/') else '/' + p.main_image }}" alt="" class="rounded" style="width:48px;height:48px;object-fit:cover;">
+                        {% if children|length > 0 %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary p-1 me-1" data-bs-toggle="collapse" data-bs-target="#children-{{ parent.id }}" aria-expanded="false" aria-controls="children-{{ parent.id }}" title="Показать дочерние ({{ children|length }})">
+                            <span class="expand-icon">▸</span>
+                        </button>
+                        {% endif %}
+                        <input type="checkbox" name="ids" value="{{ parent.id }}" class="form-check-input row-select">
+                    </td>
+                    <td class="text-muted">{{ parent.id }}</td>
+                    <td>
+                        {% if parent.main_image %}
+                        <img src="{{ parent.main_image if parent.main_image.startswith('/') else '/' + parent.main_image }}" alt="" class="rounded" style="width:48px;height:48px;object-fit:cover;">
                         {% else %}
                         <span class="avatar avatar-sm bg-secondary rounded">—</span>
                         {% endif %}
                     </td>
-                    <td>{{ p.title or '—' }}</td>
-                    <td><span class="badge bg-azure-lt">{{ p.deal_type or '—' }}</span> {{ p.category or '' }}</td>
-                    <td>{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽</td>
+                    <td>{{ parent.title or '—' }}</td>
+                    <td><span class="badge bg-azure-lt">{{ parent.deal_type or '—' }}</span> {{ parent.category or '' }}</td>
+                    <td>{{ "{:,.0f}".format(parent.price).replace(',', ' ') }} ₽</td>
                     <td>
-                        {% if p.is_active %}
+                        {% if parent.is_active %}
                         <span class="badge bg-green text-white">Активен</span>
                         {% else %}
                         <span class="badge bg-red text-white">Скрыт</span>
                         {% endif %}
-                        {% if p.show_on_main %}
+                        {% if parent.show_on_main %}
                         <span class="badge bg-blue-lt">На главной</span>
                         {% endif %}
                     </td>
                     <td>
                         <div class="btn-list flex-nowrap">
-                            <a href="/dashboard/properties/edit/{{ p.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
-                            <a href="/dashboard/properties/copy/{{ p.id }}" class="btn btn-sm btn-outline-secondary" title="Создать копию объекта">Копировать</a>
-                            <form action="/dashboard/properties/delete/{{ p.id }}" method="post" class="d-inline" onsubmit="return confirm('Удалить объект?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
-                            </form>
+                            <a href="/dashboard/properties/edit/{{ parent.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
+                            <a href="/dashboard/properties/copy/{{ parent.id }}" class="btn btn-sm btn-outline-secondary" title="Копировать">Копировать</a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="submitDelete({{ parent.id }}, {{ children|length }})">Удалить</button>
                         </div>
                     </td>
                 </tr>
+                {% if children|length > 0 %}
+                <tr class="child-rows-wrapper">
+                    <td colspan="8" class="p-0 border-0">
+                        <div class="collapse" id="children-{{ parent.id }}">
+                            <table class="table table-sm table-striped mb-0 bg-light">
+                                <tbody>
+                                    {% for ch in children %}
+                                    <tr>
+                                        <td class="w-1"><input type="checkbox" name="ids" value="{{ ch.id }}" class="form-check-input row-select"></td>
+                                        <td class="text-muted">{{ ch.id }}</td>
+                                        <td>
+                                            {% if ch.main_image %}
+                                            <img src="{{ ch.main_image if ch.main_image.startswith('/') else '/' + ch.main_image }}" alt="" class="rounded" style="width:40px;height:40px;object-fit:cover;">
+                                            {% else %}
+                                            <span class="avatar avatar-sm bg-secondary rounded">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><span class="text-muted small">↳</span> {{ ch.title or '—' }}</td>
+                                        <td><span class="badge bg-azure-lt">{{ ch.deal_type or '—' }}</span> {{ ch.category or '' }}</td>
+                                        <td>{{ "{:,.0f}".format(ch.price).replace(',', ' ') }} ₽</td>
+                                        <td>
+                                            {% if ch.is_active %}
+                                            <span class="badge bg-green text-white">Активен</span>
+                                            {% else %}
+                                            <span class="badge bg-red text-white">Скрыт</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-list flex-nowrap">
+                                                <a href="/dashboard/properties/edit/{{ ch.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
+                                                <a href="/dashboard/properties/copy/{{ ch.id }}" class="btn btn-sm btn-outline-secondary">Копировать</a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="submitDelete({{ ch.id }}, 0)">Удалить</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
                 {% else %}
                 <tr>
                     <td colspan="8" class="text-center text-muted py-4">Нет объектов. <a href="/dashboard/properties/new">Добавить первый</a>.</td>
@@ -136,6 +183,32 @@
 </form>
 
 <script>
+function submitDelete(propertyId, childrenCount) {
+    childrenCount = childrenCount || 0;
+    if (childrenCount > 0) {
+        var msg = 'У этого объекта есть ' + childrenCount + ' дочерних. Удалить их тоже?';
+        if (!confirm(msg + '\n\n«ОК» — удалить родителя и дочерние.\n«Отмена» — удалить только родителя, дочерние останутся в списке.')) {
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/dashboard/properties/delete/' + propertyId + '?delete_children=0';
+            document.body.appendChild(form);
+            form.submit();
+            return;
+        }
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/dashboard/properties/delete/' + propertyId + '?delete_children=1';
+        document.body.appendChild(form);
+        form.submit();
+        return;
+    }
+    if (!confirm('Удалить объект?')) return;
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/dashboard/properties/delete/' + propertyId;
+    document.body.appendChild(form);
+    form.submit();
+}
 (function() {
     var selectAll = document.getElementById('select-all');
     var rowChecks = document.querySelectorAll('.row-select');
@@ -144,6 +217,16 @@
             rowChecks.forEach(function(c) { c.checked = selectAll.checked; });
         });
     }
+    document.querySelectorAll('.collapse').forEach(function(el) {
+        el.addEventListener('show.bs.collapse', function() {
+            var btn = document.querySelector('[data-bs-target="#' + el.id + '"]');
+            if (btn) { var s = btn.querySelector('.expand-icon'); if (s) s.textContent = '▾'; }
+        });
+        el.addEventListener('hide.bs.collapse', function() {
+            var btn = document.querySelector('[data-bs-target="#' + el.id + '"]');
+            if (btn) { var s = btn.querySelector('.expand-icon'); if (s) s.textContent = '▸'; }
+        });
+    });
 })();
 </script>
 

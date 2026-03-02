@@ -109,7 +109,7 @@
       <div class="site-mobile-menu-body"></div>
     </div>
 
-    {% set bg_image = property.main_image if property.main_image else '/static/images/hero_bg_2.png' %}
+    {% set bg_image = (display_for_media.main_image if display_for_media.main_image else '/static/images/hero_bg_2.png') %}
     <header class="vitrina-header">
       <div class="container">
         <div class="d-flex align-items-center justify-content-between">
@@ -153,12 +153,12 @@
         <div class="row justify-content-between">
           
           <div class="col-lg-7 mb-5 mb-lg-0">
-            {% set main_img_url = (property.main_image if (property.main_image and property.main_image.startswith('/')) else ('/' + (property.main_image or ''))) if property.main_image else '/static/images/hero_bg_1.jpg' %}
+            {% set main_img_url = (display_for_media.main_image if (display_for_media.main_image and display_for_media.main_image.startswith('/')) else ('/' + (display_for_media.main_image or ''))) if display_for_media.main_image else '/static/images/hero_bg_1.jpg' %}
             <div class="vitrina-property-carousel mb-5">
               <div id="propertyCarousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-indicators">
                   <button type="button" data-bs-target="#propertyCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Фото 1"></button>
-                  {% for image in property.images %}
+                  {% for image in display_for_media.images %}
                   <button type="button" data-bs-target="#propertyCarousel" data-bs-slide-to="{{ loop.index }}" aria-label="Фото {{ loop.index + 1 }}"></button>
                   {% endfor %}
                 </div>
@@ -166,13 +166,13 @@
                   <div class="carousel-item active">
                     <img src="{{ main_img_url }}" alt="{{ property.title }}" class="d-block w-100 img-fluid" width="800" height="450" loading="lazy" />
                   </div>
-                  {% for image in property.images %}
+                  {% for image in display_for_media.images %}
                   <div class="carousel-item">
                     <img src="{{ (image.image_url if (image.image_url and image.image_url.startswith('/')) else ('/' + (image.image_url or ''))) }}" alt="{{ property.title }}" class="d-block w-100 img-fluid" width="800" height="450" loading="lazy" />
                   </div>
                   {% endfor %}
                 </div>
-                {% if property.main_image or property.images %}
+                {% if display_for_media.main_image or display_for_media.images %}
                 <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
                   <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                   <span class="visually-hidden">Назад</span>

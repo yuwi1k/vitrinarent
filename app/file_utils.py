@@ -26,10 +26,28 @@ def folder_slug_from_title(title: Optional[str], property_id: int) -> str:
     return slug
 
 
-def get_upload_dirs(property_id: int, title: Optional[str] = None) -> Tuple[str, str]:
-    """Папка формата ID_Название_объекта, внутри строго «Фото» и «Документы»."""
+def get_street_slug(address_or_title: Optional[str], fallback: str = "object") -> str:
+    """Слаг для общей папки улицы (например «Рабочая, 91» → rabochaia_91)."""
+    text = (address_or_title or "").strip() or fallback
+    slug = re.sub(r"[^\w\s\-]", "", text, flags=re.UNICODE)
+    slug = re.sub(r"[-\s]+", "_", slug).strip().lower()[:60] or fallback
+    return slug
+
+
+def get_upload_dirs(
+    property_id: int,
+    title: Optional[str] = None,
+    street_slug: Optional[str] = None,
+) -> Tuple[str, str]:
+    """
+    Папка объекта: при заданном street_slug — static/uploads/properties/{улица}/{id_название}/Фото|Документы;
+    иначе — static/uploads/properties/{id_название}/Фото|Документы (для обратной совместимости).
+    """
     folder_name = f"{property_id}_{folder_slug_from_title(title, property_id)}"
-    base = os.path.join("static", "uploads", "properties", folder_name)
+    if street_slug:
+        base = os.path.join("static", "uploads", "properties", street_slug.strip(), folder_name)
+    else:
+        base = os.path.join("static", "uploads", "properties", folder_name)
     images_dir = os.path.join(base, IMAGES_SUBFOLDER)
     documents_dir = os.path.join(base, DOCUMENTS_SUBFOLDER)
     os.makedirs(images_dir, exist_ok=True)
