@@ -94,8 +94,8 @@
                 <tr class="parent-row">
                     <td>
                         {% if children|length > 0 %}
-                        <button type="button" class="btn btn-sm btn-outline-secondary p-1 me-1" data-bs-toggle="collapse" data-bs-target="#children-{{ parent.id }}" aria-expanded="false" aria-controls="children-{{ parent.id }}" title="Показать дочерние ({{ children|length }})">
-                            <span class="expand-icon">▸</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary p-1 me-1" data-bs-toggle="collapse" data-bs-target="#children-{{ parent.id }}" aria-expanded="true" aria-controls="children-{{ parent.id }}" title="Показать/скрыть дочерние ({{ children|length }})">
+                            <span class="expand-icon">▾</span>
                         </button>
                         {% endif %}
                         <input type="checkbox" name="ids" value="{{ parent.id }}" class="form-check-input row-select">
@@ -132,7 +132,7 @@
                 {% if children|length > 0 %}
                 <tr class="child-rows-wrapper">
                     <td colspan="8" class="p-0 border-0">
-                        <div class="collapse" id="children-{{ parent.id }}">
+                        <div class="collapse show" id="children-{{ parent.id }}">
                             <table class="table table-sm table-striped mb-0 bg-light">
                                 <tbody>
                                     {% for ch in children %}

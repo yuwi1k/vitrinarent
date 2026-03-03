@@ -1,4 +1,6 @@
 import os
+import time
+from collections import defaultdict
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -6,8 +8,31 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 
 load_dotenv()
+
+# Rate limiting для логина: макс. 5 попыток в минуту с одного IP
+_LOGIN_ATTEMPTS: dict[str, list[float]] = defaultdict(list)
+_LOGIN_RATE_LIMIT = 5
+_LOGIN_WINDOW_SEC = 60
+
+
+class LoginRateLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path == "/admin/login" and request.method == "POST":
+            client = request.client.host if request.client else "unknown"
+            now = time.monotonic()
+            # Удаляем старые попытки
+            _LOGIN_ATTEMPTS[client] = [t for t in _LOGIN_ATTEMPTS[client] if now - t < _LOGIN_WINDOW_SEC]
+            if len(_LOGIN_ATTEMPTS[client]) >= _LOGIN_RATE_LIMIT:
+                return JSONResponse(
+                    {"detail": "Слишком много попыток входа. Подождите минуту."},
+                    status_code=429,
+                )
+            _LOGIN_ATTEMPTS[client].append(now)
+        return await call_next(request)
 
 
 def _require_production_secrets() -> None:
@@ -79,6 +104,8 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SESSION_SECRET_KEY", "supersecretkey123") or "supersecretkey123",
 )
+# Ограничение попыток входа на /admin/login
+app.add_middleware(LoginRateLimitMiddleware)
 
 
 # --- ПУБЛИЧНЫЕ МАРШРУТЫ ---

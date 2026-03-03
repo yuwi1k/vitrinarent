@@ -138,6 +138,32 @@
                         <label class="form-label required">Площадь (м²)</label>
                         <input type="number" step="0.01" name="area" class="form-control" value="{{ model.area or 0 }}" min="0" required>
                     </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">Этаж</label>
+                                <input type="number" name="floor_number" class="form-control" value="{{ model.floor_number if model and model.floor_number is not none else '' }}" min="0" placeholder="Напр. 3">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">Этажность здания</label>
+                                <input type="number" name="floors_total" class="form-control" value="{{ model.floors_total if model and model.floors_total is not none else '' }}" min="0" placeholder="Всего этажей">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">Мощность, кВт</label>
+                                <input type="number" step="0.1" name="power_kw" class="form-control" value="{{ model.power_kw if model and model.power_kw is not none else '' }}" min="0" placeholder="Напр. 50">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">Высота потолков, м</label>
+                                <input type="number" step="0.1" name="ceiling_height" class="form-control" value="{{ model.ceiling_height if model and model.ceiling_height is not none else '' }}" min="0" placeholder="Напр. 3.2">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -164,7 +190,10 @@
                 <div class="card-header">Прикреплённые документы</div>
                 <div class="list-group list-group-flush">
                     {% for doc in model.documents %}
-                    <a href="{{ doc.document_url if doc.document_url and doc.document_url.startswith('/') else '/' + (doc.document_url or '') }}" target="_blank" rel="noopener" class="list-group-item list-group-item-action">{{ doc.title or 'Документ' }}</a>
+                    <div class="list-group-item d-flex justify-content-between align-items-center" id="doc-row-{{ doc.id }}">
+                        <a href="{{ doc.document_url if doc.document_url and doc.document_url.startswith('/') else '/' + (doc.document_url or '') }}" target="_blank" rel="noopener" class="me-2 text-truncate">{{ doc.title or 'Документ' }}</a>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteDocument({{ doc.id }})">Удалить</button>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
@@ -238,7 +267,11 @@
                         <div class="col-md-6 col-lg-4">
                             <div class="mb-3">
                                 <label class="form-label">Этаж (Floor)</label>
-                                <input type="text" class="form-control avito-field" name="avito_Floor" data-key="Floor" value="{{ avito.get('Floor', '') }}" placeholder="1">
+                                {% set floor_default = '' %}
+                                {% if not avito.get('Floor') and model and model.floor_number is not none %}
+                                    {% set floor_default = model.floor_number %}
+                                {% endif %}
+                                <input type="text" class="form-control avito-field" name="avito_Floor" data-key="Floor" value="{{ avito.get('Floor', floor_default) }}" placeholder="1">
                                 <small class="text-muted">Для вида «Здание» не применяется.</small>
                             </div>
                         </div>
@@ -405,7 +438,11 @@
                         <div class="card-body">
                             <div class="mb-3">
                                 <label class="form-label">Высота потолков, м (CeilingHeight)</label>
-                                <input type="text" class="form-control avito-field" name="avito_CeilingHeight" data-key="CeilingHeight" value="{{ avito.get('CeilingHeight', '') }}" placeholder="2.5">
+                                {% set ceiling_default = '' %}
+                                {% if not avito.get('CeilingHeight') and model and model.ceiling_height is not none %}
+                                    {% set ceiling_default = '%.2f'|format(model.ceiling_height) %}
+                                {% endif %}
+                                <input type="text" class="form-control avito-field" name="avito_CeilingHeight" data-key="CeilingHeight" value="{{ avito.get('CeilingHeight', ceiling_default) }}" placeholder="2.5">
                                 <small class="text-muted">Десятичное число, до 100 м.</small>
                             </div>
                         </div>
@@ -502,7 +539,11 @@
                         <div class="card-body">
                             <div class="mb-3">
                                 <label class="form-label">Мощность электросети, кВт (PowerGridCapacity)</label>
-                                <input type="text" class="form-control avito-field" name="avito_PowerGridCapacity" data-key="PowerGridCapacity" value="{{ avito.get('PowerGridCapacity', '') }}" placeholder="12">
+                                {% set power_default = '' %}
+                                {% if not avito.get('PowerGridCapacity') and model and model.power_kw is not none %}
+                                    {% set power_default = '%.1f'|format(model.power_kw) %}
+                                {% endif %}
+                                <input type="text" class="form-control avito-field" name="avito_PowerGridCapacity" data-key="PowerGridCapacity" value="{{ avito.get('PowerGridCapacity', power_default) }}" placeholder="12">
                                 <small class="text-muted">Целое число.</small>
                             </div>
                             <div class="mb-3">
@@ -809,6 +850,21 @@ async function deleteImage(imageId) {
     }
 }
 
+async function deleteDocument(docId) {
+    if (!confirm('Удалить документ?')) return;
+    try {
+        var r = await fetch('/dashboard/ajax/documents/' + docId, { method: 'DELETE' });
+        var data = await r.json();
+        if (data.status === 'ok') {
+            var el = document.getElementById('doc-row-' + docId);
+            if (el) el.remove();
+        } else alert('Ошибка удаления');
+    } catch (e) {
+        alert('Ошибка сети');
+        console.error(e);
+    }
+}
+
 (function() {
     var gallery = document.getElementById('existing-gallery');
     if (gallery && typeof Sortable !== 'undefined') {
@@ -834,6 +890,37 @@ async function deleteImage(imageId) {
             }
         });
     }
+
+    // Автоподстановка коммерческих полей во вкладку Авито (этаж, высота потолков, мощность)
+    (function syncCommerceToAvito() {
+        var floorInput = document.querySelector('input[name="floor_number"]');
+        var ceilingInput = document.querySelector('input[name="ceiling_height"]');
+        var powerInput = document.querySelector('input[name="power_kw"]');
+        var avitoFloor = document.querySelector('input[name="avito_Floor"]');
+        var avitoCeiling = document.querySelector('input[name="avito_CeilingHeight"]');
+        var avitoPower = document.querySelector('input[name="avito_PowerGridCapacity"]');
+
+        function bind(source, target, formatter) {
+            if (!source || !target) return;
+            // Запоминаем исходное значение, чтобы различать авто- и ручной ввод
+            if (typeof target.dataset.autoFrom === 'undefined') {
+                target.dataset.autoFrom = target.value || '';
+            }
+            source.addEventListener('input', function () {
+                var raw = source.value || '';
+                var val = formatter ? formatter(raw) : raw;
+                // Если поле Авито пустое или до этого содержало только авто-подставленное значение — обновляем
+                if (target.value === '' || target.value === target.dataset.autoFrom) {
+                    target.value = val;
+                    target.dataset.autoFrom = val;
+                }
+            });
+        }
+
+        bind(floorInput, avitoFloor, function (v) { return v.trim(); });
+        bind(ceilingInput, avitoCeiling, function (v) { return v.replace(',', '.').trim(); });
+        bind(powerInput, avitoPower, function (v) { return v.replace(',', '.').trim(); });
+    })();
 
     function previewImages(input, containerId) {
         var container = document.getElementById(containerId);

@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Настройки{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/dashboard">Главная</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Настройки</li>
+    </ol>
+</nav>
+
+<div class="page-header d-print-none mb-4">
+    <h2 class="page-title">Настройки контактов для фида Авито</h2>
+    <p class="text-muted mt-1 mb-0">Имя менеджера и телефон подставляются в выгружаемый XML для Авито. Если не заданы — используются значения из переменных окружения (.env).</p>
+</div>
+
+{% if success %}
+<div class="alert alert-success" role="alert">
+    Настройки сохранены. Они будут использоваться при следующей выгрузке фида Авито.
+</div>
+{% endif %}
+
+{% if error %}
+<div class="alert alert-danger" role="alert">{{ error }}</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="/dashboard/settings" class="row g-3">
+            <div class="col-12">
+                <label class="form-label">Имя менеджера (ManagerName)</label>
+                <input type="text" name="avito_manager_name" class="form-control" value="{{ (settings.avito_manager_name or '') }}" placeholder="Менеджер Vitrina">
+            </div>
+            <div class="col-12">
+                <label class="form-label">Телефон для объявлений Авито (ContactPhone)</label>
+                <input type="text" name="avito_contact_phone" class="form-control" value="{{ (settings.avito_contact_phone or '') }}" placeholder="+79990000000">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a href="/dashboard" class="btn btn-outline-secondary ms-2">На главную</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

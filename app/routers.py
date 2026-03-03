@@ -227,7 +227,7 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
 
 @router.get("/avito.xml")
 async def get_avito_feed_route(db: AsyncSession = Depends(get_db)):
-    stmt = select(Property).where(Property.is_active == True)
+    stmt = select(Property).where(Property.is_active == True, Property.parent_id.is_(None))
     result = await db.execute(stmt)
     properties = result.scalars().all()
     xml_content = generate_avito_feed(properties)

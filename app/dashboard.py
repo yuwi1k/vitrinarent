@@ -1,215 +1,52 @@
 """
 Кастомная панель управления (Dashboard) для менеджеров: FastAPI + Jinja2 + Bootstrap 5.
 """
+import csv
+import io
 import json
 import os
+import shutil
 import uuid
 from typing import Optional, Any
 
 from fastapi import APIRouter, Request, Depends, HTTPException, Form, UploadFile, File
 from fastapi.responses import RedirectResponse, JSONResponse, Response
 from fastapi.templating import Jinja2Templates
-from lxml import etree
 from sqlalchemy import select, func, or_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from slugify import slugify
 
-from app.config import PAGE_SIZE_DASHBOARD
+from app.config import PAGE_SIZE_DASHBOARD, UPLOAD_MAX_FILE_SIZE
 from app.database import get_db
 from app.models import Property, PropertyImage, PropertyDocument
 from app.file_utils import get_upload_dirs, get_street_slug, resize_image_async, normalize_image_url
 from app.admin_password import get_admin_password, set_admin_password
+from app.feed import generate_avito_feed_full
+from app.settings_store import get_settings_for_edit, save_settings
+
+# Разрешённые расширения для загрузок
+ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+ALLOWED_DOCUMENT_EXTENSIONS = {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt", ".rtf"}
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 templates = Jinja2Templates(directory="templates")
 
-# Маппинг категорий Vitrina -> Авито (Коммерческая недвижимость)
-AVITO_OBJECT_TYPE_MAP = {
-    "Офис": "Офисное помещение",
-    "Торговая площадь": "Торговое помещение",
-    "Склад": "Складское помещение",
-    "Здание": "Здание",
-    "ГАБ": "Здание",
-    "Промышленное": "Помещение свободного назначения",
-    "Свободного назначения": "Помещение свободного назначения",
-}
-AVITO_OBJECT_TYPE_DEFAULT = "Помещение свободного назначения"
 
-
-def _build_avito_feed_xml(properties: list) -> bytes:
-    """Генерация XML-фида для Авито (Коммерческая недвижимость). Отдельные шаблоны: Продам и Сдам (01-03-2026)."""
-    root = etree.Element("Ads", formatVersion="3", target="Avito.ru")
-    site_url = os.getenv("SITE_URL", "http://127.0.0.1:8000").rstrip("/")
-    manager_name = os.getenv("AVITO_MANAGER_NAME", os.getenv("MANAGER_NAME", "Менеджер Vitrina")) or "Менеджер Vitrina"
-    contact_phone = os.getenv("AVITO_CONTACT_PHONE", os.getenv("CONTACT_PHONE", "+79990000000")) or "+79990000000"
-
-    def _cdata_safe(s: str) -> str:
-        return (s or "").replace("]]>", "]]]]><![CDATA[>")
-
-    for prop in properties:
-        ad = etree.SubElement(root, "Ad")
-        data = getattr(prop, "avito_data", None) or {}
-
-        def _avito(key: str, default: str = "") -> str:
-            v = data.get(key)
-            return str(v).strip() if v is not None and str(v).strip() else default
-
-        operation_type = "Сдам" if (getattr(prop, "deal_type", None) or "").strip() == "Аренда" else "Продам"
-        object_type = (getattr(prop, "avito_object_type", None) or "").strip()
-        if not object_type:
-            object_type = AVITO_OBJECT_TYPE_MAP.get((prop.category or "").strip(), AVITO_OBJECT_TYPE_DEFAULT)
-        deco = _avito("Decoration") or ("Офисная" if object_type == "Офисное помещение" else "Без отделки")
-
-        def _add(key: str, value: str, cdata: bool = False) -> None:
-            if not value:
-                return
-            if cdata:
-                safe = _cdata_safe(value)
-                child = etree.fromstring(f"<{key}><![CDATA[{safe}]]></{key}>")
-                ad.append(child)
-            else:
-                sub = etree.SubElement(ad, key)
-                sub.text = value
-
-        # --- Общая часть (одинакова для Продам и Сдам) ---
-        etree.SubElement(ad, "Id").text = str(prop.id)
-        _add("DateBegin", _avito("DateBegin"))
-        _add("DateEnd", _avito("DateEnd"))
-        _add("ListingFee", _avito("ListingFee"))
-        _add("AdStatus", _avito("AdStatus"))
-        _add("AvitoId", _avito("AvitoId"))
-        etree.SubElement(ad, "ManagerName").text = manager_name.strip()
-        etree.SubElement(ad, "ContactPhone").text = contact_phone.strip()
-        _desc_text = (prop.description or "Описание отсутствует").strip()
-        desc_elem = etree.fromstring(
-            "<Description><![CDATA[" + _cdata_safe(_desc_text) + "]]></Description>"
-        )
-        ad.append(desc_elem)
-        image_urls = []
-        if getattr(prop, "main_image", None) and (prop.main_image or "").strip():
-            url = (prop.main_image if prop.main_image.startswith("/") else "/" + prop.main_image).strip()
-            image_urls.append(site_url + url)
-        for img in sorted(getattr(prop, "images", []) or [], key=lambda x: getattr(x, "sort_order", 0)):
-            if getattr(img, "image_url", None) and (img.image_url or "").strip():
-                url = (img.image_url if img.image_url.startswith("/") else "/" + img.image_url).strip()
-                full = site_url + url
-                if full not in image_urls:
-                    image_urls.append(full)
-        images_el = etree.SubElement(ad, "Images")
-        for url in (image_urls[:40] if image_urls else [""]):
-            etree.SubElement(images_el, "Image", url=url)
-        _add("VideoURL", _avito("VideoURL"))
-        etree.SubElement(ad, "Address").text = (prop.address or "").strip() or "Москва"
-        if prop.longitude is not None:
-            etree.SubElement(ad, "Longitude").text = str(prop.longitude)
-        if prop.latitude is not None:
-            etree.SubElement(ad, "Latitude").text = str(prop.latitude)
-        _add("ContactMethod", _avito("ContactMethod"))
-        etree.SubElement(ad, "Category").text = "Коммерческая недвижимость"
-        etree.SubElement(ad, "Title").text = (prop.title or "Объект недвижимости").strip() or "Объект недвижимости"
-        etree.SubElement(ad, "Price").text = str(int(prop.price) if prop.price is not None else 0)
-        _add("InternetCalls", _avito("InternetCalls"))
-        _add("CallsDevices", _avito("CallsDevices"))
-        _add("PriceWithVAT", _avito("PriceWithVAT"))
-        etree.SubElement(ad, "OperationType").text = operation_type
-        etree.SubElement(ad, "ObjectType").text = object_type
-
-        if operation_type == "Продам":
-            # Шаблон «Коммерческая недвижимость — Продам»: без OfficeType, с условиями продажи
-            _add("AdditionalObjectTypes", _avito("AdditionalObjectTypes"))
-            _add("VideoFileURL", _avito("VideoFileURL"), cdata=True)
-            _add("EgrnExtractionLink", _avito("EgrnExtractionLink"), cdata=True)
-            etree.SubElement(ad, "PropertyRights").text = _avito("PropertyRights", "Собственник")
-            _add("PremisesType", _avito("PremisesType"))
-            etree.SubElement(ad, "Entrance").text = _avito("Entrance", "С улицы")
-            _add("EntranceAdditionally", _avito("EntranceAdditionally"))
-            etree.SubElement(ad, "Floor").text = _avito("Floor", "1")
-            _add("FloorAdditionally", _avito("FloorAdditionally"))
-            _add("Layout", _avito("Layout"))
-            etree.SubElement(ad, "Square").text = str(float(prop.area) if prop.area is not None else 0)
-            _add("PlaceIsRented", _avito("PlaceIsRented"))
-            _add("RenterName", _avito("RenterName"))
-            _add("RenterMonthPayment", _avito("RenterMonthPayment"))
-            _add("RentContractExpireDate", _avito("RentContractExpireDate"))
-            _add("PaymentIndexation", _avito("PaymentIndexation"))
-            _add("PercentOfTrade", _avito("PercentOfTrade"))
-            _add("CeilingHeight", _avito("CeilingHeight"))
-            etree.SubElement(ad, "Decoration").text = deco
-            _add("PowerGridCapacity", _avito("PowerGridCapacity"))
-            _add("PowerGridAdditionally", _avito("PowerGridAdditionally"))
-            _add("Heating", _avito("Heating"))
-            _add("ReadinessStatus", _avito("ReadinessStatus"))
-            etree.SubElement(ad, "BuildingType").text = _avito("BuildingType", "Другой")
-            _add("BuildingClass", _avito("BuildingClass"))
-            _add("DistanceFromRoad", _avito("DistanceFromRoad"))
-            etree.SubElement(ad, "ParkingType").text = _avito("ParkingType", "На улице")
-            _add("ParkingAdditionally", _avito("ParkingAdditionally"))
-            _add("ParkingSpaces", _avito("ParkingSpaces"))
-            etree.SubElement(ad, "TransactionType").text = _avito("TransactionType", "Продажа")
-            _add("PriceType", _avito("PriceType"))
-            _add("SaleOptions", _avito("SaleOptions"))
-            _add("AgentSellCommissionPresence", _avito("AgentSellCommissionPresence"))
-            _add("AgentSellCommissionSize", _avito("AgentSellCommissionSize"))
-        else:
-            # Шаблон «Коммерческая недвижимость — Сдам»: OfficeType, без PlaceIsRented/продажа, с арендой
-            if object_type == "Офисное помещение":
-                etree.SubElement(ad, "OfficeType").text = _avito("OfficeType", "Помещение под офис")
-            _add("AdditionalObjectTypes", _avito("AdditionalObjectTypes"))
-            _add("VideoFileURL", _avito("VideoFileURL"), cdata=True)
-            _add("EgrnExtractionLink", _avito("EgrnExtractionLink"), cdata=True)
-            _add("PropertyRights", _avito("PropertyRights"))
-            _add("PremisesType", _avito("PremisesType"))
-            etree.SubElement(ad, "Entrance").text = _avito("Entrance", "С улицы")
-            _add("EntranceAdditionally", _avito("EntranceAdditionally"))
-            etree.SubElement(ad, "Floor").text = _avito("Floor", "1")
-            _add("FloorAdditionally", _avito("FloorAdditionally"))
-            _add("Layout", _avito("Layout"))
-            etree.SubElement(ad, "Square").text = str(float(prop.area) if prop.area is not None else 0)
-            _add("SquareAdditionally", _avito("SquareAdditionally"))
-            _add("CeilingHeight", _avito("CeilingHeight"))
-            etree.SubElement(ad, "Decoration").text = deco
-            _add("PowerGridCapacity", _avito("PowerGridCapacity"))
-            _add("PowerGridAdditionally", _avito("PowerGridAdditionally"))
-            _add("NumTax", _avito("NumTax"))
-            _add("GuaranteeLetter", _avito("GuaranteeLetter"))
-            _add("LandlinePhone", _avito("LandlinePhone"))
-            _add("MailService", _avito("MailService"))
-            _add("Secretary", _avito("Secretary"))
-            _add("Heating", _avito("Heating"))
-            etree.SubElement(ad, "BuildingType").text = _avito("BuildingType", "Другой")
-            _add("BuildingClass", _avito("BuildingClass"))
-            _add("DistanceFromRoad", _avito("DistanceFromRoad"))
-            etree.SubElement(ad, "ParkingType").text = _avito("ParkingType", "На улице")
-            _add("ParkingAdditionally", _avito("ParkingAdditionally"))
-            _add("ParkingSpaces", _avito("ParkingSpaces"))
-            _add("PlacesAmount", _avito("PlacesAmount"))
-            _add("WeekendWork", _avito("WeekendWork"))
-            _add("Working24Hours", _avito("Working24Hours"))
-            _add("WorksFrom", _avito("WorksFrom"))
-            _add("WorksTill", _avito("WorksTill"))
-            _add("PlaceType", _avito("PlaceType"))
-            _add("RoomArea", _avito("RoomArea"))
-            _add("PlacesInRoom", _avito("PlacesInRoom"))
-            _add("KeyConveniences", _avito("KeyConveniences"))
-            _add("ConvenienceIncluded", _avito("ConvenienceIncluded"))
-            _add("AvailableHardware", _avito("AvailableHardware"))
-            _add("FoodAndDrinks", _avito("FoodAndDrinks"))
-            _add("AvailableService", _avito("AvailableService"))
-            _add("AdditionalFacilities", _avito("AdditionalFacilities"))
-            etree.SubElement(ad, "RentalType").text = _avito("RentalType", "Прямая")
-            _add("RentalHolidays", _avito("RentalHolidays"))
-            _add("RentalMinimumPeriod", _avito("RentalMinimumPeriod"))
-            _add("LeasePriceOptions", _avito("LeasePriceOptions"))
-            _add("PriceType", _avito("PriceType"))
-            _add("LeaseDeposit", _avito("LeaseDeposit"))
-            _add("AgentLeaseCommissionPresence", _avito("AgentLeaseCommissionPresence"))
-            _add("AgentLeaseCommissionSize", _avito("AgentLeaseCommissionSize"))
-
-    return etree.tostring(
-        root, pretty_print=True, encoding="UTF-8", xml_declaration=True
-    )
+def _validate_upload_file(
+    file: Optional[UploadFile],
+    allowed_extensions: set,
+    max_size: int,
+) -> Optional[str]:
+    """Проверка файла. Возвращает None если ок, иначе строку с ошибкой."""
+    if not file or not file.filename:
+        return None
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in allowed_extensions:
+        return f"Недопустимое расширение. Разрешены: {', '.join(sorted(allowed_extensions))}"
+    # Размер проверим после чтения в обработчике
+    return None
 
 
 # --- Зависимость: проверка админа ---
@@ -269,13 +106,13 @@ async def _get_street_slug_for_property(db: AsyncSession, prop: Property) -> str
 async def export_avito_feed(db: AsyncSession = Depends(get_db)):
     stmt = (
         select(Property)
-        .where(Property.parent_id.is_(None), Property.is_active.is_(True))
+        .where(Property.is_active.is_(True))
         .options(selectinload(Property.images))
         .order_by(Property.id.asc())
     )
     result = await db.execute(stmt)
     properties = result.scalars().all()
-    xml_bytes = _build_avito_feed_xml(properties)
+    xml_bytes = generate_avito_feed_full(properties)
     return Response(
         content=xml_bytes,
         media_type="application/xml",
@@ -289,16 +126,16 @@ async def dashboard_home(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    base = select(Property).where(Property.parent_id.is_(None))
-    total_r = await db.execute(select(func.count(Property.id)).where(Property.parent_id.is_(None)))
+    base = select(Property)
+    total_r = await db.execute(select(func.count(Property.id)))
     total = total_r.scalar() or 0
-    active_r = await db.execute(select(func.count(Property.id)).where(Property.parent_id.is_(None), Property.is_active.is_(True)))
+    active_r = await db.execute(select(func.count(Property.id)).where(Property.is_active.is_(True)))
     active_count = active_r.scalar() or 0
-    on_main_r = await db.execute(select(func.count(Property.id)).where(Property.parent_id.is_(None), Property.show_on_main.is_(True)))
+    on_main_r = await db.execute(select(func.count(Property.id)).where(Property.show_on_main.is_(True)))
     on_main_count = on_main_r.scalar() or 0
-    rent_r = await db.execute(select(func.count(Property.id)).where(Property.parent_id.is_(None), Property.deal_type == "Аренда"))
+    rent_r = await db.execute(select(func.count(Property.id)).where(Property.deal_type == "Аренда"))
     rent_count = rent_r.scalar() or 0
-    sale_r = await db.execute(select(func.count(Property.id)).where(Property.parent_id.is_(None), Property.deal_type == "Продажа"))
+    sale_r = await db.execute(select(func.count(Property.id)).where(Property.deal_type == "Продажа"))
     sale_count = sale_r.scalar() or 0
     return templates.TemplateResponse(
         "dashboard/home.html",
@@ -418,6 +255,63 @@ async def settings_password_change(
     )
 
 
+# --- Настройки контактов для фида Авито (без правки .env) ---
+@router.get("/settings", dependencies=[Depends(check_admin)])
+async def settings_form(request: Request):
+    settings_data = get_settings_for_edit()
+    return templates.TemplateResponse(
+        "dashboard/settings.html",
+        {"request": request, "settings": settings_data, "error": None, "success": False},
+    )
+
+
+@router.post("/settings", dependencies=[Depends(check_admin)])
+async def settings_save(
+    request: Request,
+    avito_manager_name: str = Form(""),
+    avito_contact_phone: str = Form(""),
+):
+    save_settings(avito_manager_name=avito_manager_name, avito_contact_phone=avito_contact_phone)
+    settings_data = get_settings_for_edit()
+    return templates.TemplateResponse(
+        "dashboard/settings.html",
+        {"request": request, "settings": settings_data, "error": None, "success": True},
+    )
+
+
+# --- Экспорт списка объектов в CSV ---
+@router.get("/export/csv", dependencies=[Depends(check_admin)])
+async def export_properties_csv(db: AsyncSession = Depends(get_db)):
+    stmt = (
+        select(Property)
+        .where(Property.parent_id.is_(None))
+        .order_by(Property.id.asc())
+    )
+    result = await db.execute(stmt)
+    properties = result.scalars().all()
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=";")
+    writer.writerow(["id", "title", "slug", "deal_type", "category", "price", "area", "address", "is_active", "show_on_main"])
+    for p in properties:
+        writer.writerow([
+            p.id,
+            (p.title or ""),
+            (p.slug or ""),
+            (p.deal_type or ""),
+            (p.category or ""),
+            p.price or 0,
+            p.area or 0,
+            (p.address or ""),
+            "да" if p.is_active else "нет",
+            "да" if p.show_on_main else "нет",
+        ])
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="properties.csv"'},
+    )
+
+
 # --- Создание: GET форма ---
 @router.get("/properties/new", dependencies=[Depends(check_admin)])
 async def new_property_form(request: Request, db: AsyncSession = Depends(get_db)):
@@ -461,6 +355,10 @@ async def create_property(
     deal_type: str = Form("Аренда"),
     category: str = Form("Офис"),
     avito_object_type: Optional[str] = Form(None),
+    floors_total: Optional[str] = Form(None),
+    floor_number: Optional[str] = Form(None),
+    power_kw: Optional[str] = Form(None),
+    ceiling_height: Optional[str] = Form(None),
     latitude: Optional[str] = Form(None),
     longitude: Optional[str] = Form(None),
     is_active: Optional[str] = Form(None),
@@ -497,6 +395,30 @@ async def create_property(
             pass
     lat_val = float(latitude) if latitude and latitude.strip() else None
     lon_val = float(longitude) if longitude and longitude.strip() else None
+    floors_total_val: Optional[int] = None
+    if floors_total and floors_total.strip():
+        try:
+            floors_total_val = int(floors_total.strip())
+        except (TypeError, ValueError):
+            floors_total_val = None
+    floor_number_val: Optional[int] = None
+    if floor_number and floor_number.strip():
+        try:
+            floor_number_val = int(floor_number.strip())
+        except (TypeError, ValueError):
+            floor_number_val = None
+    power_kw_val: Optional[float] = None
+    if power_kw and power_kw.strip():
+        try:
+            power_kw_val = float(power_kw.strip().replace(",", "."))
+        except (TypeError, ValueError):
+            power_kw_val = None
+    ceiling_height_val: Optional[float] = None
+    if ceiling_height and ceiling_height.strip():
+        try:
+            ceiling_height_val = float(ceiling_height.strip().replace(",", "."))
+        except (TypeError, ValueError):
+            ceiling_height_val = None
     avito_type_val = (avito_object_type or "").strip() or None
     avito_data_val: Optional[dict[str, Any]] = None
     if avito_data_json and (avito_data_json or "").strip():
@@ -520,6 +442,10 @@ async def create_property(
         avito_data=avito_data_val,
         latitude=lat_val,
         longitude=lon_val,
+        floors_total=floors_total_val,
+        floor_number=floor_number_val,
+        power_kw=power_kw_val,
+        ceiling_height=ceiling_height_val,
         main_page_order=main_page_order_val,
         parent_id=parent_id_val,
         main_image=None,
@@ -534,7 +460,10 @@ async def create_property(
 
     if copy_from_val and (not main_image or not main_image.filename):
         source_result = await db.execute(
-            select(Property).options(selectinload(Property.images)).where(Property.id == copy_from_val)
+            select(Property).options(
+                selectinload(Property.images),
+                selectinload(Property.documents),
+            ).where(Property.id == copy_from_val)
         )
         source_prop = source_result.scalar_one_or_none()
         if source_prop:
@@ -566,9 +495,28 @@ async def create_property(
                     with open(dest, "wb") as out:
                         out.write(data)
                 db.add(PropertyImage(property_id=prop.id, image_url=normalize_image_url(dest), sort_order=idx))
+            # Копирование документов
+            for doc in source_prop.documents or []:
+                if not getattr(doc, "document_url", None):
+                    continue
+                src_path = doc.document_url.lstrip("/").replace("/", os.sep)
+                if not os.path.isfile(src_path):
+                    continue
+                ext = os.path.splitext(src_path)[1] or ""
+                dest_doc = os.path.join(documents_dir, f"{uuid.uuid4()}{ext}")
+                with open(src_path, "rb") as f_in, open(dest_doc, "wb") as f_out:
+                    f_out.write(f_in.read())
+                new_title = doc.title or "Документ"
+                new_url = f"/{dest_doc.replace(os.sep, '/')}"
+                db.add(PropertyDocument(property_id=prop.id, title=new_title, document_url=new_url))
 
     if main_image and main_image.filename:
+        err = _validate_upload_file(main_image, ALLOWED_IMAGE_EXTENSIONS, UPLOAD_MAX_FILE_SIZE)
+        if err:
+            raise HTTPException(status_code=400, detail=err)
         data = await main_image.read()
+        if len(data) > UPLOAD_MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail=f"Файл слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         dest = os.path.join(images_dir, f"{uuid.uuid4()}.jpg")
         ok = await resize_image_async(data, dest)
         if not ok:
@@ -580,7 +528,12 @@ async def create_property(
     for idx, f in enumerate(extra_images or []):
         if not f or not f.filename:
             continue
+        err = _validate_upload_file(f, ALLOWED_IMAGE_EXTENSIONS, UPLOAD_MAX_FILE_SIZE)
+        if err:
+            raise HTTPException(status_code=400, detail=err)
         data = await f.read()
+        if len(data) > UPLOAD_MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail=f"Файл «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         dest = os.path.join(images_dir, f"{uuid.uuid4()}.jpg")
         ok = await resize_image_async(data, dest)
         if not ok:
@@ -595,9 +548,14 @@ async def create_property(
         if not f or not f.filename:
             continue
         ext = os.path.splitext(f.filename)[1] or ""
+        if ext.lower() not in ALLOWED_DOCUMENT_EXTENSIONS:
+            raise HTTPException(status_code=400, detail=f"Недопустимое расширение документа. Разрешены: {', '.join(sorted(ALLOWED_DOCUMENT_EXTENSIONS))}")
+        data_doc = await f.read()
+        if len(data_doc) > UPLOAD_MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail=f"Документ «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         path = os.path.join(documents_dir, f"{uuid.uuid4()}{ext}")
         with open(path, "wb") as out:
-            out.write(await f.read())
+            out.write(data_doc)
         title_doc = os.path.splitext(f.filename)[0] or "Документ"
         doc = PropertyDocument(property_id=prop.id, title=title_doc, document_url=f"/{path.replace(os.sep, '/')}")
         db.add(doc)
@@ -657,6 +615,10 @@ async def update_property(
     deal_type: str = Form("Аренда"),
     category: str = Form("Офис"),
     avito_object_type: Optional[str] = Form(None),
+    floors_total: Optional[str] = Form(None),
+    floor_number: Optional[str] = Form(None),
+    power_kw: Optional[str] = Form(None),
+    ceiling_height: Optional[str] = Form(None),
     latitude: Optional[str] = Form(None),
     longitude: Optional[str] = Form(None),
     main_page_order: Optional[int] = Form(None),
@@ -691,6 +653,30 @@ async def update_property(
             pass
     lat_val = float(latitude) if latitude and latitude.strip() else None
     lon_val = float(longitude) if longitude and longitude.strip() else None
+    floors_total_val: Optional[int] = None
+    if floors_total and floors_total.strip():
+        try:
+            floors_total_val = int(floors_total.strip())
+        except (TypeError, ValueError):
+            floors_total_val = None
+    floor_number_val: Optional[int] = None
+    if floor_number and floor_number.strip():
+        try:
+            floor_number_val = int(floor_number.strip())
+        except (TypeError, ValueError):
+            floor_number_val = None
+    power_kw_val: Optional[float] = None
+    if power_kw and power_kw.strip():
+        try:
+            power_kw_val = float(power_kw.strip().replace(",", "."))
+        except (TypeError, ValueError):
+            power_kw_val = None
+    ceiling_height_val: Optional[float] = None
+    if ceiling_height and ceiling_height.strip():
+        try:
+            ceiling_height_val = float(ceiling_height.strip().replace(",", "."))
+        except (TypeError, ValueError):
+            ceiling_height_val = None
     avito_type_val = (avito_object_type or "").strip() or None
     avito_data_val: Optional[dict[str, Any]] = None
     if avito_data_json and (avito_data_json or "").strip():
@@ -713,6 +699,10 @@ async def update_property(
     prop.avito_data = avito_data_val
     prop.latitude = lat_val
     prop.longitude = lon_val
+    prop.floors_total = floors_total_val
+    prop.floor_number = floor_number_val
+    prop.power_kw = power_kw_val
+    prop.ceiling_height = ceiling_height_val
     prop.is_active = is_active_val
     prop.show_on_main = show_on_main_val
     prop.main_page_order = main_page_order_val
@@ -722,7 +712,12 @@ async def update_property(
     images_dir, documents_dir = get_upload_dirs(prop.id, prop.title, street_slug)
 
     if main_image and main_image.filename:
+        err = _validate_upload_file(main_image, ALLOWED_IMAGE_EXTENSIONS, UPLOAD_MAX_FILE_SIZE)
+        if err:
+            raise HTTPException(status_code=400, detail=err)
         data = await main_image.read()
+        if len(data) > UPLOAD_MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail=f"Файл слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         dest = os.path.join(images_dir, f"{uuid.uuid4()}.jpg")
         ok = await resize_image_async(data, dest)
         if not ok:
@@ -737,7 +732,12 @@ async def update_property(
     for f in extra_images or []:
         if not f or not f.filename:
             continue
+        err = _validate_upload_file(f, ALLOWED_IMAGE_EXTENSIONS, UPLOAD_MAX_FILE_SIZE)
+        if err:
+            raise HTTPException(status_code=400, detail=err)
         data = await f.read()
+        if len(data) > UPLOAD_MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail=f"Файл «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         dest = os.path.join(images_dir, f"{uuid.uuid4()}.jpg")
         ok = await resize_image_async(data, dest)
         if not ok:
@@ -753,9 +753,14 @@ async def update_property(
         if not f or not f.filename:
             continue
         ext = os.path.splitext(f.filename)[1] or ""
+        if ext.lower() not in ALLOWED_DOCUMENT_EXTENSIONS:
+            raise HTTPException(status_code=400, detail=f"Недопустимое расширение документа. Разрешены: {', '.join(sorted(ALLOWED_DOCUMENT_EXTENSIONS))}")
+        data_doc = await f.read()
+        if len(data_doc) > UPLOAD_MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail=f"Документ «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         path = os.path.join(documents_dir, f"{uuid.uuid4()}{ext}")
         with open(path, "wb") as out:
-            out.write(await f.read())
+            out.write(data_doc)
         title_doc = os.path.splitext(f.filename)[0] or "Документ"
         doc = PropertyDocument(property_id=prop.id, title=title_doc, document_url=f"/{path.replace(os.sep, '/')}")
         db.add(doc)
@@ -816,8 +821,27 @@ async def delete_property(
     prop = result.scalars().one_or_none()
     if not prop:
         raise HTTPException(status_code=404, detail="Объект не найден")
+
     children = list(prop.children or [])
     remove_children = delete_children in ("1", "true", "yes")
+
+    # Соберём список объектов, для которых нужно почистить папки файлов
+    props_to_cleanup: list[Property] = [prop]
+    if children and remove_children:
+        props_to_cleanup.extend(children)
+
+    # Запоминаем пути папок до удаления из БД
+    folders_to_remove: set[str] = set()
+    for p in props_to_cleanup:
+        try:
+            street_slug = await _get_street_slug_for_property(db, p)
+            images_dir, documents_dir = get_upload_dirs(p.id, p.title, street_slug)
+            base_dir = os.path.dirname(images_dir)  # общая папка объекта (где Фото/Документы)
+            folders_to_remove.add(base_dir)
+        except Exception:
+            # Не мешаем удалению объекта, даже если что-то пошло не так с файловой системой
+            continue
+
     if children:
         if remove_children:
             for child in children:
@@ -825,8 +849,18 @@ async def delete_property(
         else:
             for child in children:
                 child.parent_id = None
+
     await db.delete(prop)
     await db.commit()
+
+    # После успешного удаления из БД — чистим папки на диске
+    for folder in folders_to_remove:
+        try:
+            if os.path.isdir(folder):
+                shutil.rmtree(folder, ignore_errors=True)
+        except Exception:
+            # Тихо игнорируем ошибки файловой системы
+            continue
     return RedirectResponse(url="/dashboard/properties", status_code=303)
 
 
@@ -959,7 +993,12 @@ async def folder_upload(
     for f in new_photos or []:
         if not f or not f.filename:
             continue
+        err = _validate_upload_file(f, ALLOWED_IMAGE_EXTENSIONS, UPLOAD_MAX_FILE_SIZE)
+        if err:
+            raise HTTPException(status_code=400, detail=err)
         data = await f.read()
+        if len(data) > UPLOAD_MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail=f"Файл «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         dest = os.path.join(images_dir, f"{uuid.uuid4()}.jpg")
         ok = await resize_image_async(data, dest)
         if not ok:
@@ -975,9 +1014,14 @@ async def folder_upload(
         if not f or not f.filename:
             continue
         ext = os.path.splitext(f.filename)[1] or ""
+        if ext.lower() not in ALLOWED_DOCUMENT_EXTENSIONS:
+            raise HTTPException(status_code=400, detail=f"Недопустимое расширение документа. Разрешены: {', '.join(sorted(ALLOWED_DOCUMENT_EXTENSIONS))}")
+        data_doc = await f.read()
+        if len(data_doc) > UPLOAD_MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail=f"Документ «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         path = os.path.join(documents_dir, f"{uuid.uuid4()}{ext}")
         with open(path, "wb") as out:
-            out.write(await f.read())
+            out.write(data_doc)
         title_doc = os.path.splitext(f.filename)[0] or "Документ"
         doc = PropertyDocument(property_id=prop.id, title=title_doc, document_url=f"/{path.replace(os.sep, '/')}")
         db.add(doc)

@@ -33,6 +33,12 @@ class Property(Base):
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
 
+    # Базовые характеристики здания/помещения
+    floors_total = Column(Integer, nullable=True)      # общее количество этажей в здании
+    floor_number = Column(Integer, nullable=True)      # этаж, на котором находится помещение
+    power_kw = Column(Float, nullable=True)            # доступная мощность, кВт
+    ceiling_height = Column(Float, nullable=True)      # высота потолков, м
+
     # Родительский объект (для иерархии "матрешек")
     parent_id = Column(Integer, ForeignKey("properties.id"), nullable=True)
 
