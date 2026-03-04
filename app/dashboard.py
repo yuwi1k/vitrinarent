@@ -52,9 +52,16 @@ def _validate_upload_file(
 
 # --- Зависимость: проверка админа ---
 async def check_admin(request: Request):
+    """
+    Проверяет, что в сессии выставлен флаг is_admin.
+    Если нет — делаем redirect на /admin/login.
+
+    Важно: в зависимости нужно именно выбрасывать исключение,
+    иначе возвращённый RedirectResponse будет проигнорирован.
+    """
     if not request.session.get("is_admin"):
-        return RedirectResponse(url="/admin/login", status_code=302)
-    return None
+        # 302 с заголовком Location корректно обрабатывается как redirect
+        raise HTTPException(status_code=302, headers={"Location": "/admin/login"})
 
 
 async def _ensure_unique_slug(db: AsyncSession, slug: str, exclude_id: Optional[int] = None) -> str:
