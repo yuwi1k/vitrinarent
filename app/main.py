@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.proxy_headers import ProxyHeadersMiddleware
 from starlette.requests import Request
 
 load_dotenv()
@@ -134,15 +135,14 @@ async def health_readiness():
 # --- ПОДКЛЮЧЕНИЕ СТАТИКИ И ШАБЛОНОВ ---
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Ограничение попыток входа на /admin/login (внешний слой)
-app.add_middleware(LoginRateLimitMiddleware)
-# Редирект на логин при заходе на /dashboard без is_admin
-app.add_middleware(RequireDashboardAuthMiddleware)
-# Сессионный middleware (внутренний слой — выполняется первым, session доступна в RequireDashboardAuthMiddleware)
+# Порядок middleware важен: первым должен идти ProxyHeaders, затем Session, затем авторизация/лимиты
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SESSION_SECRET_KEY", "supersecretkey123") or "supersecretkey123",
 )
+app.add_middleware(RequireDashboardAuthMiddleware)
+app.add_middleware(LoginRateLimitMiddleware)
 
 
 # --- ПУБЛИЧНЫЕ МАРШРУТЫ ---
