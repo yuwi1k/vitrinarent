@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
@@ -17,6 +17,15 @@ load_dotenv()
 _LOGIN_ATTEMPTS: dict[str, list[float]] = defaultdict(list)
 _LOGIN_RATE_LIMIT = 5
 _LOGIN_WINDOW_SEC = 60
+
+
+class RequireDashboardAuthMiddleware(BaseHTTPMiddleware):
+    """Редирект на /admin/login при заходе на /dashboard без авторизации."""
+    async def dispatch(self, request: Request, call_next):
+        path = request.url.path
+        if path.startswith("/dashboard") and not request.session.get("is_admin"):
+            return RedirectResponse(url="/admin/login", status_code=302)
+        return await call_next(request)
 
 
 class LoginRateLimitMiddleware(BaseHTTPMiddleware):
@@ -99,13 +108,15 @@ async def health_readiness():
 # --- ПОДКЛЮЧЕНИЕ СТАТИКИ И ШАБЛОНОВ ---
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Сессионный middleware для хранения логина админа
+# Ограничение попыток входа на /admin/login (внешний слой)
+app.add_middleware(LoginRateLimitMiddleware)
+# Редирект на логин при заходе на /dashboard без is_admin
+app.add_middleware(RequireDashboardAuthMiddleware)
+# Сессионный middleware (внутренний слой — выполняется первым, session доступна в RequireDashboardAuthMiddleware)
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SESSION_SECRET_KEY", "supersecretkey123") or "supersecretkey123",
 )
-# Ограничение попыток входа на /admin/login
-app.add_middleware(LoginRateLimitMiddleware)
 
 
 # --- ПУБЛИЧНЫЕ МАРШРУТЫ ---
