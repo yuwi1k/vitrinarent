@@ -3,7 +3,7 @@ import time
 from collections import defaultdict
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
@@ -22,9 +22,14 @@ _LOGIN_WINDOW_SEC = 60
 class RequireDashboardAuthMiddleware(BaseHTTPMiddleware):
     """Редирект на /admin/login при заходе на /dashboard без авторизации."""
     async def dispatch(self, request: Request, call_next):
-        path = request.url.path
-        if path.startswith("/dashboard") and not request.session.get("is_admin"):
-            return RedirectResponse(url="/admin/login", status_code=302)
+        path = request.url.path.rstrip("/") or "/"
+        if path.startswith("/dashboard"):
+            # session может быть пустым dict, если куки нет
+            is_admin = getattr(request, "session", None)
+            if is_admin is not None and isinstance(is_admin, dict):
+                is_admin = is_admin.get("is_admin")
+            if not is_admin:
+                return RedirectResponse(url="/admin/login", status_code=302)
         return await call_next(request)
 
 
@@ -80,6 +85,15 @@ app = FastAPI(
     title="Vitrina Real Estate",
     description="Внутренний каталог коммерческой недвижимости"
 )
+
+
+# Редирект при HTTPException(302) — чтобы зависимости дашборда реально перенаправляли на логин
+@app.exception_handler(HTTPException)
+async def http_exception_redirect(request: Request, exc: HTTPException):
+    if exc.status_code == 302 and "Location" in (exc.headers or {}):
+        return RedirectResponse(url=exc.headers["Location"], status_code=302)
+    from fastapi.responses import JSONResponse
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 # --- HEALTH-CHECK для деплоя и оркестрации ---
