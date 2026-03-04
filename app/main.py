@@ -9,7 +9,6 @@ from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.middleware.proxy_headers import ProxyHeadersMiddleware
 from starlette.requests import Request
 
 load_dotenv()
@@ -21,13 +20,16 @@ _LOGIN_WINDOW_SEC = 60
 
 
 def _login_url(request: Request) -> str:
-    """URL страницы логина: тот же хост и схема (https при доступе по https)."""
-    base = getattr(request.url, "replace", None)
-    if base:
-        try:
-            return str(request.url.replace(path="/admin/login", query=""))
-        except Exception:
-            pass
+    """URL страницы логина: тот же хост и схема (https если nginx передал X-Forwarded-Proto)."""
+    try:
+        proto = (request.headers.get("x-forwarded-proto") or "").strip().lower()
+        if proto == "https":
+            host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
+            return f"https://{host.rstrip('/')}/admin/login"
+        url = request.url.replace(path="/admin/login", query="")
+        return str(url)
+    except Exception:
+        pass
     return "/admin/login"
 
 
@@ -135,8 +137,7 @@ async def health_readiness():
 # --- ПОДКЛЮЧЕНИЕ СТАТИКИ И ШАБЛОНОВ ---
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Порядок middleware важен: первым должен идти ProxyHeaders, затем Session, затем авторизация/лимиты
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+# Порядок middleware: Session, затем авторизация/лимиты (X-Forwarded-Proto проверяем в _login_url)
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SESSION_SECRET_KEY", "supersecretkey123") or "supersecretkey123",
