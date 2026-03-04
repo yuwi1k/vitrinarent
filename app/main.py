@@ -38,9 +38,9 @@ class RequireDashboardAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path.rstrip("/") or "/"
         if path.startswith("/dashboard"):
-            is_admin = getattr(request, "session", None)
-            if is_admin is not None and isinstance(is_admin, dict):
-                is_admin = is_admin.get("is_admin")
+            # Читаем из scope: session уже заполнена SessionMiddleware (он должен быть добавлен первым)
+            session = request.scope.get("session")
+            is_admin = isinstance(session, dict) and session.get("is_admin")
             if not is_admin:
                 return RedirectResponse(url=_login_url(request), status_code=302)
         return await call_next(request)
@@ -137,13 +137,13 @@ async def health_readiness():
 # --- ПОДКЛЮЧЕНИЕ СТАТИКИ И ШАБЛОНОВ ---
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Порядок middleware: Session, затем авторизация/лимиты (X-Forwarded-Proto проверяем в _login_url)
+# Порядок middleware: последний add = первый при обработке запроса. Нужно: Session -> Auth -> RateLimit -> app.
+app.add_middleware(LoginRateLimitMiddleware)
+app.add_middleware(RequireDashboardAuthMiddleware)
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SESSION_SECRET_KEY", "supersecretkey123") or "supersecretkey123",
 )
-app.add_middleware(RequireDashboardAuthMiddleware)
-app.add_middleware(LoginRateLimitMiddleware)
 
 
 # --- ПУБЛИЧНЫЕ МАРШРУТЫ ---

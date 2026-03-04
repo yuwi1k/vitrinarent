@@ -1,0 +1,19 @@
+# Не копировать в образ при docker build
+.env
+.env.*
+!.env.example
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.db
+.git/
+.gitignore
+.cursorrules
+*.md
+!README.md
+# Локальные данные (на хосте задаются через volume или env)
+data/

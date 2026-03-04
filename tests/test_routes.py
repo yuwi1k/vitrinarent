@@ -1,7 +1,11 @@
 """
-Ключевые сценарии: главная, поиск, карточка объекта, 404, дашборд без сессии, health-check.
+Ключевые сценарии: главная, поиск, карточка объекта, 404, дашборд без сессии, логин, health-check.
 """
+import os
+
 from fastapi.testclient import TestClient
+
+from app.admin_password import get_admin_password
 
 
 def test_health_liveness(client: TestClient):
@@ -70,6 +74,36 @@ def test_dashboard_properties_redirect_without_session(client: TestClient):
     r = client.get("/dashboard/properties", follow_redirects=False)
     assert r.status_code == 302
     assert "admin/login" in r.headers.get("location", "")
+
+
+def test_dashboard_after_login(client: TestClient):
+    """После успешного логина на /admin/login дашборд отдаёт 200 и контент."""
+    username = os.getenv("ADMIN_USERNAME", "admin")
+    password = get_admin_password()
+    r = client.post(
+        "/admin/login",
+        data={"username": username, "password": password},
+        follow_redirects=False,
+    )
+    assert r.status_code in (200, 302, 307), f"Login failed: {r.status_code} {r.text[:200]}"
+    # Может быть 307 (redirect) на /dashboard без слэша — идём с follow_redirects
+    r2 = client.get("/dashboard/", follow_redirects=True)
+    assert r2.status_code == 200, f"Dashboard should be 200 after login, got {r2.status_code}"
+    assert b"Vitrina" in r2.content or b"dashboard" in r2.content.lower()
+
+
+def test_dashboard_rejects_wrong_password(client: TestClient):
+    """Неверный пароль — логин не проходит, дашборд по-прежнему редиректит."""
+    r = client.post(
+        "/admin/login",
+        data={"username": "admin", "password": "wrong_password"},
+        follow_redirects=False,
+    )
+    # При неверном пароле SQLAdmin может вернуть 200 (форма с ошибкой) или 400
+    assert r.status_code in (200, 302, 400)
+    r2 = client.get("/dashboard/", follow_redirects=False)
+    assert r2.status_code == 302
+    assert "admin/login" in r2.headers.get("location", "")
 
 
 def test_avito_feed(client: TestClient):
