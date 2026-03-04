@@ -19,17 +19,27 @@ _LOGIN_RATE_LIMIT = 5
 _LOGIN_WINDOW_SEC = 60
 
 
+def _login_url(request: Request) -> str:
+    """URL страницы логина: тот же хост и схема (https при доступе по https)."""
+    base = getattr(request.url, "replace", None)
+    if base:
+        try:
+            return str(request.url.replace(path="/admin/login", query=""))
+        except Exception:
+            pass
+    return "/admin/login"
+
+
 class RequireDashboardAuthMiddleware(BaseHTTPMiddleware):
     """Редирект на /admin/login при заходе на /dashboard без авторизации."""
     async def dispatch(self, request: Request, call_next):
         path = request.url.path.rstrip("/") or "/"
         if path.startswith("/dashboard"):
-            # session может быть пустым dict, если куки нет
             is_admin = getattr(request, "session", None)
             if is_admin is not None and isinstance(is_admin, dict):
                 is_admin = is_admin.get("is_admin")
             if not is_admin:
-                return RedirectResponse(url="/admin/login", status_code=302)
+                return RedirectResponse(url=_login_url(request), status_code=302)
         return await call_next(request)
 
 
@@ -87,9 +97,11 @@ app = FastAPI(
 )
 
 
-# Редирект при HTTPException(302) — чтобы зависимости дашборда реально перенаправляли на логин
+# Редирект при HTTPException(302) — чтобы зависимости дашборда перенаправляли на логин по той же схеме (https)
 @app.exception_handler(HTTPException)
 async def http_exception_redirect(request: Request, exc: HTTPException):
+    if exc.status_code == 302 and (exc.headers or {}).get("Location") == "/admin/login":
+        return RedirectResponse(url=_login_url(request), status_code=302)
     if exc.status_code == 302 and "Location" in (exc.headers or {}):
         return RedirectResponse(url=exc.headers["Location"], status_code=302)
     from fastapi.responses import JSONResponse
