@@ -120,6 +120,11 @@
                         {% if parent.show_on_main %}
                         <span class="badge bg-blue-lt">На главной</span>
                         {% endif %}
+                        {% if parent.is_on_avito %}
+                        <span class="badge bg-purple-lt">Avito</span>
+                        {% else %}
+                        <span class="badge bg-secondary-lt">Без Avito</span>
+                        {% endif %}
                     </td>
                     <td>
                         <div class="btn-list flex-nowrap">
@@ -154,6 +159,11 @@
                                             <span class="badge bg-green text-white">Активен</span>
                                             {% else %}
                                             <span class="badge bg-red text-white">Скрыт</span>
+                                            {% endif %}
+                                            {% if ch.is_on_avito %}
+                                            <span class="badge bg-purple-lt">Avito</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary-lt">Без Avito</span>
                                             {% endif %}
                                         </td>
                                         <td>

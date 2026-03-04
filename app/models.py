@@ -75,6 +75,16 @@ class Property(Base):
     def extra_documents(self):
         return []
 
+    @property
+    def avito_id(self) -> str:
+        data = self.avito_data or {}
+        v = data.get("AvitoId") if isinstance(data, dict) else None
+        return str(v).strip() if v is not None else ""
+
+    @property
+    def is_on_avito(self) -> bool:
+        return bool(self.avito_id)
+
 
 # ТАБЛИЦА ДЛЯ ГАЛЕРЕИ (МНОГО ФОТО). image_url хранит путь, начинающийся с /static/
 class PropertyImage(Base):

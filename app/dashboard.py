@@ -24,6 +24,7 @@ from app.models import Property, PropertyImage, PropertyDocument
 from app.file_utils import get_upload_dirs, get_street_slug, resize_image_async, normalize_image_url
 from app.admin_password import get_admin_password, set_admin_password
 from app.feed import generate_avito_feed_full
+from app.avito_client import AvitoAutoloadClient
 from app.settings_store import get_settings_for_edit, save_settings
 
 # Разрешённые расширения для загрузок
@@ -120,13 +121,123 @@ async def export_avito_feed(db: AsyncSession = Depends(get_db)):
     )
 
 
+@router.get("/export/avito-new", dependencies=[Depends(check_admin)])
+async def export_avito_feed_new(db: AsyncSession = Depends(get_db)):
+    stmt = (
+        select(Property)
+        .where(Property.is_active.is_(True))
+        .options(selectinload(Property.images))
+        .order_by(Property.id.asc())
+    )
+    result = await db.execute(stmt)
+    all_properties = result.scalars().all()
+    properties = []
+    for p in all_properties:
+        data = getattr(p, "avito_data", None)
+        avito_id = ""
+        if isinstance(data, dict):
+            v = data.get("AvitoId")
+            avito_id = str(v).strip() if v is not None else ""
+        if not avito_id:
+            properties.append(p)
+    xml_bytes = generate_avito_feed_full(properties)
+    return Response(
+        content=xml_bytes,
+        media_type="application/xml",
+        headers={"Content-Disposition": 'attachment; filename="avito_feed_new.xml"'},
+    )
+
+
+@router.get("/export/avito-autoload-new", dependencies=[Depends(check_admin)])
+async def export_avito_feed_new_autoload(db: AsyncSession = Depends(get_db)):
+    """
+    Запускает автозагрузку по настроенному фиду Авито через Autoload API.
+    Возвращает JSON с кратким результатом.
+    """
+    client = AvitoAutoloadClient()
+    try:
+        result_payload = await client.upload_feed()
+        return JSONResponse(
+            {
+                "ok": True,
+                "message": "Автозагрузка через Autoload API Авито запущена.",
+                "api_result": result_payload,
+            }
+        )
+    except Exception as exc:
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": str(exc),
+            },
+            status_code=500,
+        )
+
+
+@router.get("/avito/sync", dependencies=[Depends(check_admin)])
+async def avito_sync_autoload_statuses(db: AsyncSession = Depends(get_db)):
+    """
+    Синхронизирует статусы автозагрузки из последнего завершённого отчёта:
+    проставляет AvitoId и статус в avito_data по полю ad_id (наш Property.id в фиде).
+    """
+    client = AvitoAutoloadClient()
+    try:
+        payload = await client.get_last_completed_report_items()
+    except Exception as exc:
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": str(exc),
+            },
+            status_code=200,
+        )
+
+    items = payload.get("items") or []
+    updated = 0
+    for item in items:
+        ad_id = item.get("ad_id")
+        if not ad_id:
+            continue
+        try:
+            prop_id = int(str(ad_id))
+        except ValueError:
+            continue
+        result = await db.execute(select(Property).where(Property.id == prop_id))
+        prop = result.scalar_one_or_none()
+        if not prop:
+            continue
+        data = getattr(prop, "avito_data", None) or {}
+        if not isinstance(data, dict):
+            data = {}
+        avito_id = item.get("avito_id")
+        if avito_id is not None:
+            data["AvitoId"] = str(avito_id)
+        section = item.get("section") or {}
+        section_slug = section.get("slug")
+        if section_slug:
+            data["AutoloadSectionSlug"] = section_slug
+        avito_status = item.get("avito_status")
+        if avito_status:
+            data["AvitoStatus"] = avito_status
+        prop.avito_data = data
+        updated += 1
+
+    await db.commit()
+    return JSONResponse(
+        {
+            "ok": True,
+            "updated": updated,
+            "total_items": len(items),
+        }
+    )
+
+
 # --- Стартовая страница дашборда: счётчики и быстрые действия ---
 @router.get("", dependencies=[Depends(check_admin)])
 async def dashboard_home(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    base = select(Property)
     total_r = await db.execute(select(func.count(Property.id)))
     total = total_r.scalar() or 0
     active_r = await db.execute(select(func.count(Property.id)).where(Property.is_active.is_(True)))
@@ -137,6 +248,16 @@ async def dashboard_home(
     rent_count = rent_r.scalar() or 0
     sale_r = await db.execute(select(func.count(Property.id)).where(Property.deal_type == "Продажа"))
     sale_count = sale_r.scalar() or 0
+    avito_rows_r = await db.execute(select(Property.avito_data))
+    avito_rows = avito_rows_r.scalars().all()
+    avito_published = 0
+    for data in avito_rows:
+        if not data or not isinstance(data, dict):
+            continue
+        v = data.get("AvitoId")
+        if v is not None and str(v).strip():
+            avito_published += 1
+    avito_not_published = max(0, (total or 0) - avito_published)
     return templates.TemplateResponse(
         "dashboard/home.html",
         {
@@ -146,6 +267,8 @@ async def dashboard_home(
             "on_main_count": on_main_count,
             "rent_count": rent_count,
             "sale_count": sale_count,
+            "avito_published": avito_published,
+            "avito_not_published": avito_not_published,
         },
     )
 
