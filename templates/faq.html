@@ -15,6 +15,17 @@
     <link rel="stylesheet" href="/static/css/style.css" />
 
     <style>
+      html { scroll-behavior: smooth; }
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      body .vitrina-page-hero { flex-shrink: 0; }
+      body main {
+        flex: 1;
+      }
+      body .site-footer { flex-shrink: 0; margin-top: auto; }
       .vitrina-header {
         position: absolute;
         top: 0;
@@ -59,11 +70,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 5rem 0 4rem;
         background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.65)), url('/static/images/hero_bg_2.png');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
       }
+      .vitrina-page-hero .container { padding-top: 3rem; padding-bottom: 1.5rem; }
       .vitrina-page-hero .vitrina-hero-title {
         font-size: clamp(1.75rem, 4vw, 2.5rem);
         font-weight: 700;
@@ -76,22 +89,33 @@
         font-size: 1rem;
         margin-bottom: 0;
       }
+      /* Секция контента — в духе каталога на главной */
+      .vitrina-faq-section {
+        background: rgba(90, 108, 125, 0.04);
+      }
       .vitrina-faq-card {
         background: #fff;
         border-radius: 12px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        border: 1px solid rgba(0,0,0,0.06);
         padding: 1.5rem 1.75rem;
         height: 100%;
-        border: 1px solid #f0f0f0;
+        border-left: 4px solid #5a6c7d;
       }
       .vitrina-faq-card .vitrina-faq-title {
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         font-weight: 600;
-        color: #1a1a1a;
+        color: #5a6c7d;
         margin-bottom: 1rem;
         font-family: 'Work Sans', sans-serif;
       }
-      .vitrina-faq-card ul { font-size: 0.9rem; color: #555; }
+      .vitrina-faq-card .vitrina-faq-subtitle {
+        color: #5a6c7d;
+        font-weight: 600;
+      }
+      .vitrina-faq-card ul,
+      .vitrina-faq-card p.small { font-size: 0.9rem; color: #495057; }
+      .vitrina-faq-card .vitrina-faq-bullet { color: #5a6c7d; }
       .skip-link { position: absolute; top: -3rem; left: 0.5rem; z-index: 9999; padding: 0.5rem 1rem; background: #5a6c7d; color: #fff; text-decoration: none; border-radius: 4px; }
       .skip-link:focus { top: 0.5rem; outline: 2px solid #fff; outline-offset: 2px; }
       a:focus-visible, button:focus-visible { outline: 2px solid #5a6c7d; outline-offset: 2px; }
@@ -125,51 +149,55 @@
     <div class="vitrina-page-hero">
       <div class="container text-center">
         <h1 class="vitrina-hero-title">FAQ — как использовать Vitrina</h1>
-        <p class="vitrina-hero-subtitle">Ответы на частые вопросы агентов, арендаторов и собственников</p>
+        <p class="vitrina-hero-subtitle">Условия для агентов и кому мы покупаем коммерческую недвижимость</p>
       </div>
     </div>
 
-    <main id="main-content" class="section" tabindex="-1">
+    <main id="main-content" class="section vitrina-faq-section" tabindex="-1">
       <div class="container">
         <div class="row g-4">
-          <div class="col-md-6 col-lg-4">
+          <div class="col-md-6">
             <div class="vitrina-faq-card">
               <h2 class="vitrina-faq-title">Для агентов</h2>
               <ul class="list-unstyled small mb-0">
-                <li class="mb-2"><strong>Как добавить объект?</strong><br />Через админ‑панель в разделе «Объекты недвижимости» нажмите «Создать» и заполните карточку.</li>
-                <li class="mb-2"><strong>Как прикрепить фото и документы?</strong><br />В форме объекта загрузите превью, дополнительное фото и документы — они сохранятся в галерею и раздел «Документы».</li>
-                <li class="mb-2"><strong>Как отправить подборку клиенту?</strong><br />Используйте поиск, откройте подходящие карточки и отправьте ссылки или выгрузите XML для Авито.</li>
-                <li class="mb-0"><strong>Кто видит объекты?</strong><br />Только пользователи с доступом к внутреннему каталогу вашего агентства.</li>
+                <li class="mb-2"><strong>Комиссия за продажу</strong><br />2% от суммы сделки.</li>
+                <li class="mb-2"><strong>Комиссия за аренду</strong><br />50% от первого месячного платежа (1 МАП — месячная арендная плата).</li>
+                <li class="mb-2"><strong>Документы</strong><br />Агент предоставляет Акт просмотра объекта.</li>
+                <li class="mb-2"><strong>Выплата комиссионных</strong><br />Комиссионные выплачиваются после полной оплаты покупки (или после получения арендодателем первого платежа по аренде).</li>
+                <li class="mb-0"><strong>Условия сотрудничества</strong><br />Детали можно уточнить при обращении.</li>
               </ul>
             </div>
           </div>
 
-          <div class="col-md-6 col-lg-4">
+          <div class="col-md-6">
             <div class="vitrina-faq-card">
-              <h2 class="vitrina-faq-title">Для арендаторов</h2>
-              <ul class="list-unstyled small mb-0">
-                <li class="mb-2"><strong>Как подобрать помещение?</strong><br />Перейдите в раздел «Поиск» и задайте тип сделки, назначение и бюджет.</li>
-                <li class="mb-2"><strong>Что видно в карточке объекта?</strong><br />Адрес, площадь, описание, фото, а также условия сделки.</li>
-                <li class="mb-2"><strong>Как уточнить детали?</strong><br />По вопросам по объекту обращайтесь к вашему агенту (тому, кто прислал ссылку) — он видит все данные по объекту.</li>
-                <li class="mb-0"><strong>Насколько актуальны объекты?</strong><br />Каталог ведётся агентством и регулярно обновляется.</li>
+              <h2 class="vitrina-faq-title mb-3">Мы покупаем коммерческую недвижимость</h2>
+              <p class="small mb-3">Рассматриваем объекты от 5 000 м²: отдельные здания и комплексы, в том числе с обременениями или на торгах. Готовы выкупить как актив компании, так и объект недвижимости.</p>
+              <ul class="list-unstyled small mb-3">
+                <li class="mb-2 d-flex align-items-start"><span class="vitrina-faq-bullet me-2">•</span> Площадь от 5 000 м²</li>
+                <li class="mb-2 d-flex align-items-start"><span class="vitrina-faq-bullet me-2">•</span> Отдельные здания и здания в составе комплексов</li>
+                <li class="mb-2 d-flex align-items-start"><span class="vitrina-faq-bullet me-2">•</span> Объекты на торгах и с долгами</li>
+                <li class="mb-2 d-flex align-items-start"><span class="vitrina-faq-bullet me-2">•</span> Покупка компании с недвижимостью</li>
+                <li class="mb-0 d-flex align-items-start"><span class="vitrina-faq-bullet me-2">•</span> Прямая покупка объекта недвижимости</li>
               </ul>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-4">
-            <div class="vitrina-faq-card">
-              <h2 class="vitrina-faq-title">Мы покупаем / собственники</h2>
-              <ul class="list-unstyled small mb-0">
-                <li class="mb-2"><strong>Можно ли вести объекты под выкуп?</strong><br />Да, вы можете отмечать такие объекты отдельной категорией и фильтровать их в поиске.</li>
-                <li class="mb-2"><strong>Где хранить документы?</strong><br />В карточке объекта прикрепляйте планы, договоры и презентации — всё будет доступно в один клик.</li>
-                <li class="mb-2"><strong>Как оценивать объект?</strong><br />Используйте цену, площадь, тип помещения и местоположение; при необходимости экспортируйте данные для дальнейшего анализа.</li>
-                <li class="mb-0"><strong>Кто имеет доступ к документам?</strong><br />Доступ ограничен внутренними пользователями агентства.</li>
-              </ul>
+              <p class="small mb-0">Опишите объект или пришлите презентацию — мы рассмотрим и свяжемся с вами.</p>
             </div>
           </div>
         </div>
       </div>
     </main>
+
+    <footer class="site-footer section py-4">
+      <div class="container">
+        <div class="row">
+          <div class="col-12 text-center">
+            <p class="mb-0 small text-muted">
+              &copy; <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов.
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
 
     <script src="/static/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/tiny-slider.js"></script>

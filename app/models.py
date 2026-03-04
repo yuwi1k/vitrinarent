@@ -28,6 +28,8 @@ class Property(Base):
     avito_object_type = Column(String, nullable=True)
     # Доп. поля шаблона Авито (ключи — имена тегов, значения — строки/числа для XML)
     avito_data = Column(JSON, nullable=True)
+    # Данные по объявлению на Циан (CianOfferId, status и т.д.)
+    cian_data = Column(JSON, nullable=True)
 
     # Координаты для карты
     latitude = Column(Float, nullable=True)
@@ -84,6 +86,16 @@ class Property(Base):
     @property
     def is_on_avito(self) -> bool:
         return bool(self.avito_id)
+
+    @property
+    def cian_offer_id(self) -> str:
+        data = self.cian_data or {}
+        v = data.get("CianOfferId") if isinstance(data, dict) else None
+        return str(v).strip() if v is not None else ""
+
+    @property
+    def is_on_cian(self) -> bool:
+        return bool(self.cian_offer_id)
 
 
 # ТАБЛИЦА ДЛЯ ГАЛЕРЕИ (МНОГО ФОТО). image_url хранит путь, начинающийся с /static/

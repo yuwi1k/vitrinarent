@@ -1,0 +1,278 @@
+"""
+Экспорт фидов (Авито, Циан), CSV и синхронизация статусов.
+"""
+import csv
+import io
+
+from fastapi import APIRouter, Depends
+from fastapi.responses import Response, JSONResponse
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.database import get_db
+from app.dashboard.common import check_admin
+from app.models import Property
+from app.feed import generate_avito_feed_full
+from app.feed_cian import generate_cian_feed
+from app.avito_client import AvitoAutoloadClient
+from app.cian_client import CianApiClient
+
+router = APIRouter()
+
+
+@router.get("/export/avito", dependencies=[Depends(check_admin)])
+async def export_avito_feed(db: AsyncSession = Depends(get_db)):
+    stmt = (
+        select(Property)
+        .where(Property.is_active.is_(True))
+        .options(selectinload(Property.images))
+        .order_by(Property.id.asc())
+    )
+    result = await db.execute(stmt)
+    properties = result.scalars().all()
+    xml_bytes = generate_avito_feed_full(properties)
+    return Response(
+        content=xml_bytes,
+        media_type="application/xml",
+        headers={"Content-Disposition": 'attachment; filename="avito_feed.xml"'},
+    )
+
+
+@router.get("/export/avito-new", dependencies=[Depends(check_admin)])
+async def export_avito_feed_new(db: AsyncSession = Depends(get_db)):
+    stmt = (
+        select(Property)
+        .where(Property.is_active.is_(True))
+        .options(selectinload(Property.images))
+        .order_by(Property.id.asc())
+    )
+    result = await db.execute(stmt)
+    all_properties = result.scalars().all()
+    properties = []
+    for p in all_properties:
+        data = getattr(p, "avito_data", None)
+        avito_id = ""
+        if isinstance(data, dict):
+            v = data.get("AvitoId")
+            avito_id = str(v).strip() if v is not None else ""
+        if not avito_id:
+            properties.append(p)
+    xml_bytes = generate_avito_feed_full(properties)
+    return Response(
+        content=xml_bytes,
+        media_type="application/xml",
+        headers={"Content-Disposition": 'attachment; filename="avito_feed_new.xml"'},
+    )
+
+
+@router.get("/export/avito-autoload-new", dependencies=[Depends(check_admin)])
+async def export_avito_feed_new_autoload(db: AsyncSession = Depends(get_db)):
+    """
+    Запускает автозагрузку по настроенному фиду Авито через Autoload API.
+    Возвращает JSON с кратким результатом.
+    """
+    client = AvitoAutoloadClient()
+    try:
+        result_payload = await client.upload_feed()
+        return JSONResponse(
+            {
+                "ok": True,
+                "message": "Автозагрузка через Autoload API Авито запущена.",
+                "api_result": result_payload,
+            }
+        )
+    except Exception as exc:
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": str(exc),
+            },
+            status_code=500,
+        )
+
+
+@router.get("/avito/sync", dependencies=[Depends(check_admin)])
+async def avito_sync_autoload_statuses(db: AsyncSession = Depends(get_db)):
+    """
+    Синхронизирует статусы автозагрузки из последнего завершённого отчёта:
+    проставляет AvitoId и статус в avito_data по полю ad_id (наш Property.id в фиде).
+    """
+    client = AvitoAutoloadClient()
+    try:
+        payload = await client.get_last_completed_report_items()
+    except Exception as exc:
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": str(exc),
+            },
+            status_code=200,
+        )
+
+    items = payload.get("items") or []
+    updated = 0
+    for item in items:
+        ad_id = item.get("ad_id")
+        if not ad_id:
+            continue
+        try:
+            prop_id = int(str(ad_id))
+        except ValueError:
+            continue
+        result = await db.execute(select(Property).where(Property.id == prop_id))
+        prop = result.scalar_one_or_none()
+        if not prop:
+            continue
+        data = getattr(prop, "avito_data", None) or {}
+        if not isinstance(data, dict):
+            data = {}
+        avito_id = item.get("avito_id")
+        if avito_id is not None:
+            data["AvitoId"] = str(avito_id)
+        section = item.get("section") or {}
+        section_slug = section.get("slug")
+        if section_slug:
+            data["AutoloadSectionSlug"] = section_slug
+        avito_status = item.get("avito_status")
+        if avito_status:
+            data["AvitoStatus"] = avito_status
+        prop.avito_data = data
+        updated += 1
+
+    await db.commit()
+    return JSONResponse(
+        {
+            "ok": True,
+            "updated": updated,
+            "total_items": len(items),
+        }
+    )
+
+
+@router.get("/export/cian", dependencies=[Depends(check_admin)])
+async def export_cian_feed(db: AsyncSession = Depends(get_db)):
+    """Скачать XML-фид для выгрузки на Циан (коммерческая недвижимость)."""
+    stmt = (
+        select(Property)
+        .where(Property.is_active.is_(True), Property.parent_id.is_(None))
+        .options(selectinload(Property.images))
+        .order_by(Property.id.asc())
+    )
+    result = await db.execute(stmt)
+    properties = result.scalars().all()
+    xml_bytes = generate_cian_feed(properties)
+    return Response(
+        content=xml_bytes,
+        media_type="application/xml",
+        headers={"Content-Disposition": 'attachment; filename="cian_feed.xml"'},
+    )
+
+
+@router.get("/cian/import-status", dependencies=[Depends(check_admin)])
+async def cian_import_status():
+    """Получить состояние последнего импорта фида на Циан (get-last-order-info)."""
+    client = CianApiClient()
+    try:
+        data = await client.get_last_order_info()
+        return JSONResponse({"ok": True, "data": data})
+    except Exception as exc:
+        return JSONResponse(
+            {"ok": False, "error": str(exc)},
+            status_code=500,
+        )
+
+
+@router.get("/cian/sync", dependencies=[Depends(check_admin)])
+async def cian_sync_offer_statuses(db: AsyncSession = Depends(get_db)):
+    """
+    Синхронизирует статусы объявлений из API Циан (get-my-offers).
+    Сопоставление по externalId = Property.id, сохраняет CianOfferId и статус в cian_data.
+    """
+    client = CianApiClient()
+    try:
+        all_announcements = []
+        page = 1
+        page_size = 100
+        while True:
+            resp = await client.get_my_offers(page=page, page_size=page_size)
+            result = (resp.get("result") or {}) if isinstance(resp.get("result"), dict) else {}
+            announcements = result.get("announcements") or []
+            all_announcements.extend(announcements)
+            total = result.get("totalCount")
+            if total is not None and len(all_announcements) >= total:
+                break
+            if len(announcements) < page_size:
+                break
+            page += 1
+    except Exception as exc:
+        return JSONResponse(
+            {"ok": False, "error": str(exc)},
+            status_code=500,
+        )
+
+    updated = 0
+    for ann in all_announcements:
+        external_id = ann.get("externalId")
+        if external_id is None:
+            continue
+        try:
+            prop_id = int(str(external_id))
+        except (ValueError, TypeError):
+            continue
+        result = await db.execute(select(Property).where(Property.id == prop_id))
+        prop = result.scalar_one_or_none()
+        if not prop:
+            continue
+        data = getattr(prop, "cian_data", None) or {}
+        if not isinstance(data, dict):
+            data = {}
+        cian_id = ann.get("id")
+        if cian_id is not None:
+            data["CianOfferId"] = str(cian_id)
+        status = ann.get("status")
+        if status:
+            data["CianStatus"] = status
+        prop.cian_data = data
+        updated += 1
+
+    await db.commit()
+    return JSONResponse(
+        {
+            "ok": True,
+            "updated": updated,
+            "total_offers": len(all_announcements),
+        }
+    )
+
+
+@router.get("/export/csv", dependencies=[Depends(check_admin)])
+async def export_properties_csv(db: AsyncSession = Depends(get_db)):
+    stmt = (
+        select(Property)
+        .where(Property.parent_id.is_(None))
+        .order_by(Property.id.asc())
+    )
+    result = await db.execute(stmt)
+    properties = result.scalars().all()
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=";")
+    writer.writerow(["id", "title", "slug", "deal_type", "category", "price", "area", "address", "is_active", "show_on_main"])
+    for p in properties:
+        writer.writerow([
+            p.id,
+            (p.title or ""),
+            (p.slug or ""),
+            (p.deal_type or ""),
+            (p.category or ""),
+            p.price or 0,
+            p.area or 0,
+            (p.address or ""),
+            "да" if p.is_active else "нет",
+            "да" if p.show_on_main else "нет",
+        ])
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="properties.csv"'},
+    )

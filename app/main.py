@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -20,25 +19,24 @@ _LOGIN_WINDOW_SEC = 60
 
 
 def _login_url(request: Request) -> str:
-    """URL страницы логина: тот же хост и схема (https если nginx передал X-Forwarded-Proto)."""
+    """URL страницы логина дашборда: тот же хост и схема (https если nginx передал X-Forwarded-Proto)."""
     try:
         proto = (request.headers.get("x-forwarded-proto") or "").strip().lower()
         if proto == "https":
             host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
-            return f"https://{host.rstrip('/')}/admin/login"
-        url = request.url.replace(path="/admin/login", query="")
+            return f"https://{host.rstrip('/')}/dashboard/login"
+        url = request.url.replace(path="/dashboard/login", query="")
         return str(url)
     except Exception:
         pass
-    return "/admin/login"
+    return "/dashboard/login"
 
 
 class RequireDashboardAuthMiddleware(BaseHTTPMiddleware):
-    """Редирект на /admin/login при заходе на /dashboard без авторизации."""
+    """Редирект на /dashboard/login при заходе на /dashboard без авторизации (кроме /dashboard/login)."""
     async def dispatch(self, request: Request, call_next):
-        path = request.url.path.rstrip("/") or "/"
-        if path.startswith("/dashboard"):
-            # Читаем из scope: session уже заполнена SessionMiddleware (он должен быть добавлен первым)
+        path = (request.url.path or "").rstrip("/") or "/"
+        if path.startswith("/dashboard") and not path.startswith("/dashboard/login"):
             session = request.scope.get("session")
             is_admin = isinstance(session, dict) and session.get("is_admin")
             if not is_admin:
@@ -48,7 +46,7 @@ class RequireDashboardAuthMiddleware(BaseHTTPMiddleware):
 
 class LoginRateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.url.path == "/admin/login" and request.method == "POST":
+        if request.url.path == "/dashboard/login" and request.method == "POST":
             client = request.client.host if request.client else "unknown"
             now = time.monotonic()
             # Удаляем старые попытки
@@ -82,14 +80,6 @@ def _require_production_secrets() -> None:
 
 _require_production_secrets()
 
-from app.database import engine
-from app.admin_views import (
-    AdminAuth,
-    PropertyAdmin,
-    PropertyImageAdmin,
-    PropertyDocumentAdmin,
-    ObjectFoldersView,
-)
 from app.routers import router as public_router
 from app.dashboard import router as dashboard_router
 
@@ -103,7 +93,7 @@ app = FastAPI(
 # Редирект при HTTPException(302) — чтобы зависимости дашборда перенаправляли на логин по той же схеме (https)
 @app.exception_handler(HTTPException)
 async def http_exception_redirect(request: Request, exc: HTTPException):
-    if exc.status_code == 302 and (exc.headers or {}).get("Location") == "/admin/login":
+    if exc.status_code == 302 and (exc.headers or {}).get("Location") == "/dashboard/login":
         return RedirectResponse(url=_login_url(request), status_code=302)
     if exc.status_code == 302 and "Location" in (exc.headers or {}):
         return RedirectResponse(url=exc.headers["Location"], status_code=302)
@@ -149,15 +139,5 @@ app.add_middleware(
 # --- ПУБЛИЧНЫЕ МАРШРУТЫ ---
 app.include_router(public_router)
 
-# --- ДАШБОРД МЕНЕДЖЕРОВ ---
+# --- ДАШБОРД МЕНЕДЖЕРОВ (единственная панель управления) ---
 app.include_router(dashboard_router)
-
-# --- ПОДКЛЮЧЕНИЕ АДМИНКИ ---
-authentication_backend = AdminAuth(
-    secret_key=os.getenv("SESSION_SECRET_KEY", "supersecretkey123") or "supersecretkey123",
-)
-admin = Admin(app, engine, authentication_backend=authentication_backend)
-admin.add_base_view(ObjectFoldersView)
-admin.add_view(PropertyAdmin)
-admin.add_view(PropertyImageAdmin)
-admin.add_view(PropertyDocumentAdmin)

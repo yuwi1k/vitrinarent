@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вход — Vitrina</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+</head>
+<body class="d-flex flex-column">
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            <div class="text-center mb-4">
+                <a href="/" class="navbar-brand navbar-brand-autodark">
+                    <h1 class="h2 mb-0">Vitrina</h1>
+                </a>
+                <p class="text-muted mt-2">Панель управления</p>
+            </div>
+            <div class="card card-md">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Вход в панель</h2>
+                    {% if error %}
+                    <div class="alert alert-danger" role="alert">{{ error }}</div>
+                    {% endif %}
+                    <form action="/dashboard/login" method="post" autocomplete="off">
+                        <div class="mb-3">
+                            <label class="form-label" for="username">Логин</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="admin" autocomplete="username" value="{{ username or '' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="password">Пароль</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Пароль" autocomplete="current-password" required>
+                        </div>
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary w-100">Войти</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <p class="text-center text-muted mt-3 small">
+                <a href="/">На сайт</a>
+            </p>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+</body>
+</html>

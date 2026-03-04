@@ -17,14 +17,33 @@
                 <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
                     <a href="/dashboard">Vitrina</a>
                 </h1>
-                <div class="navbar-nav flex-row order-md-last gap-2">
-                    <a href="/dashboard/export/avito" class="btn btn-outline-primary btn-sm" download="avito_feed.xml" title="Полный XML по шаблонам Продам/Сдам, контакты из настроек или .env">Скачать фид Авито</a>
-                    <a href="/dashboard/export/avito-new" class="btn btn-outline-primary btn-sm" download="avito_feed_new.xml" title="Только объекты без AvitoId (ещё не выгружены на Авито)">Фид новых для Авито</a>
-                    <a href="/dashboard/export/avito-autoload-new" class="btn btn-outline-success btn-sm" title="Отправить новых на Авито через Autoload API (нужны ключи и URL в .env)">Отправить новых на Авито</a>
-                    <a href="/dashboard/avito/sync" class="btn btn-outline-success btn-sm" title="Подтянуть AvitoId и статусы из последнего отчёта автозагрузки">Синхронизировать статусы Авито</a>
-                    <button type="button" class="btn btn-outline-primary btn-sm" id="copy-feed-url-btn" data-feed-url="{{ (request.base_url | string) ~ 'avito.xml' }}" title="Вставить этот URL в настройках автозагрузки в ЛК Авито — объявления будут подтягиваться по расписанию Авито">Скопировать URL фида</button>
+                <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+                    <div class="nav-item dropdown">
+                        <a href="#" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Авито</a>
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <a class="dropdown-item" href="/dashboard/export/avito" download="avito_feed.xml" title="Полный XML по шаблонам Продам/Сдам">Скачать фид Авито</a>
+                            <a class="dropdown-item" href="/dashboard/export/avito-new" download="avito_feed_new.xml" title="Только объекты без AvitoId">Фид новых для Авито</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="/dashboard/export/avito-autoload-new" title="Отправить через Autoload API">Отправить новых на Авито</a>
+                            <a class="dropdown-item" href="/dashboard/avito/sync" title="Подтянуть AvitoId из отчёта">Синхронизировать статусы Авито</a>
+                            <div class="dropdown-divider"></div>
+                            <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/avito.xml" title="URL для настройки автозагрузки в ЛК Авито">Скопировать URL фида</button>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="/dashboard/settings">Настройки (контакты для фида)</a>
+                        </div>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a href="#" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Циан</a>
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <a class="dropdown-item" href="/dashboard/export/cian" download="cian_feed.xml" title="XML для импорта в ЛК Циан">Скачать фид Циан</a>
+                            <a class="dropdown-item" href="/dashboard/cian/import-status" id="cian-import-status-btn" title="Состояние последней выгрузки">Статус импорта Циан</a>
+                            <a class="dropdown-item" href="/dashboard/cian/sync" title="Подтянуть CianOfferId и статус из API">Синхронизировать статусы Циан</a>
+                            <div class="dropdown-divider"></div>
+                            <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/cian.xml" title="URL фида для настройки в ЛК Циан">Скопировать URL фида</button>
+                        </div>
+                    </div>
                     <a href="/dashboard/export/csv" class="btn btn-outline-secondary btn-sm">Экспорт CSV</a>
-                    <a href="/admin/logout" class="btn btn-outline-danger btn-sm">Выйти</a>
+                    <a href="/dashboard/logout" class="btn btn-outline-danger btn-sm">Выйти</a>
                 </div>
                 <div class="collapse navbar-collapse" id="navbar-menu">
                     <ul class="navbar-nav">
@@ -39,9 +58,6 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.url.path.startswith('/dashboard/folders') %}active{% endif %}" href="/dashboard/folders">Файлы</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.url.path == '/dashboard/settings' %}active{% endif %}" href="/dashboard/settings">Настройки</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.url.path == '/dashboard/settings/password' %}active{% endif %}" href="/dashboard/settings/password">Сменить пароль</a>
@@ -61,26 +77,31 @@
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
     <script>
       (function () {
-        var btn = document.getElementById('copy-feed-url-btn');
-        if (!btn) return;
-        var url = btn.getAttribute('data-feed-url');
-        if (!url) return;
-        btn.addEventListener('click', function () {
-          navigator.clipboard.writeText(url).then(function () {
-            var t = btn.textContent;
-            btn.textContent = 'Скопировано';
-            btn.classList.add('btn-success');
-            btn.classList.remove('btn-outline-primary');
-            setTimeout(function () {
-              btn.textContent = t;
-              btn.classList.remove('btn-success');
-              btn.classList.add('btn-outline-primary');
-            }, 2000);
-          }).catch(function () {
-            btn.textContent = 'Ошибка';
-            setTimeout(function () { btn.textContent = 'Скопировать URL фида'; }, 1500);
+        var base = window.location.origin;
+        document.querySelectorAll('.copy-feed-url-btn').forEach(function (btn) {
+          var path = btn.getAttribute('data-feed-path');
+          if (!path) return;
+          var url = path.indexOf('http') === 0 ? path : (base + path);
+          var originalText = btn.textContent;
+          btn.addEventListener('click', function () {
+            navigator.clipboard.writeText(url).then(function () {
+              btn.textContent = 'Скопировано';
+              btn.classList.add('text-success');
+              setTimeout(function () {
+                btn.textContent = originalText;
+                btn.classList.remove('text-success');
+              }, 2000);
+            }).catch(function () {
+              btn.textContent = 'Ошибка';
+              setTimeout(function () { btn.textContent = originalText; }, 1500);
+            });
           });
         });
+        var cianStatusBtn = document.getElementById('cian-import-status-btn');
+        if (cianStatusBtn) {
+          cianStatusBtn.setAttribute('target', '_blank');
+          cianStatusBtn.setAttribute('rel', 'noopener');
+        }
       })();
     </script>
     {% block tail %}{% endblock %}

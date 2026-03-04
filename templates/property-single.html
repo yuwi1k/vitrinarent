@@ -24,6 +24,10 @@
     <meta property="og:locale" content="ru_RU" />
 
     <style>
+      html { scroll-behavior: smooth; }
+      body { display: flex; flex-direction: column; min-height: 100vh; }
+      body main { flex: 1; }
+      body .site-footer { flex-shrink: 0; margin-top: auto; }
       .vitrina-header {
         position: absolute;
         top: 0;
@@ -353,9 +357,8 @@
       <div class="container">
         <div class="row">
           <div class="col-12 text-center">
-            <p class="mb-0">
-              &copy; <script>document.write(new Date().getFullYear());</script>
-              vitrina.rent — сервис для агентов.
+            <p class="mb-0 small text-muted">
+              &copy; <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов.
             </p>
           </div>
         </div>

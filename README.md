@@ -1,11 +1,11 @@
 ## Vitrina Rent — каталог коммерческой недвижимости
 
-Внутренний сайт‑каталог для агентов: поиск объектов, карточки с фото и документами, дашборд менеджеров, выгрузка фида Авито.
+Внутренний сайт‑каталог для агентов: поиск объектов, карточки с фото и документами, дашборд менеджеров, выгрузка фидов Авито и Циан.
 
 - **Backend**: FastAPI, SQLAlchemy 2 (async), PostgreSQL  
 - **UI**: Jinja2‑шаблоны, Bootstrap/Tabler, адаптивная вёрстка  
-- **Админка**: SQLAdmin + кастомный дашборд `/dashboard`  
-- **Интеграция**: полный XML‑фид Авито (Коммерческая недвижимость)
+- **Панель управления**: дашборд `/dashboard` с собственной формой входа  
+- **Интеграция**: XML‑фиды Авито и Циан (коммерческая недвижимость), API Циан для статуса импорта и синхронизации объявлений
 
 ---
 
@@ -14,16 +14,15 @@
 - `app/` — код приложения
   - `main.py` — точка входа FastAPI
   - `models.py` — модели БД (`Property`, `PropertyImage`, `PropertyDocument`)
-  - `routers.py` — публичные страницы (`/`, `/search`, `/property/{slug}`, `/faq`, `/avito.xml`)
-  - `dashboard.py` — дашборд менеджеров (`/dashboard/...`)
-  - `admin_views.py` — SQLAdmin (`/admin/...`)
+  - `routers.py` — публичные страницы (`/`, `/search`, `/property/{slug}`, `/faq`, `/avito.xml`, `/cian.xml`)
+  - `dashboard.py` — дашборд менеджеров (`/dashboard/...`, логин на `/dashboard/login`)
   - `services.py` — логика поиска
-  - `feed.py` — генерация XML‑фидов Авито
+  - `feed.py` — генерация XML‑фидов Авито; `feed_cian.py` — фид Циан; `cian_client.py` — клиент API Циан
   - `file_utils.py` — работа с файлами/папками и ресайз изображений
   - `database.py` — подключение к PostgreSQL (async/sync)
   - `config.py` — настройки из `.env`
   - `admin_password.py` / `settings_store.py` — пароль админа и настройки фида
-- `templates/` — Jinja2‑шаблоны (публичные + дашборд + SQLAdmin)
+- `templates/` — Jinja2‑шаблоны (публичные + дашборд)
 - `static/` — статика (CSS/JS/шрифты) и загруженные файлы (`static/uploads/...`)
 - `migrations/` — миграции Alembic
 - `tests/` — pytest‑тесты
@@ -92,25 +91,23 @@ uvicorn app.main:app --reload
 - Карточка объекта: `/property/{slug_or_id}`
 - FAQ: `/faq`
 - Публичный упрощённый фид Авито: `/avito.xml`
-- Дашборд менеджеров: `/dashboard` (нужна авторизация)
-- SQLAdmin: `/admin`
+- Публичный фид Циан (импорт по URL в ЛК Циан): `/cian.xml`
+- Дашборд менеджеров: `/dashboard` (вход на `/dashboard/login`)
 
 ---
 
 ## 4. Авторизация и дашборд
 
-1. Зайди на `/admin`.
+1. Зайди на `/dashboard/login`.
 2. Логин/пароль берутся из `.env` (`ADMIN_USERNAME` / `ADMIN_PASSWORD`) или файла `data/.admin_password`.
-3. После успешного логина:
-   - доступен SQLAdmin, модели и BaseView «Папки объектов»;
-   - в дашборде (`/dashboard`) доступны:
-     - главная с отчётами;
-     - список объектов (`/dashboard/properties`);
-     - формы создания/редактирования/копирования объекта;
-     - управление файлами (`/dashboard/folders`);
-     - настройки (контакты для фида) и смена пароля.
+3. После успешного входа доступна панель `/dashboard`:
+   - главная с отчётами;
+   - список объектов (`/dashboard/properties`);
+   - формы создания/редактирования/копирования объекта;
+   - управление файлами (`/dashboard/folders`);
+   - настройки (контакты для фида) и смена пароля.
 
-Пароль админа можно сменить в `/dashboard/settings/password` — он запишется в `data/.admin_password`.
+Пароль можно сменить в `/dashboard/settings/password` — он сохраняется в `data/.admin_password`.
 
 ---
 
@@ -201,7 +198,16 @@ uvicorn app.main:app --reload
 
 ---
 
-## 8. Тесты
+## 8. Фид и API Циан
+
+- **Публичный фид**: `/cian.xml` — XML для импорта объявлений (коммерческая недвижимость). URL фида указывается в личном кабинете Циан.
+- **Дашборд** (меню «Циан»): скачать фид, посмотреть статус последнего импорта (`/dashboard/cian/import-status`), синхронизировать статусы объявлений из API (`/dashboard/cian/sync`), скопировать URL фида.
+- **Переменные окружения**: `CIAN_ACCESS_KEY` (ключ запрашивается у import@cian.ru с темой "ACCESS KEY"), при необходимости `CIAN_API_BASE_URL` (по умолчанию `https://public-api.cian.ru`).
+- Модули: `app/feed_cian.py` (генерация фида), `app/cian_client.py` (get-last-order-info, get-my-offers). В модели `Property` поле `cian_data` (JSON) хранит `CianOfferId` и `CianStatus` после синхронизации.
+
+---
+
+## 9. Тесты
 
 Запуск pytest (из venv):
 
@@ -221,7 +227,7 @@ python -m pytest tests/ -v
 
 ---
 
-## 9. Деплой в продакшн (кратко)
+## 10. Деплой в продакшн (кратко)
 
 Один из типовых вариантов:
 
@@ -241,11 +247,11 @@ python -m pytest tests/ -v
 
 ---
 
-## 10. Полезные ссылки по коду
+## 11. Полезные ссылки по коду
 
 - Публичные роуты: `app/routers.py`
 - Дашборд: `app/dashboard.py`, `templates/dashboard/*.html`
-- SQLAdmin: `app/admin_views.py`
 - Файлы и папки: `app/file_utils.py`, `templates/dashboard/folders.html`, `templates/dashboard/folder_view.html`
 - Фид Авито: `app/feed.py`, `templates/dashboard/form.html` (вкладка «Авито»)
+- Фид и API Циан: `app/feed_cian.py`, `app/cian_client.py`
 

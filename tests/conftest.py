@@ -1,6 +1,11 @@
 """Pytest fixtures: клиент приложения для тестов."""
+import os
+
 import pytest
 from fastapi.testclient import TestClient
+
+# До импорта app: включаем NullPool для async БД в тестах (избегаем "another operation is in progress")
+os.environ["TESTING"] = "1"
 
 from app.main import app
 

@@ -32,11 +32,13 @@ def test_build_search_query_category_filter():
 
 
 def test_build_search_query_price_filters():
-    """Фильтры min_price/max_price добавляют условия."""
+    """Фильтры min_price/max_price задают центр диапазона ±30% (см. services.py)."""
     stmt = build_search_query(min_price="100000", max_price="500000")
     compiled = stmt.compile(compile_kwargs={"literal_binds": True})
     text = str(compiled)
-    assert "100000" in text and "500000" in text
+    # Центр (100000+500000)/2 = 300000 → low=210000, high=390000
+    assert "210000" in text and "390000" in text
+    assert "price" in text.lower()
 
 
 def test_build_search_query_text_search():

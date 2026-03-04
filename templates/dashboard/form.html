@@ -35,6 +35,9 @@
             <a href="#pane-avito" class="nav-link" data-bs-toggle="tab" role="tab">Авито</a>
         </li>
         <li class="nav-item" role="presentation">
+            <a href="#pane-cian" class="nav-link" data-bs-toggle="tab" role="tab">Циан</a>
+        </li>
+        <li class="nav-item" role="presentation">
             <a href="#pane-settings" class="nav-link" data-bs-toggle="tab" role="tab">Настройки</a>
         </li>
     </ul>
@@ -744,6 +747,242 @@
             </div>
         </div>
 
+        <div class="tab-pane" id="pane-cian" role="tabpanel">
+            {% set cian = (model.cian_data or {}) if model else {} %}
+            {% set deal_rent_cian = (model and (model.deal_type or '') == 'Аренда') %}
+            {% set deal_sale_cian = (model and (model.deal_type or '') == 'Продажа') %}
+            <input type="hidden" name="cian_data_json" id="cian_data_json" value="">
+            <p class="text-muted small mb-3">Параметры для фида Циан (коммерческая недвижимость). Title, Price, Address, Description, Images — из вкладок выше. Id в фиде = ID объекта в системе.</p>
+
+            <h5 class="mt-2 mb-2 text-secondary"><span class="badge bg-secondary me-2">Категория Циан</span></h5>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Категория объявления Циан</label>
+                                <select class="form-select cian-field" name="cian_CianCategory" data-key="CianCategory" id="cian-category-select">
+                                    {% if deal_rent_cian %}
+                                    <option value="freeAppointmentObjectRent" {% if cian.get('CianCategory', 'freeAppointmentObjectRent') == 'freeAppointmentObjectRent' %}selected{% endif %}>Помещение свободного назначения</option>
+                                    <option value="officeRent" {% if cian.get('CianCategory') == 'officeRent' %}selected{% endif %}>Офис</option>
+                                    <option value="warehouseRent" {% if cian.get('CianCategory') == 'warehouseRent' %}selected{% endif %}>Склад</option>
+                                    <option value="industryRent" {% if cian.get('CianCategory') == 'industryRent' %}selected{% endif %}>Производство</option>
+                                    <option value="shoppingAreaRent" {% if cian.get('CianCategory') == 'shoppingAreaRent' %}selected{% endif %}>Торговая площадь</option>
+                                    <option value="buildingRent" {% if cian.get('CianCategory') == 'buildingRent' %}selected{% endif %}>Здание</option>
+                                    <option value="garageRent" {% if cian.get('CianCategory') == 'garageRent' %}selected{% endif %}>Гараж</option>
+                                    <option value="commercialLandRent" {% if cian.get('CianCategory') == 'commercialLandRent' %}selected{% endif %}>Коммерческая земля</option>
+                                    {% else %}
+                                    <option value="freeAppointmentObjectSale" {% if cian.get('CianCategory', 'freeAppointmentObjectSale') == 'freeAppointmentObjectSale' %}selected{% endif %}>Помещение свободного назначения</option>
+                                    <option value="officeSale" {% if cian.get('CianCategory') == 'officeSale' %}selected{% endif %}>Офис</option>
+                                    <option value="warehouseSale" {% if cian.get('CianCategory') == 'warehouseSale' %}selected{% endif %}>Склад</option>
+                                    <option value="industrySale" {% if cian.get('CianCategory') == 'industrySale' %}selected{% endif %}>Производство</option>
+                                    <option value="shoppingAreaSale" {% if cian.get('CianCategory') == 'shoppingAreaSale' %}selected{% endif %}>Торговая площадь</option>
+                                    <option value="buildingSale" {% if cian.get('CianCategory') == 'buildingSale' %}selected{% endif %}>Здание</option>
+                                    <option value="garageSale" {% if cian.get('CianCategory') == 'garageSale' %}selected{% endif %}>Гараж</option>
+                                    <option value="commercialLandSale" {% if cian.get('CianCategory') == 'commercialLandSale' %}selected{% endif %}>Коммерческая земля</option>
+                                    {% endif %}
+                                </select>
+                                <small class="text-muted">Выбор категории для аренды и продажи в фиде Циан.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4" id="cian-payment-period-wrap" style="display:{% if deal_sale_cian %}none{% else %}block{% endif %};">
+                            <div class="mb-3">
+                                <label class="form-label">Период оплаты (PaymentPeriod)</label>
+                                <select class="form-select cian-field" name="cian_PaymentPeriod" data-key="PaymentPeriod">
+                                    <option value="monthly" {% if cian.get('PaymentPeriod', 'monthly') == 'monthly' %}selected{% endif %}>За месяц</option>
+                                    <option value="annual" {% if cian.get('PaymentPeriod') == 'annual' %}selected{% endif %}>За год</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4" id="cian-lease-type-wrap" style="display:{% if deal_sale_cian %}none{% else %}block{% endif %};">
+                            <div class="mb-3">
+                                <label class="form-label">Тип аренды (LeaseType)</label>
+                                <select class="form-select cian-field" name="cian_LeaseType" data-key="LeaseType">
+                                    <option value="direct" {% if cian.get('LeaseType', 'direct') == 'direct' %}selected{% endif %}>Прямая аренда</option>
+                                    <option value="sublease" {% if cian.get('LeaseType') == 'sublease' %}selected{% endif %}>Субаренда</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-2 mb-2 text-secondary"><span class="badge bg-secondary me-2">Параметры для фида</span></h5>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Тип здания (BuildingType)</label>
+                                <select class="form-select cian-field" name="cian_BuildingType" data-key="BuildingType">
+                                    <option value="">— не указано —</option>
+                                    <option value="Бизнес-центр" {% if cian.get('BuildingType') == 'Бизнес-центр' %}selected{% endif %}>Бизнес-центр</option>
+                                    <option value="Торговый центр" {% if cian.get('BuildingType') == 'Торговый центр' %}selected{% endif %}>Торговый центр</option>
+                                    <option value="Административное здание" {% if cian.get('BuildingType') == 'Административное здание' %}selected{% endif %}>Административное здание</option>
+                                    <option value="Жилой дом" {% if cian.get('BuildingType') == 'Жилой дом' %}selected{% endif %}>Жилой дом</option>
+                                    <option value="Другой" {% if cian.get('BuildingType') == 'Другой' %}selected{% endif %}>Другой</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Отделка (Decoration)</label>
+                                <select class="form-select cian-field" name="cian_Decoration" data-key="Decoration">
+                                    <option value="">— не указано —</option>
+                                    <option value="Без отделки" {% if cian.get('Decoration') == 'Без отделки' %}selected{% endif %}>Без отделки</option>
+                                    <option value="Чистовая" {% if cian.get('Decoration') == 'Чистовая' %}selected{% endif %}>Чистовая</option>
+                                    <option value="Офисная" {% if cian.get('Decoration') == 'Офисная' %}selected{% endif %}>Офисная</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Состояние (ConditionType) — для фида Циан</label>
+                                <select class="form-select cian-field" name="cian_ConditionType" data-key="ConditionType">
+                                    <option value="">— по умолчанию из Отделки —</option>
+                                    <option value="cosmeticRepairsRequired" {% if cian.get('ConditionType') == 'cosmeticRepairsRequired' %}selected{% endif %}>Требуется косметический ремонт</option>
+                                    <option value="design" {% if cian.get('ConditionType') == 'design' %}selected{% endif %}>Дизайнерский ремонт</option>
+                                    <option value="finishing" {% if cian.get('ConditionType') == 'finishing' %}selected{% endif %}>Под чистовую отделку</option>
+                                    <option value="majorRepairsRequired" {% if cian.get('ConditionType') == 'majorRepairsRequired' %}selected{% endif %}>Требуется капитальный ремонт</option>
+                                    <option value="office" {% if cian.get('ConditionType') == 'office' %}selected{% endif %}>Офисная отделка</option>
+                                    <option value="typical" {% if cian.get('ConditionType') == 'typical' %}selected{% endif %}>Типовой ремонт</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Этаж (Floor)</label>
+                                {% set cian_floor_default = cian.get('Floor', model.floor_number if model and model.floor_number is not none else '') %}
+                                <input type="text" class="form-control cian-field" name="cian_Floor" data-key="Floor" value="{{ cian_floor_default }}" placeholder="1">
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Этажность (FloorsTotal)</label>
+                                {% set cian_floors_default = cian.get('FloorsTotal', model.floors_total if model and model.floors_total is not none else '') %}
+                                <input type="text" class="form-control cian-field" name="cian_FloorsTotal" data-key="FloorsTotal" value="{{ cian_floors_default }}" placeholder="10">
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Высота потолков, м (CeilingHeight)</label>
+                                {% set cian_ceiling_default = cian.get('CeilingHeight', model.ceiling_height if model and model.ceiling_height is not none else '') %}
+                                <input type="text" class="form-control cian-field" name="cian_CeilingHeight" data-key="CeilingHeight" value="{{ cian_ceiling_default }}" placeholder="2.7">
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Парковка (ParkingType)</label>
+                                <select class="form-select cian-field" name="cian_ParkingType" data-key="ParkingType">
+                                    <option value="">— не указано —</option>
+                                    <option value="Нет" {% if cian.get('ParkingType') == 'Нет' %}selected{% endif %}>Нет</option>
+                                    <option value="На улице" {% if cian.get('ParkingType') == 'На улице' %}selected{% endif %}>На улице</option>
+                                    <option value="В здании" {% if cian.get('ParkingType') == 'В здании' %}selected{% endif %}>В здании</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Вход (Entrance)</label>
+                                <select class="form-select cian-field" name="cian_Entrance" data-key="Entrance">
+                                    <option value="">— не указано —</option>
+                                    <option value="С улицы" {% if cian.get('Entrance') == 'С улицы' %}selected{% endif %}>С улицы</option>
+                                    <option value="Со двора" {% if cian.get('Entrance') == 'Со двора' %}selected{% endif %}>Со двора</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Тип входа (InputType) — для фида Циан</label>
+                                <select class="form-select cian-field" name="cian_InputType" data-key="InputType">
+                                    <option value="">— по умолчанию из Входа —</option>
+                                    <option value="commonFromStreet" {% if cian.get('InputType') == 'commonFromStreet' %}selected{% endif %}>Общий с улицы</option>
+                                    <option value="commonFromYard" {% if cian.get('InputType') == 'commonFromYard' %}selected{% endif %}>Общий со двора</option>
+                                    <option value="separateFromStreet" {% if cian.get('InputType') == 'separateFromStreet' %}selected{% endif %}>Отдельный с улицы</option>
+                                    <option value="separateFromYard" {% if cian.get('InputType') == 'separateFromYard' %}selected{% endif %}>Отдельный со двора</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Планировка (Layout)</label>
+                                <select class="form-select cian-field" name="cian_Layout" data-key="Layout">
+                                    <option value="">— не указано (кабинетная) —</option>
+                                    <option value="Кабинетная" {% if cian.get('Layout') == 'Кабинетная' %}selected{% endif %}>Кабинетная</option>
+                                    <option value="Открытая" {% if cian.get('Layout') == 'Открытая' %}selected{% endif %}>Открытая (openSpace)</option>
+                                    <option value="Смешанная" {% if cian.get('Layout') == 'Смешанная' %}selected{% endif %}>Смешанная</option>
+                                    <option value="Коридорная" {% if cian.get('Layout') == 'Коридорная' %}selected{% endif %}>Коридорная</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4" id="cian-rent-type" style="display:{% if deal_sale_cian %}none{% else %}block{% endif %};">
+                            <div class="mb-3">
+                                <label class="form-label">Тип аренды (RentalType)</label>
+                                <select class="form-select cian-field" name="cian_RentalType" data-key="RentalType">
+                                    <option value="">— не указано —</option>
+                                    <option value="Прямая" {% if cian.get('RentalType') == 'Прямая' %}selected{% endif %}>Прямая</option>
+                                    <option value="Субаренда" {% if cian.get('RentalType') == 'Субаренда' %}selected{% endif %}>Субаренда</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4" id="cian-sale-type" style="display:{% if deal_rent_cian %}none{% else %}block{% endif %};">
+                            <div class="mb-3">
+                                <label class="form-label">Тип сделки (TransactionType)</label>
+                                <select class="form-select cian-field" name="cian_TransactionType" data-key="TransactionType">
+                                    <option value="">— не указано —</option>
+                                    <option value="Продажа" {% if cian.get('TransactionType') == 'Продажа' %}selected{% endif %}>Продажа</option>
+                                    <option value="Переуступка права аренды" {% if cian.get('TransactionType') == 'Переуступка права аренды' %}selected{% endif %}>Переуступка права аренды</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4" id="cian-property-rights" style="display:{% if deal_rent_cian %}none{% else %}block{% endif %};">
+                            <div class="mb-3">
+                                <label class="form-label">Право собственности (PropertyRights)</label>
+                                <select class="form-select cian-field" name="cian_PropertyRights" data-key="PropertyRights">
+                                    <option value="">— не указано —</option>
+                                    <option value="Собственник" {% if cian.get('PropertyRights') == 'Собственник' %}selected{% endif %}>Собственник</option>
+                                    <option value="Посредник" {% if cian.get('PropertyRights') == 'Посредник' %}selected{% endif %}>Посредник</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-4 mb-2 text-secondary">ID и статус на Циан</h5>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">ID объявления на Циан (CianOfferId)</label>
+                                <input type="text" class="form-control cian-field" name="cian_CianOfferId" data-key="CianOfferId" value="{{ cian.get('CianOfferId', '') }}" placeholder="214937422">
+                                <small class="text-muted">Подтягивается кнопкой «Синхронизировать статусы Циан» или вручную.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Статус на Циан (CianStatus)</label>
+                                <select class="form-select cian-field" name="cian_CianStatus" data-key="CianStatus">
+                                    <option value="">— не указано —</option>
+                                    <option value="published" {% if cian.get('CianStatus') == 'published' %}selected{% endif %}>Опубликовано (published)</option>
+                                    <option value="inactive" {% if cian.get('CianStatus') == 'inactive' %}selected{% endif %}>Снято (inactive)</option>
+                                    <option value="refusedByModerator" {% if cian.get('CianStatus') == 'refusedByModerator' %}selected{% endif %}>Отказ модерации</option>
+                                    <option value="removedByModerator" {% if cian.get('CianStatus') == 'removedByModerator' %}selected{% endif %}>Снято модератором</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">Заметка по Циан (не в фид)</label>
+                                <input type="text" class="form-control cian-field" name="cian_Note" data-key="Note" value="{{ cian.get('Note', '') }}" placeholder="Заметка для себя">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="tab-pane" id="pane-settings" role="tabpanel">
             <div class="card mb-3">
                 <div class="card-body">
@@ -770,6 +1009,30 @@
     </div>
 </form>
 <script>
+window.CIAN_CATEGORIES = {
+    rent: [
+        { value: 'freeAppointmentObjectRent', label: 'Помещение свободного назначения' },
+        { value: 'officeRent', label: 'Офис' },
+        { value: 'warehouseRent', label: 'Склад' },
+        { value: 'industryRent', label: 'Производство' },
+        { value: 'shoppingAreaRent', label: 'Торговая площадь' },
+        { value: 'buildingRent', label: 'Здание' },
+        { value: 'garageRent', label: 'Гараж' },
+        { value: 'commercialLandRent', label: 'Коммерческая земля' }
+    ],
+    sale: [
+        { value: 'freeAppointmentObjectSale', label: 'Помещение свободного назначения' },
+        { value: 'officeSale', label: 'Офис' },
+        { value: 'warehouseSale', label: 'Склад' },
+        { value: 'industrySale', label: 'Производство' },
+        { value: 'shoppingAreaSale', label: 'Торговая площадь' },
+        { value: 'buildingSale', label: 'Здание' },
+        { value: 'garageSale', label: 'Гараж' },
+        { value: 'commercialLandSale', label: 'Коммерческая земля' }
+    ],
+    rentToSale: { freeAppointmentObjectRent: 'freeAppointmentObjectSale', officeRent: 'officeSale', warehouseRent: 'warehouseSale', industryRent: 'industrySale', shoppingAreaRent: 'shoppingAreaSale', buildingRent: 'buildingSale', garageRent: 'garageSale', commercialLandRent: 'commercialLandSale' },
+    saleToRent: { freeAppointmentObjectSale: 'freeAppointmentObjectRent', officeSale: 'officeRent', warehouseSale: 'warehouseRent', industrySale: 'industryRent', shoppingAreaSale: 'shoppingAreaRent', buildingSale: 'buildingRent', garageSale: 'garageRent', commercialLandSale: 'commercialLandRent' }
+};
 (function() {
     var form = document.querySelector('form[action*="/dashboard/properties"]');
     var hidden = document.getElementById('avito_data_json');
@@ -782,6 +1045,17 @@
             if (key && val) data[key] = val;
         });
         hidden.value = JSON.stringify(data);
+
+        var cianHidden = document.getElementById('cian_data_json');
+        if (cianHidden) {
+            var cianData = {};
+            form.querySelectorAll('.cian-field').forEach(function(el) {
+                var key = el.getAttribute('data-key');
+                var val = (el.value || '').trim();
+                if (key) cianData[key] = val;
+            });
+            cianHidden.value = JSON.stringify(cianData);
+        }
     });
 
     function toggleAvitoByDealType() {
@@ -795,6 +1069,29 @@
         if (saleReq) saleReq.style.display = isRent ? 'none' : 'block';
         if (rentBlock) rentBlock.style.display = isRent ? 'block' : 'none';
         if (saleBlock) saleBlock.style.display = isRent ? 'none' : 'block';
+        var cianRent = document.getElementById('cian-rent-type');
+        var cianSale = document.getElementById('cian-sale-type');
+        var cianRights = document.getElementById('cian-property-rights');
+        var cianPaymentWrap = document.getElementById('cian-payment-period-wrap');
+        var cianLeaseWrap = document.getElementById('cian-lease-type-wrap');
+        if (cianRent) cianRent.style.display = isRent ? 'block' : 'none';
+        if (cianSale) cianSale.style.display = isRent ? 'none' : 'block';
+        if (cianRights) cianRights.style.display = isRent ? 'none' : 'block';
+        if (cianPaymentWrap) cianPaymentWrap.style.display = isRent ? 'block' : 'none';
+        if (cianLeaseWrap) cianLeaseWrap.style.display = isRent ? 'block' : 'none';
+        var catSelect = document.getElementById('cian-category-select');
+        if (catSelect && window.CIAN_CATEGORIES) {
+            var cur = (catSelect.value || '').trim();
+            var opts = isRent ? window.CIAN_CATEGORIES.rent : window.CIAN_CATEGORIES.sale;
+            var map = isRent ? window.CIAN_CATEGORIES.saleToRent : window.CIAN_CATEGORIES.rentToSale;
+            catSelect.options.length = 0;
+            opts.forEach(function(o) {
+                var opt = new Option(o.label, o.value);
+                catSelect.options.add(opt);
+            });
+            var newVal = map[cur] || (isRent ? 'freeAppointmentObjectRent' : 'freeAppointmentObjectSale');
+            catSelect.value = newVal;
+        }
     }
     if (form.querySelector('select[name="deal_type"]')) {
         form.querySelector('select[name="deal_type"]').addEventListener('change', toggleAvitoByDealType);

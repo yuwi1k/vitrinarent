@@ -17,6 +17,9 @@
 
     <style>
       html { scroll-behavior: smooth; }
+      body { display: flex; flex-direction: column; min-height: 100vh; }
+      body main { flex: 1; }
+      body .site-footer { flex-shrink: 0; margin-top: auto; }
       .vitrina-header {
         position: absolute;
         top: 0;
@@ -333,6 +336,18 @@
 
         </div>
     </main>
+
+    <footer class="site-footer section py-4">
+      <div class="container">
+        <div class="row">
+          <div class="col-12 text-center">
+            <p class="mb-0 small text-muted">
+              &copy; <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов.
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
 
     <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU{% if yandex_maps_api_key %}&apikey={{ yandex_maps_api_key }}{% endif %}" type="text/javascript"></script>
     <script src="/static/js/bootstrap.bundle.min.js"></script>

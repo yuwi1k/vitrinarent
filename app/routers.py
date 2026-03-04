@@ -17,6 +17,7 @@ from app.config import PAGE_SIZE_PUBLIC, MAIN_PAGE_LIMIT
 from app.database import get_db
 from app.models import Property
 from app.feed import generate_avito_feed
+from app.feed_cian import generate_cian_feed
 from app.services import build_search_query
 
 router = APIRouter()
@@ -231,4 +232,18 @@ async def get_avito_feed_route(db: AsyncSession = Depends(get_db)):
     result = await db.execute(stmt)
     properties = result.scalars().all()
     xml_content = generate_avito_feed(properties)
+    return Response(content=xml_content, media_type="application/xml")
+
+
+@router.get("/cian.xml")
+async def get_cian_feed_route(db: AsyncSession = Depends(get_db)):
+    """Публичный XML-фид для импорта объявлений на Циан (URL указать в ЛК Циан)."""
+    stmt = (
+        select(Property)
+        .where(Property.is_active == True, Property.parent_id.is_(None))
+        .options(selectinload(Property.images))
+    )
+    result = await db.execute(stmt)
+    properties = result.scalars().all()
+    xml_content = generate_cian_feed(properties)
     return Response(content=xml_content, media_type="application/xml")

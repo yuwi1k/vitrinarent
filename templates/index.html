@@ -27,6 +27,9 @@
 
     <style>
       html { scroll-behavior: smooth; }
+      body { display: flex; flex-direction: column; min-height: 100vh; }
+      body main { flex: 1; }
+      body .site-footer { flex-shrink: 0; margin-top: auto; }
       .skip-link { position: absolute; top: -3rem; left: 0.5rem; z-index: 9999; padding: 0.5rem 1rem; background: #5a6c7d; color: #fff; text-decoration: none; border-radius: 4px; }
       .skip-link:focus { top: 0.5rem; outline: 2px solid #fff; outline-offset: 2px; }
       a:focus-visible, button:focus-visible { outline: 2px solid #5a6c7d; outline-offset: 2px; }
@@ -381,9 +384,8 @@
       <div class="container">
         <div class="row">
           <div class="col-12 text-center">
-            <p class="mb-0">
-              &copy; <script>document.write(new Date().getFullYear());</script> 
-              vitrina.rent - сервис для агентов.
+            <p class="mb-0 small text-muted">
+              &copy; <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов.
             </p>
           </div>
         </div>
