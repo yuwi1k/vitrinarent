@@ -7,7 +7,7 @@
     <link rel="shortcut icon" href="/static/images/favicon.png" />
 
     <meta name="description" content="Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа. Сервис для агентов." />
-    <meta name="keywords" content="коммерческая недвижимость, аренда офиса, продажа склада, торговые площади, Vitrina" />
+    <meta name="keywords" content="коммерческая недвижимость, аренда офиса, продажа склада, торговые площади, Vitrina, витрина рент, vitrina, витрина рент рф />
     <meta name="yandex-verification" content="e6fcd66bd1186ee2" />
     <meta name="google-site-verification" content="oEtd5BxM5fAybSDNtTC5PJZCCKSnBITBUe5syl3J2WY" />
     <link rel="canonical" href="{{ request.url.scheme }}://{{ request.url.netloc }}{{ request.url.path }}" />
@@ -71,7 +71,7 @@
         display: flex;
         flex-direction: column;
         overflow-x: hidden;
-        background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.65)), url('/static/images/hero_bg_1.png');
+        background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.65)), url('{{ request.base_url }}static/images/hero_bg_1.png');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
