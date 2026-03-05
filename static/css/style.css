@@ -76,8 +76,19 @@
   :root {
     scroll-behavior: smooth; } }
 
+html {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+
 body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
   margin: 0;
+  box-sizing: border-box;
   font-family: var(--bs-body-font-family);
   font-size: var(--bs-body-font-size);
   font-weight: var(--bs-body-font-weight);
@@ -4926,9 +4937,11 @@ textarea.form-control-lg {
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 1050;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background-color: #000; }
   .modal-backdrop.fade {
     opacity: 0; }
@@ -5618,9 +5631,11 @@ textarea.form-control-lg {
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 1040;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background-color: #000; }
   .offcanvas-backdrop.fade {
     opacity: 0; }
@@ -9584,13 +9599,17 @@ textarea.form-control-lg {
   outline: none; }
 
 html {
-  overflow-x: hidden; }
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%; }
 
 body {
   font-family: "Work Sans", sans-serif;
   font-weight: 400;
   font-size: 14px;
-  overflow-x: hidden; }
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%; }
   body:before {
     content: "";
     position: fixed;
