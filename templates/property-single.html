@@ -24,6 +24,28 @@
     {% endif %}
     <meta property="og:locale" content="ru_RU" />
 
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": "{{ (property.title or 'Объект')|replace('\\', '\\\\')|replace('"', '\\"') }}",
+      "description": "{{ ((property.description or property.title or 'Объект недвижимости')[:500])|replace('\\', '\\\\')|replace('"', '\\"')|replace('\n', ' ') }}",
+      "url": "{{ site_url }}/property/{{ property.slug or property.id }}",
+      {% if property.main_image %}
+      "image": "{{ site_url }}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}",
+      {% endif %}
+      "offers": {
+        "@type": "Offer",
+        "price": "{{ property.price or 0 }}",
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock"
+      }
+      {% if property.address %},
+      "address": { "@type": "PostalAddress", "addressLocality": "{{ (property.address or '')|replace('\\', '\\\\')|replace('"', '\\"') }}" }
+      {% endif %}
+    }
+    </script>
+
     <style>
       html { scroll-behavior: smooth; }
       body { display: flex; flex-direction: column; min-height: 100vh; }

@@ -3,13 +3,39 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="author" content="Untree.co" />
+    <meta name="author" content="Vitrina" />
     <link rel="shortcut icon" href="/static/images/favicon.png" />
 
     <meta name="description" content="Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа. Сервис для агентов." />
     <meta name="keywords" content="коммерческая недвижимость, аренда офиса, продажа склада, торговые площади, Vitrina" />
     <meta name="yandex-verification" content="e6fcd66bd1186ee2" />
+    <meta name="google-site-verification" content="oEtd5BxM5fAybSDNtTC5PJZCCKSnBITBUe5syl3J2WY" />
     <link rel="canonical" href="{{ request.url.scheme }}://{{ request.url.netloc }}{{ request.url.path }}" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "name": "Vitrina",
+          "url": "{{ request.url.scheme }}://{{ request.url.netloc }}",
+          "description": "Каталог коммерческой недвижимости: аренда и продажа офисов, складов, торговых площадей."
+        },
+        {
+          "@type": "WebSite",
+          "name": "Vitrina",
+          "url": "{{ request.url.scheme }}://{{ request.url.netloc }}",
+          "description": "Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": { "@type": "EntryPoint", "urlTemplate": "{{ request.url.scheme }}://{{ request.url.netloc }}/search?q={search_term_string}" },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
