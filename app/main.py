@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse, RedirectResponse, FileResponse, PlainTextResponse, HTMLResponse
+from fastapi.responses import JSONResponse, RedirectResponse, FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -216,20 +216,14 @@ async def robots_txt(request: Request) -> PlainTextResponse:
     return PlainTextResponse("\n".join(lines))
 
 
-# Файл верификации прав на сайт в Яндекс.Вебмастер (не удалять после подтверждения)
-YANDEX_VERIFICATION_HTML = """<!DOCTYPE html>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-</head>
-<body>Verification: e6fcd66bd1186ee2</body>
-</html>"""
+# Файл верификации прав на сайт в Яндекс.Вебмастер (лежит в корне проекта, не удалять после подтверждения)
+_YANDEX_VERIFICATION_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "yandex_e6fcd66bd1186ee2.html")
 
 
 @app.get("/yandex_e6fcd66bd1186ee2.html", include_in_schema=False)
-async def yandex_verification() -> HTMLResponse:
-    """Отдаёт HTML-файл для подтверждения прав на сайт в Яндекс.Вебмастер."""
-    return HTMLResponse(content=YANDEX_VERIFICATION_HTML, media_type="text/html; charset=utf-8")
+async def yandex_verification():
+    """Отдаёт HTML-файл из корня проекта для подтверждения прав в Яндекс.Вебмастер."""
+    return FileResponse(_YANDEX_VERIFICATION_PATH, media_type="text/html; charset=utf-8")
 
 
 # Порядок middleware: последний add = первый при обработке запроса.
