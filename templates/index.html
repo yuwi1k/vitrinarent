@@ -54,8 +54,8 @@
     <title>Vitrina — сервис для агентов</title>
 
     <style>
-      html { scroll-behavior: smooth; }
-      body { display: flex; flex-direction: column; min-height: 100vh; }
+      html { scroll-behavior: smooth; overflow-x: hidden; }
+      body { display: flex; flex-direction: column; min-height: 100vh; width: 100%; max-width: 100vw; overflow-x: hidden; }
       body main { flex: 1; width: 100%; max-width: 100%; min-width: 0; overflow-x: hidden; }
       body .site-footer { flex-shrink: 0; margin-top: auto; width: 100%; max-width: 100%; }
       .skip-link { position: absolute; top: -3rem; left: 0.5rem; z-index: 9999; padding: 0.5rem 1rem; background: #5a6c7d; color: #fff; text-decoration: none; border-radius: 4px; }
@@ -140,6 +140,9 @@
         flex-direction: column;
         justify-content: center;
         padding: 6rem 0 4rem;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
       }
       .vitrina-hero-title {
         font-size: clamp(2rem, 5vw, 3.25rem);
@@ -165,7 +168,9 @@
         box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
         padding: 1.5rem 1.5rem;
         max-width: 720px;
+        width: 100%;
         margin: 0 auto;
+        box-sizing: border-box;
       }
       .vitrina-search-card .form-control,
       .vitrina-search-card .form-select {
@@ -173,7 +178,10 @@
         border: 1px solid #e5e7eb;
         padding: 0.65rem 1rem;
         font-size: 0.95rem;
+        max-width: 100%;
+        box-sizing: border-box;
       }
+      .vitrina-search-card .flex-grow-1 { min-width: 0; }
       .vitrina-search-card .form-control:focus,
       .vitrina-search-card .form-select:focus {
         border-color: #5a6c7d;
@@ -199,16 +207,18 @@
       }
       @media (max-width: 991.98px) {
         .vitrina-hero-wrap { min-height: auto; padding-bottom: 2rem; }
-        .vitrina-hero-content { padding: 5rem 0 2rem; justify-content: flex-start; }
+        .vitrina-hero-content { padding: 6rem 0 2rem; justify-content: flex-start; }
         .vitrina-search-card .d-flex { flex-direction: column; gap: 0.75rem !important; }
         .vitrina-hero-cta { width: 100%; }
         .vitrina-hero-title { font-size: 1.5rem; }
         .vitrina-hero-subtitle { font-size: 0.95rem; margin-bottom: 1.5rem; }
       }
       @media (max-width: 575.98px) {
-        .vitrina-hero-content { padding: 4rem 0 1.5rem; }
+        .vitrina-hero-content { padding: 6rem 0 1.5rem; }
+        .vitrina-hero-title { margin-top: 0.5rem; }
         .vitrina-hero-subtitle { font-size: 0.9rem; }
-        .vitrina-search-card { padding: 1rem; }
+        .vitrina-search-card { padding: 1rem; min-width: 0; }
+        .vitrina-hero-content .container { max-width: 100%; padding-left: 0.75rem; padding-right: 0.75rem; }
       }
       /* --- Каталог на главной: ровные карточки и цвета под дизайн --- */
       .catalog-preview .heading { color: #5a6c7d !important; font-weight: 700; }
