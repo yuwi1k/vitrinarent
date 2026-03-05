@@ -137,6 +137,7 @@
         line-height: 1.2;
         margin-bottom: 1rem;
         font-family: 'Work Sans', sans-serif;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.25);
       }
       .vitrina-hero-subtitle {
         font-size: 1.15rem;
@@ -186,14 +187,17 @@
         transform: translateY(-1px);
       }
       @media (max-width: 991.98px) {
-        .vitrina-hero-wrap { min-height: auto; min-height: 100svh; }
-        .vitrina-hero-content { padding: 5rem 0 3rem; }
+        .vitrina-hero-wrap { min-height: auto; padding-bottom: 2rem; }
+        .vitrina-hero-content { padding: 5rem 0 2rem; justify-content: flex-start; }
         .vitrina-search-card .d-flex { flex-direction: column; gap: 0.75rem !important; }
         .vitrina-hero-cta { width: 100%; }
+        .vitrina-hero-title { font-size: 1.5rem; }
+        .vitrina-hero-subtitle { font-size: 0.95rem; margin-bottom: 1.5rem; }
       }
       @media (max-width: 575.98px) {
-        .vitrina-hero-content { padding: 4.25rem 0 2.75rem; }
-        .vitrina-hero-subtitle { font-size: 1rem; }
+        .vitrina-hero-content { padding: 4rem 0 1.5rem; }
+        .vitrina-hero-subtitle { font-size: 0.9rem; }
+        .vitrina-search-card { padding: 1rem; }
       }
       /* --- Каталог на главной: ровные карточки и цвета под дизайн --- */
       .catalog-preview .heading { color: #5a6c7d !important; font-weight: 700; }
@@ -283,7 +287,7 @@
               <li><a href="/search">Поиск</a></li>
               <li><a href="/faq">FAQ</a></li>
             </ul>
-            <button type="button" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-inline-block d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Открыть меню" aria-expanded="false">
+            <button type="button" class="burger light ms-auto flex-shrink-0 site-menu-toggle js-menu-toggle d-inline-block d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Открыть меню" aria-expanded="false">
               <span></span>
             </button>
           </div>
