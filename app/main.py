@@ -216,16 +216,6 @@ async def robots_txt(request: Request) -> PlainTextResponse:
     return PlainTextResponse("\n".join(lines))
 
 
-# Файл верификации прав на сайт в Яндекс.Вебмастер (лежит в корне проекта, не удалять после подтверждения)
-_YANDEX_VERIFICATION_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "yandex_e6fcd66bd1186ee2.html")
-
-
-@app.get("/yandex_e6fcd66bd1186ee2.html", include_in_schema=False)
-async def yandex_verification():
-    """Отдаёт HTML-файл из корня проекта для подтверждения прав в Яндекс.Вебмастер."""
-    return FileResponse(_YANDEX_VERIFICATION_PATH, media_type="text/html; charset=utf-8")
-
-
 # Порядок middleware: последний add = первый при обработке запроса.
 # Итоговый порядок обработки: Session -> CSRF -> RequireDashboardAuth -> LoginRateLimit -> app.
 app.add_middleware(LoginRateLimitMiddleware)

@@ -8,6 +8,7 @@ from typing import Optional
 
 import bleach
 from fastapi import APIRouter, Request, Depends, HTTPException, Query, Response
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,6 +41,25 @@ def _sanitize_html(value: Optional[str]) -> str:
 
 
 templates.env.filters["sanitize_html"] = _sanitize_html
+
+# Файл верификации Яндекс.Вебмастер: в корне проекта, отдаём по /yandex_e6fcd66bd1186ee2.html
+_YANDEX_VERIFICATION_HTML = """<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>Verification: e6fcd66bd1186ee2</body>
+</html>"""
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_YANDEX_VERIFICATION_FILE = os.path.join(_PROJECT_ROOT, "yandex_e6fcd66bd1186ee2.html")
+
+
+@router.get("/yandex_e6fcd66bd1186ee2.html", include_in_schema=False)
+async def yandex_verification():
+    """Отдаёт HTML для подтверждения прав в Яндекс.Вебмастер (файл в корне или fallback)."""
+    if os.path.isfile(_YANDEX_VERIFICATION_FILE):
+        return FileResponse(_YANDEX_VERIFICATION_FILE, media_type="text/html; charset=utf-8")
+    return HTMLResponse(content=_YANDEX_VERIFICATION_HTML, media_type="text/html; charset=utf-8")
 
 
 @router.get("/")
