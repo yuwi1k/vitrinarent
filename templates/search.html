@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Поиск коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа." />
+    <link rel="canonical" href="{{ request.url.scheme }}://{{ request.url.netloc }}{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}" />
     <title>Vitrina — поиск недвижимости</title>
     <link rel="shortcut icon" href="/static/images/favicon.png" />
 
@@ -209,7 +210,7 @@
                 <div class="col-lg-12">
                     <form action="/search" method="GET" class="vitrina-search-card mb-5">
                       <div class="row g-3">
-                        <div class="col-6 col-md-3">
+                        <div class="col-12 col-md-3">
                           <label class="form-label small text-muted mb-1">Поиск по адресу или названию</label>
                           <input type="text" name="q" class="form-control" placeholder="БЦ, Арбат, склад" value="{{ q or '' }}">
                         </div>
@@ -221,7 +222,7 @@
                           <label class="form-label small text-muted mb-1">Площадь до (м²)</label>
                           <input type="number" name="max_area" class="form-control" placeholder="До" min="1" step="1" value="{{ max_area or '' }}">
                         </div>
-                        <div class="col-6 col-md-3">
+                        <div class="col-12 col-md-3">
                           <label class="form-label small text-muted mb-1">Тип сделки</label>
                           <select name="deal_type" class="form-select">
                             <option value="Все" {% if deal_type == 'Все' or not deal_type %}selected{% endif %}>Все</option>
@@ -229,7 +230,7 @@
                             <option value="Продажа" {% if deal_type == 'Продажа' %}selected{% endif %}>Продажа</option>
                           </select>
                         </div>
-                        <div class="col-6 col-md-3">
+                        <div class="col-12 col-md-3">
                           <label class="form-label small text-muted mb-1">Тип помещения</label>
                           <select name="category" class="form-select">
                             <option value="Все" {% if category == 'Все' or not category %}selected{% endif %}>Все типы</option>

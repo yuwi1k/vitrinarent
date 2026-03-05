@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Дашборд{% endblock %} — Vitrina</title>
+    <link rel="shortcut icon" href="/static/images/favicon.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
     {% block head %}{% endblock %}
 </head>
@@ -69,6 +70,13 @@
         <div class="page-wrapper">
             <div class="page-body">
                 <div class="container-xl">
+                    {% set flashes = get_flash(request) %}
+                    {% for msg in flashes %}
+                    <div class="alert alert-{{ 'danger' if msg.type == 'error' else msg.type }} alert-dismissible fade show mb-3" role="alert">
+                        {{ msg.message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+                    </div>
+                    {% endfor %}
                     {% block content %}{% endblock %}
                 </div>
             </div>

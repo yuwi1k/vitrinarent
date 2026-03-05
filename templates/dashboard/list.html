@@ -22,6 +22,10 @@
                 <input type="text" name="q" class="form-control" placeholder="Название или адрес" value="{{ q or '' }}" aria-label="Поиск по названию или адресу">
             </div>
             <div class="col-md-2">
+                <label class="form-label small text-muted">ID или slug</label>
+                <input type="text" name="id_or_slug" class="form-control" placeholder="Напр. 5 или url-slug" value="{{ id_or_slug or '' }}" aria-label="Фильтр по ID или slug">
+            </div>
+            <div class="col-md-2">
                 <label class="form-label small text-muted">Тип сделки</label>
                 <select name="deal_type" class="form-select" aria-label="Тип сделки">
                     <option value="Все" {% if (deal_type or 'Все') == 'Все' %}selected{% endif %}>Все</option>
@@ -54,10 +58,27 @@
                 <button type="submit" class="btn btn-outline-primary w-100">Применить</button>
             </div>
         </div>
+        <div class="row g-3 mt-1">
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Сортировка</label>
+                <div class="d-flex gap-2">
+                    <select name="sort_by" class="form-select form-select-sm" aria-label="Поле сортировки">
+                        <option value="id" {% if (sort_by or 'id') == 'id' %}selected{% endif %}>ID</option>
+                        <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Цена</option>
+                        <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Название</option>
+                    </select>
+                    <select name="order" class="form-select form-select-sm w-auto" aria-label="Направление">
+                        <option value="desc" {% if (order or 'desc') == 'desc' %}selected{% endif %}>↓ Убыв.</option>
+                        <option value="asc" {% if order == 'asc' %}selected{% endif %}>↑ Возр.</option>
+                    </select>
+                </div>
+            </div>
+        </div>
     </div>
 </form>
 
 <form id="bulk-form" method="post" action="/dashboard/properties/bulk">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
     {% if properties %}
     <div class="card mb-3">
         <div class="card-body py-2">
@@ -67,6 +88,9 @@
                 <button type="submit" name="action" value="deactivate" class="btn btn-sm btn-outline-warning">Снять с публикации</button>
                 <button type="submit" name="action" value="show_on_main" class="btn btn-sm btn-outline-primary">На главную</button>
                 <button type="submit" name="action" value="hide_from_main" class="btn btn-sm btn-outline-secondary">Убрать с главной</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="btn-bulk-delete">
+                    Удалить выбранные
+                </button>
             </div>
         </div>
     </div>
@@ -125,6 +149,22 @@
                         {% else %}
                         <span class="badge bg-secondary-lt">Без Avito</span>
                         {% endif %}
+                        {% set cian = parent.cian_data or {} %}
+                        {% if parent.is_on_cian or cian.get("CianStatus") %}
+                            {% if cian.get("CianStatus") == "published" %}
+                            <span class="badge bg-green-lt">Циан: опубликовано</span>
+                            {% elif cian.get("CianStatus") == "inactive" %}
+                            <span class="badge bg-yellow-lt">Циан: снято</span>
+                            {% elif cian.get("CianStatus") == "refusedByModerator" %}
+                            <span class="badge bg-red-lt">Циан: отказ модерации</span>
+                            {% elif cian.get("CianStatus") == "removedByModerator" %}
+                            <span class="badge bg-red-lt">Циан: снято модератором</span>
+                            {% else %}
+                            <span class="badge bg-purple-lt">Циан</span>
+                            {% endif %}
+                        {% else %}
+                        <span class="badge bg-secondary-lt">Без Циан</span>
+                        {% endif %}
                     </td>
                     <td>
                         <div class="btn-list flex-nowrap">
@@ -165,6 +205,22 @@
                                             {% else %}
                                             <span class="badge bg-secondary-lt">Без Avito</span>
                                             {% endif %}
+                                            {% set cian_ch = ch.cian_data or {} %}
+                                            {% if ch.is_on_cian or cian_ch.get("CianStatus") %}
+                                                {% if cian_ch.get("CianStatus") == "published" %}
+                                                <span class="badge bg-green-lt">Циан: опубликовано</span>
+                                                {% elif cian_ch.get("CianStatus") == "inactive" %}
+                                                <span class="badge bg-yellow-lt">Циан: снято</span>
+                                                {% elif cian_ch.get("CianStatus") == "refusedByModerator" %}
+                                                <span class="badge bg-red-lt">Циан: отказ модерации</span>
+                                                {% elif cian_ch.get("CianStatus") == "removedByModerator" %}
+                                                <span class="badge bg-red-lt">Циан: снято модератором</span>
+                                                {% else %}
+                                                <span class="badge bg-purple-lt">Циан</span>
+                                                {% endif %}
+                                            {% else %}
+                                            <span class="badge bg-secondary-lt">Без Циан</span>
+                                            {% endif %}
                                         </td>
                                         <td>
                                             <div class="btn-list flex-nowrap">
@@ -193,21 +249,32 @@
 </form>
 
 <script>
+var CSRF_TOKEN = "{{ csrf_token(request) }}";
 function submitDelete(propertyId, childrenCount) {
     childrenCount = childrenCount || 0;
     if (childrenCount > 0) {
         var msg = 'У этого объекта есть ' + childrenCount + ' дочерних. Удалить их тоже?';
         if (!confirm(msg + '\n\n«ОК» — удалить родителя и дочерние.\n«Отмена» — удалить только родителя, дочерние останутся в списке.')) {
-            var form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/dashboard/properties/delete/' + propertyId + '?delete_children=0';
-            document.body.appendChild(form);
-            form.submit();
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/dashboard/properties/delete/' + propertyId + '?delete_children=0';
+        var token = document.createElement('input');
+        token.type = 'hidden';
+        token.name = '_csrf_token';
+        token.value = CSRF_TOKEN;
+        form.appendChild(token);
+        document.body.appendChild(form);
+        form.submit();
             return;
         }
         var form = document.createElement('form');
         form.method = 'POST';
         form.action = '/dashboard/properties/delete/' + propertyId + '?delete_children=1';
+        var token = document.createElement('input');
+        token.type = 'hidden';
+        token.name = '_csrf_token';
+        token.value = CSRF_TOKEN;
+        form.appendChild(token);
         document.body.appendChild(form);
         form.submit();
         return;
@@ -216,9 +283,27 @@ function submitDelete(propertyId, childrenCount) {
     var form = document.createElement('form');
     form.method = 'POST';
     form.action = '/dashboard/properties/delete/' + propertyId;
+    var token = document.createElement('input');
+    token.type = 'hidden';
+    token.name = '_csrf_token';
+    token.value = CSRF_TOKEN;
+    form.appendChild(token);
     document.body.appendChild(form);
     form.submit();
 }
+document.getElementById('btn-bulk-delete').addEventListener('click', function() {
+    var parentRows = document.querySelectorAll('tr.parent-row');
+    var ids = [];
+    parentRows.forEach(function(tr) {
+        var cb = tr.querySelector('input.row-select[name="ids"]');
+        if (cb && cb.checked) ids.push(cb.value);
+    });
+    if (ids.length === 0) {
+        alert('Выберите хотя бы один объект (корневой) для удаления.');
+        return;
+    }
+    window.location.href = '/dashboard/properties/bulk-delete-confirm?ids=' + ids.join(',');
+});
 (function() {
     var selectAll = document.getElementById('select-all');
     var rowChecks = document.querySelectorAll('.row-select');
@@ -245,13 +330,13 @@ function submitDelete(propertyId, childrenCount) {
     <p class="text-muted small me-2 mb-0">Всего: {{ total }}</p>
     <ul class="pagination m-0">
         <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-            <a class="page-link" href="?page={{ page - 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}">Назад</a>
+            <a class="page-link" href="?page={{ page - 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}">Назад</a>
         </li>
         {% for p in pages %}
-        <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="?page={{ p }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}">{{ p }}</a></li>
+        <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="?page={{ p }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}">{{ p }}</a></li>
         {% endfor %}
         <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-            <a class="page-link" href="?page={{ page + 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}">Вперёд</a>
+            <a class="page-link" href="?page={{ page + 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}">Вперёд</a>
         </li>
     </ul>
 </div>

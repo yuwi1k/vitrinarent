@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, FileResponse, PlainTextResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -57,6 +57,66 @@ class LoginRateLimitMiddleware(BaseHTTPMiddleware):
                     status_code=429,
                 )
             _LOGIN_ATTEMPTS[client].append(now)
+        return await call_next(request)
+
+
+class CSRFMiddleware(BaseHTTPMiddleware):
+    """
+    Простейшая защита от CSRF для форм дашборда.
+    Проверяет токен из сессии против _csrf_token в форме / X-CSRF-Token заголовка.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        method = request.method.upper()
+        path = (request.url.path or "")
+        # Логин оставляем без CSRF, чтобы не усложнять форму и тесты.
+        if path == "/dashboard/login":
+            return await call_next(request)
+        if method in ("POST", "PUT", "PATCH", "DELETE") and path.startswith("/dashboard"):
+            session = request.session or {}
+            expected = session.get("_csrf_token")
+            token = None
+
+            # 1) Пытаемся взять токен из заголовка
+            header_token = request.headers.get("X-CSRF-Token")
+            if header_token:
+                token = header_token
+            else:
+                # 2) Иначе аккуратно парсим тело, не трогая request.form(),
+                #    чтобы не сломать последующую обработку Form-параметров FastAPI.
+                content_type = (request.headers.get("content-type") or "").lower()
+                try:
+                    body_bytes = await request.body()
+                    text = body_bytes.decode("utf-8", errors="ignore")
+                except Exception:
+                    text = ""
+
+                if "application/x-www-form-urlencoded" in content_type and text:
+                    from urllib.parse import parse_qs
+
+                    parsed = parse_qs(text, keep_blank_values=True)
+                    vals = parsed.get("_csrf_token") or []
+                    token = vals[0] if vals else None
+                elif "multipart/form-data" in content_type and text:
+                    # Простейший парсер для multipart: ищем блок с name="_csrf_token"
+                    marker = 'name="_csrf_token"'
+                    idx = text.find(marker)
+                    if idx != -1:
+                        # Берём часть от маркера и ищем первую пустую строку,
+                        # за которой идёт строка со значением токена.
+                        tail = text[idx:].splitlines()
+                        for i, line in enumerate(tail):
+                            if not line.strip() and i + 1 < len(tail):
+                                possible = tail[i + 1].strip()
+                                if possible:
+                                    token = possible
+                                break
+
+            if not expected or not token or token != expected:
+                return JSONResponse(
+                    {"detail": "CSRF token missing or invalid"},
+                    status_code=403,
+                )
         return await call_next(request)
 
 
@@ -127,9 +187,56 @@ async def health_readiness():
 # --- ПОДКЛЮЧЕНИЕ СТАТИКИ И ШАБЛОНОВ ---
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Порядок middleware: последний add = первый при обработке запроса. Нужно: Session -> Auth -> RateLimit -> app.
+
+@app.get("/favicon.ico")
+async def favicon():
+    """Отдаём favicon из статики, чтобы убрать 404 в логах браузера."""
+    return FileResponse("static/images/favicon.png")
+
+
+@app.get("/robots.txt", include_in_schema=False)
+async def robots_txt(request: Request) -> PlainTextResponse:
+    """
+    Динамический robots.txt:
+    - Разрешаем индексацию всего, кроме /dashboard
+    - Отдаём ссылку на sitemap.xml с учётом реального домена/схемы.
+    """
+    # Определяем базовый URL с учётом возможного прокси
+    host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc or "").strip()
+    proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "https").split(",")[0].strip() or "https"
+    base = f"{proto}://{host}".rstrip("/") if host else str(request.url.replace(path="", query="")).rstrip("/")
+
+    lines = [
+        "User-agent: *",
+        "Disallow: /dashboard/",
+        "",
+        f"Sitemap: {base}/sitemap.xml",
+        "",
+    ]
+    return PlainTextResponse("\n".join(lines))
+
+
+# Файл верификации прав на сайт в Яндекс.Вебмастер (не удалять после подтверждения)
+YANDEX_VERIFICATION_HTML = """<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>Verification: e6fcd66bd1186ee2</body>
+</html>"""
+
+
+@app.get("/yandex_e6fcd66bd1186ee2.html", include_in_schema=False)
+async def yandex_verification() -> HTMLResponse:
+    """Отдаёт HTML-файл для подтверждения прав на сайт в Яндекс.Вебмастер."""
+    return HTMLResponse(content=YANDEX_VERIFICATION_HTML, media_type="text/html; charset=utf-8")
+
+
+# Порядок middleware: последний add = первый при обработке запроса.
+# Итоговый порядок обработки: Session -> CSRF -> RequireDashboardAuth -> LoginRateLimit -> app.
 app.add_middleware(LoginRateLimitMiddleware)
 app.add_middleware(RequireDashboardAuthMiddleware)
+app.add_middleware(CSRFMiddleware)
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SESSION_SECRET_KEY", "supersecretkey123") or "supersecretkey123",

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, Text, ForeignKey, JSON
+from sqlalchemy import Column, Integer, BigInteger, String, Float, Boolean, Text, ForeignKey, JSON
 from sqlalchemy.orm import relationship, backref
 from app.database import Base
 
@@ -7,11 +7,12 @@ class Property(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     slug = Column(String, unique=True, index=True, nullable=True)
-    title = Column(String, index=True) 
-    description = Column(Text, nullable=True) 
-    price = Column(Integer, index=True) 
-    area = Column(Float, index=True) 
-    address = Column(String) 
+    title = Column(String, index=True)
+    description = Column(Text, nullable=True)
+    # Цена может быть больше int4, используем BigInteger
+    price = Column(BigInteger, index=True)
+    area = Column(Float, index=True)
+    address = Column(String)
     
     # Главное фото (превью). В БД храним путь, всегда начинающийся с /static/ (например /static/uploads/properties/...)
     main_image = Column(String, nullable=True) 
@@ -96,6 +97,12 @@ class Property(Base):
     @property
     def is_on_cian(self) -> bool:
         return bool(self.cian_offer_id)
+
+    @property
+    def cian_status(self) -> str:
+        data = self.cian_data or {}
+        v = data.get("CianStatus") if isinstance(data, dict) else None
+        return str(v).strip() if v is not None else ""
 
 
 # ТАБЛИЦА ДЛЯ ГАЛЕРЕИ (МНОГО ФОТО). image_url хранит путь, начинающийся с /static/

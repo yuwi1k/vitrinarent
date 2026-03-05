@@ -56,6 +56,16 @@ async def dashboard_home(
     )
 
 
+def _order_clause(sort_by: Optional[str], order: Optional[str]):
+    """Возвращает выражение order_by (по умолчанию id desc)."""
+    asc = order and order.lower() == "asc"
+    if sort_by == "price":
+        return Property.price.asc().nullslast() if asc else Property.price.desc().nullslast()
+    if sort_by == "title":
+        return Property.title.asc().nullslast() if asc else Property.title.desc().nullslast()
+    return Property.id.asc() if asc else Property.id.desc()
+
+
 @router.get("/properties", dependencies=[Depends(check_admin)])
 async def list_properties(
     request: Request,
@@ -65,6 +75,9 @@ async def list_properties(
     deal_type: Optional[str] = None,
     category: Optional[str] = None,
     is_active: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    order: Optional[str] = None,
+    id_or_slug: Optional[str] = None,
 ):
     if page < 1:
         page = 1
@@ -93,11 +106,21 @@ async def list_properties(
         else:
             stmt = stmt.where(Property.is_active.is_(False))
             count_stmt = count_stmt.where(Property.is_active.is_(False))
+    if id_or_slug and id_or_slug.strip():
+        term = id_or_slug.strip()
+        try:
+            sid = int(term)
+            stmt = stmt.where(Property.id == sid)
+            count_stmt = count_stmt.where(Property.id == sid)
+        except ValueError:
+            stmt = stmt.where(Property.slug.ilike(f"%{term}%"))
+            count_stmt = count_stmt.where(Property.slug.ilike(f"%{term}%"))
 
     total_result = await db.execute(count_stmt)
     total = total_result.scalar() or 0
     total_pages = max(1, (total + PAGE_SIZE_DASHBOARD - 1) // PAGE_SIZE_DASHBOARD)
-    stmt = stmt.order_by(Property.id.desc()).offset((page - 1) * PAGE_SIZE_DASHBOARD).limit(PAGE_SIZE_DASHBOARD)
+    stmt = stmt.order_by(_order_clause(sort_by, order))
+    stmt = stmt.offset((page - 1) * PAGE_SIZE_DASHBOARD).limit(PAGE_SIZE_DASHBOARD)
     result = await db.execute(stmt)
     properties = result.scalars().all()
     pages = list(range(1, total_pages + 1))
@@ -116,5 +139,8 @@ async def list_properties(
             "deal_type": deal_type or "Все",
             "category": category or "Все",
             "is_active": is_active if is_active not in (None, "") else "all",
+            "sort_by": sort_by or "id",
+            "order": order or "desc",
+            "id_or_slug": id_or_slug or "",
         },
     )

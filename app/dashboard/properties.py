@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import uuid
+import types
 from typing import Optional, Any
 
 from fastapi import APIRouter, Request, Depends, HTTPException, Form, UploadFile, File
@@ -19,6 +20,7 @@ from app.database import get_db
 from app.dashboard.common import (
     check_admin,
     templates,
+    add_flash,
     _validate_upload_file,
     ALLOWED_IMAGE_EXTENSIONS,
     ALLOWED_DOCUMENT_EXTENSIONS,
@@ -55,6 +57,153 @@ async def _get_parent_candidates(db: AsyncSession, exclude_id: Optional[int] = N
     result = await db.execute(stmt)
     rows = result.all()
     return [(r[0], (r[1] or "")) for r in rows]
+
+
+def _form_model_from_params(
+    title: str = "",
+    slug: str = "",
+    description: str = "",
+    address: str = "",
+    deal_type: str = "Аренда",
+    category: str = "Офис",
+    price: int = 0,
+    area: float = 0.0,
+    latitude: Optional[str] = None,
+    longitude: Optional[str] = None,
+    parent_id: Optional[int] = None,
+    avito_data: Optional[dict] = None,
+    cian_data: Optional[dict] = None,
+    **kwargs: Any,
+) -> Any:
+    """Объект для повторного отображения формы создания при ошибке валидации."""
+    return types.SimpleNamespace(
+        id=None,
+        title=title or "",
+        slug=slug or "",
+        description=description or "",
+        address=address or "",
+        deal_type=deal_type or "Аренда",
+        category=category or "Офис",
+        price=price or 0,
+        area=area or 0.0,
+        latitude=latitude,
+        longitude=longitude,
+        parent_id=parent_id,
+        avito_data=avito_data,
+        cian_data=cian_data,
+        images=[],
+        documents=[],
+        main_image=None,
+        floors_total=kwargs.get("floors_total"),
+        floor_number=kwargs.get("floor_number"),
+        power_kw=kwargs.get("power_kw"),
+        ceiling_height=kwargs.get("ceiling_height"),
+        main_page_order=kwargs.get("main_page_order"),
+        avito_object_type=kwargs.get("avito_object_type"),
+    )
+
+
+async def _render_create_form_error(
+    request: Request,
+    db: AsyncSession,
+    err: str,
+    title: str = "",
+    slug: str = "",
+    description: str = "",
+    address: str = "",
+    deal_type: str = "Аренда",
+    category: str = "Офис",
+    price: int = 0,
+    area: float = 0.0,
+    latitude: Optional[str] = None,
+    longitude: Optional[str] = None,
+    parent_id_val: Optional[int] = None,
+    avito_data_val: Optional[dict] = None,
+    cian_data_val: Optional[dict] = None,
+    floors_total_val: Optional[int] = None,
+    floor_number_val: Optional[int] = None,
+    power_kw_val: Optional[float] = None,
+    ceiling_height_val: Optional[float] = None,
+    main_page_order_val: Optional[int] = None,
+    avito_type_val: Optional[str] = None,
+):
+    parents = await _get_parent_candidates(db)
+    form_model = _form_model_from_params(
+        title=title, slug=slug, description=description, address=address,
+        deal_type=deal_type, category=category, price=price, area=area,
+        latitude=latitude, longitude=longitude, parent_id=parent_id_val,
+        avito_data=avito_data_val, cian_data=cian_data_val,
+        floors_total=floors_total_val, floor_number=floor_number_val,
+        power_kw=power_kw_val, ceiling_height=ceiling_height_val,
+        main_page_order=main_page_order_val, avito_object_type=avito_type_val,
+    )
+    return templates.TemplateResponse(
+        "dashboard/form.html",
+        {
+            "request": request,
+            "model": form_model,
+            "form_errors": [err],
+            "is_edit": False,
+            "is_copy": False,
+            "parent_candidates": parents,
+        },
+        status_code=400,
+    )
+
+
+async def _render_edit_form_error(request: Request, db: AsyncSession, id: int, err: str):
+    """Повторный показ формы редактирования с сообщением об ошибке (400)."""
+    stmt = select(Property).options(
+        selectinload(Property.images),
+        selectinload(Property.documents),
+        selectinload(Property.parent).selectinload(Property.children),
+        selectinload(Property.children),
+    ).where(Property.id == id)
+    result = await db.execute(stmt)
+    model = result.scalar_one_or_none()
+    if not model:
+        raise HTTPException(status_code=404, detail="Объект не найден")
+    parents = await _get_parent_candidates(db, exclude_id=model.id)
+    building = getattr(model, "parent", None) or model
+    children_list = list(getattr(building, "children", None) or [])
+    building_nav_items = [(building.id, building.title or f"Объект #{building.id}", f"/dashboard/properties/edit/{building.id}")]
+    for c in sorted(children_list, key=lambda x: (getattr(x, "main_page_order") or 999, x.id)):
+        building_nav_items.append((c.id, c.title or f"Объект #{c.id}", f"/dashboard/properties/edit/{c.id}"))
+    return templates.TemplateResponse(
+        "dashboard/form.html",
+        {
+            "request": request,
+            "model": model,
+            "form_errors": [err],
+            "is_edit": True,
+            "is_copy": False,
+            "parent_candidates": parents,
+            "building_nav_items": building_nav_items,
+        },
+        status_code=400,
+    )
+
+
+import os
+from fastapi.responses import JSONResponse
+
+
+if os.getenv("TESTING") == "1":
+    @router.post("/properties/_debug_form")
+    async def debug_properties_form(request: Request):
+        """
+        Вспомогательный endpoint только для тестов: возвращает form-данные как JSON,
+        чтобы убедиться, какие поля реально приходят с формы.
+        """
+        form = await request.form()
+        data = {}
+        for k, v in form.multi_items():
+            # UploadFile отображаем как строку с именем файла
+            if hasattr(v, "filename"):
+                data.setdefault(k, []).append(f"<file:{v.filename}>")
+            else:
+                data.setdefault(k, []).append(str(v))
+        return JSONResponse({"form": data})
 
 
 @router.get("/properties/new", dependencies=[Depends(check_admin)])
@@ -118,49 +267,59 @@ async def create_property(
         try:
             copy_from_val = int(copy_from_id)
         except (TypeError, ValueError):
-            pass
+            copy_from_val = None
+
     parent_id_val: Optional[int] = None
     if parent_id is not None and str(parent_id).strip() != "":
         try:
             parent_id_val = int(parent_id)
         except (TypeError, ValueError):
-            pass
-    slug_val = (slug or "").strip() or slugify(title or "object", allow_unicode=False) or "object"
-    slug_val = await _ensure_unique_slug(db, slug_val)
+            parent_id_val = None
+
+    slug_val_input = (slug or "").strip() or slugify(title or "object", allow_unicode=False) or "object"
+    slug_val = await _ensure_unique_slug(db, slug_val_input)
+
     is_active_val = is_active in ("1", "true", "on", True)
     show_on_main_val = show_on_main in ("1", "true", "on", True)
+
     main_page_order_val = None
     if main_page_order is not None and str(main_page_order).strip() != "":
         try:
             main_page_order_val = int(main_page_order)
         except (TypeError, ValueError):
-            pass
+            main_page_order_val = None
+
     lat_val = float(latitude) if latitude and latitude.strip() else None
     lon_val = float(longitude) if longitude and longitude.strip() else None
+
     floors_total_val: Optional[int] = None
     if floors_total and floors_total.strip():
         try:
             floors_total_val = int(floors_total.strip())
         except (TypeError, ValueError):
             floors_total_val = None
+
     floor_number_val: Optional[int] = None
     if floor_number and floor_number.strip():
         try:
             floor_number_val = int(floor_number.strip())
         except (TypeError, ValueError):
             floor_number_val = None
+
     power_kw_val: Optional[float] = None
     if power_kw and power_kw.strip():
         try:
             power_kw_val = float(power_kw.strip().replace(",", "."))
         except (TypeError, ValueError):
             power_kw_val = None
+
     ceiling_height_val: Optional[float] = None
     if ceiling_height and ceiling_height.strip():
         try:
             ceiling_height_val = float(ceiling_height.strip().replace(",", "."))
         except (TypeError, ValueError):
             ceiling_height_val = None
+
     avito_type_val = (avito_object_type or "").strip() or None
     avito_data_val: Optional[dict[str, Any]] = None
     if avito_data_json and (avito_data_json or "").strip():
@@ -261,13 +420,20 @@ async def create_property(
                 new_url = f"/{dest_doc.replace(os.sep, '/')}"
                 db.add(PropertyDocument(property_id=prop.id, title=new_title, document_url=new_url))
 
+    _form_err_ctx = lambda err: _render_create_form_error(
+        request, db, err, title=title, slug=slug_val_input, description=description, address=address,
+        deal_type=deal_type, category=category, price=price, area=area, latitude=latitude, longitude=longitude,
+        parent_id_val=parent_id_val, avito_data_val=avito_data_val, cian_data_val=cian_data_val,
+        floors_total_val=floors_total_val, floor_number_val=floor_number_val, power_kw_val=power_kw_val,
+        ceiling_height_val=ceiling_height_val, main_page_order_val=main_page_order_val, avito_type_val=avito_type_val,
+    )
     if main_image and main_image.filename:
         err = _validate_upload_file(main_image, ALLOWED_IMAGE_EXTENSIONS, UPLOAD_MAX_FILE_SIZE)
         if err:
-            raise HTTPException(status_code=400, detail=err)
+            return await _form_err_ctx(err)
         data = await main_image.read()
         if len(data) > UPLOAD_MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail=f"Файл слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
+            return await _form_err_ctx(f"Файл слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         dest = os.path.join(images_dir, f"{uuid.uuid4()}.jpg")
         ok = await resize_image_async(data, dest)
         if not ok:
@@ -281,10 +447,10 @@ async def create_property(
             continue
         err = _validate_upload_file(f, ALLOWED_IMAGE_EXTENSIONS, UPLOAD_MAX_FILE_SIZE)
         if err:
-            raise HTTPException(status_code=400, detail=err)
+            return await _form_err_ctx(err)
         data = await f.read()
         if len(data) > UPLOAD_MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail=f"Файл «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
+            return await _form_err_ctx(f"Файл «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         dest = os.path.join(images_dir, f"{uuid.uuid4()}.jpg")
         ok = await resize_image_async(data, dest)
         if not ok:
@@ -300,10 +466,10 @@ async def create_property(
             continue
         ext = os.path.splitext(f.filename)[1] or ""
         if ext.lower() not in ALLOWED_DOCUMENT_EXTENSIONS:
-            raise HTTPException(status_code=400, detail=f"Недопустимое расширение документа. Разрешены: {', '.join(sorted(ALLOWED_DOCUMENT_EXTENSIONS))}")
+            return await _form_err_ctx(f"Недопустимое расширение документа. Разрешены: {', '.join(sorted(ALLOWED_DOCUMENT_EXTENSIONS))}")
         data_doc = await f.read()
         if len(data_doc) > UPLOAD_MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail=f"Документ «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
+            return await _form_err_ctx(f"Документ «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         path = os.path.join(documents_dir, f"{uuid.uuid4()}{ext}")
         with open(path, "wb") as out:
             out.write(data_doc)
@@ -312,6 +478,7 @@ async def create_property(
         db.add(doc)
 
     await db.commit()
+    add_flash(request, "Объект создан.", "success")
     return RedirectResponse(url=f"/dashboard/properties/edit/{prop.id}", status_code=303)
 
 
@@ -385,48 +552,57 @@ async def update_property(
         try:
             parent_id_val = int(parent_id)
         except (TypeError, ValueError):
-            pass
+            parent_id_val = None
+
     result = await db.execute(select(Property).where(Property.id == id))
     prop = result.scalar_one_or_none()
     if not prop:
         raise HTTPException(status_code=404, detail="Объект не найден")
 
-    slug_val = (slug or "").strip() or slugify(title or "object", allow_unicode=False) or "object"
-    slug_val = await _ensure_unique_slug(db, slug_val, exclude_id=id)
+    slug_val_input = (slug or "").strip() or slugify(title or "object", allow_unicode=False) or "object"
+    slug_val = await _ensure_unique_slug(db, slug_val_input, exclude_id=id)
+
     is_active_val = is_active in ("1", "true", "on", True)
     show_on_main_val = show_on_main in ("1", "true", "on", True)
+
     main_page_order_val = None
     if main_page_order is not None and str(main_page_order).strip() != "":
         try:
             main_page_order_val = int(main_page_order)
         except (TypeError, ValueError):
-            pass
+            main_page_order_val = None
+
     lat_val = float(latitude) if latitude and latitude.strip() else None
     lon_val = float(longitude) if longitude and longitude.strip() else None
+
     floors_total_val: Optional[int] = None
     if floors_total and floors_total.strip():
         try:
             floors_total_val = int(floors_total.strip())
         except (TypeError, ValueError):
             floors_total_val = None
+
     floor_number_val: Optional[int] = None
     if floor_number and floor_number.strip():
         try:
             floor_number_val = int(floor_number.strip())
         except (TypeError, ValueError):
             floor_number_val = None
+
     power_kw_val: Optional[float] = None
     if power_kw and power_kw.strip():
         try:
             power_kw_val = float(power_kw.strip().replace(",", "."))
         except (TypeError, ValueError):
             power_kw_val = None
+
     ceiling_height_val: Optional[float] = None
     if ceiling_height and ceiling_height.strip():
         try:
             ceiling_height_val = float(ceiling_height.strip().replace(",", "."))
         except (TypeError, ValueError):
             ceiling_height_val = None
+
     avito_type_val = (avito_object_type or "").strip() or None
     avito_data_val: Optional[dict[str, Any]] = None
     if avito_data_json and (avito_data_json or "").strip():
@@ -475,10 +651,10 @@ async def update_property(
     if main_image and main_image.filename:
         err = _validate_upload_file(main_image, ALLOWED_IMAGE_EXTENSIONS, UPLOAD_MAX_FILE_SIZE)
         if err:
-            raise HTTPException(status_code=400, detail=err)
+            return await _render_edit_form_error(request, db, id, err)
         data = await main_image.read()
         if len(data) > UPLOAD_MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail=f"Файл слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
+            return await _render_edit_form_error(request, db, id, f"Файл слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         dest = os.path.join(images_dir, f"{uuid.uuid4()}.jpg")
         ok = await resize_image_async(data, dest)
         if not ok:
@@ -495,10 +671,10 @@ async def update_property(
             continue
         err = _validate_upload_file(f, ALLOWED_IMAGE_EXTENSIONS, UPLOAD_MAX_FILE_SIZE)
         if err:
-            raise HTTPException(status_code=400, detail=err)
+            return await _render_edit_form_error(request, db, id, err)
         data = await f.read()
         if len(data) > UPLOAD_MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail=f"Файл «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
+            return await _render_edit_form_error(request, db, id, f"Файл «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         dest = os.path.join(images_dir, f"{uuid.uuid4()}.jpg")
         ok = await resize_image_async(data, dest)
         if not ok:
@@ -515,10 +691,10 @@ async def update_property(
             continue
         ext = os.path.splitext(f.filename)[1] or ""
         if ext.lower() not in ALLOWED_DOCUMENT_EXTENSIONS:
-            raise HTTPException(status_code=400, detail=f"Недопустимое расширение документа. Разрешены: {', '.join(sorted(ALLOWED_DOCUMENT_EXTENSIONS))}")
+            return await _render_edit_form_error(request, db, id, f"Недопустимое расширение документа. Разрешены: {', '.join(sorted(ALLOWED_DOCUMENT_EXTENSIONS))}")
         data_doc = await f.read()
         if len(data_doc) > UPLOAD_MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail=f"Документ «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
+            return await _render_edit_form_error(request, db, id, f"Документ «{f.filename}» слишком большой (макс. {UPLOAD_MAX_FILE_SIZE // (1024*1024)} МБ)")
         path = os.path.join(documents_dir, f"{uuid.uuid4()}{ext}")
         with open(path, "wb") as out:
             out.write(data_doc)
@@ -527,7 +703,49 @@ async def update_property(
         db.add(doc)
 
     await db.commit()
+    add_flash(request, "Объект сохранён.", "success")
     return RedirectResponse(url="/dashboard/properties", status_code=303)
+
+
+@router.get("/properties/bulk-delete-confirm", dependencies=[Depends(check_admin)])
+async def bulk_delete_confirm(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    ids: Optional[str] = None,
+):
+    """Страница подтверждения массового удаления: список объектов и форма POST в bulk."""
+    if not ids or not ids.strip():
+        add_flash(request, "Не выбрано ни одного объекта.", "error")
+        return RedirectResponse(url="/dashboard/properties", status_code=303)
+    id_list = []
+    for part in ids.strip().split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            id_list.append(int(part))
+        except (TypeError, ValueError):
+            continue
+    if not id_list:
+        add_flash(request, "Некорректный список ID.", "error")
+        return RedirectResponse(url="/dashboard/properties", status_code=303)
+    # Только корневые объекты
+    stmt = select(Property).where(
+        Property.id.in_(id_list),
+        Property.parent_id.is_(None),
+    ).order_by(Property.id.asc())
+    result = await db.execute(stmt)
+    properties = result.scalars().all()
+    if not properties:
+        add_flash(request, "Выбранные объекты не найдены или не являются корневыми.", "error")
+        return RedirectResponse(url="/dashboard/properties", status_code=303)
+    return templates.TemplateResponse(
+        "dashboard/bulk_delete_confirm.html",
+        {
+            "request": request,
+            "properties": properties,
+        },
+    )
 
 
 @router.post("/properties/bulk", dependencies=[Depends(check_admin)])
@@ -544,18 +762,36 @@ async def bulk_action(
             id_list.append(int(i))
         except (TypeError, ValueError):
             pass
-    if not id_list or action not in ("activate", "deactivate", "show_on_main", "hide_from_main"):
+    if not id_list or action not in ("activate", "deactivate", "show_on_main", "hide_from_main", "delete"):
         return RedirectResponse(url="/dashboard/properties", status_code=303)
-    base = update(Property).where(Property.id.in_(id_list), Property.parent_id.is_(None))
+    # Массовые действия только по корневым объектам (parent_id is None)
+    base_ids = [i for i in id_list]
+    base = update(Property).where(Property.id.in_(base_ids), Property.parent_id.is_(None))
     if action == "activate":
         await db.execute(base.values(is_active=True))
+        await db.commit()
+        add_flash(request, f"Опубликовано объектов: {len(base_ids)}.", "success")
     elif action == "deactivate":
         await db.execute(base.values(is_active=False))
+        await db.commit()
+        add_flash(request, f"Снято с публикации: {len(base_ids)}.", "success")
     elif action == "show_on_main":
         await db.execute(base.values(show_on_main=True))
+        await db.commit()
+        add_flash(request, f"Добавлено на главную: {len(base_ids)}.", "success")
     elif action == "hide_from_main":
         await db.execute(base.values(show_on_main=False))
-    await db.commit()
+        await db.commit()
+        add_flash(request, f"Убрано с главной: {len(base_ids)}.", "success")
+    elif action == "delete":
+        # Удаляем выбранные объекты вместе с дочерними (эквивалент delete_children=1)
+        for pid in base_ids:
+            try:
+                await delete_property(request, pid, db, delete_children="1")
+            except HTTPException:
+                # Пропускаем, если объект уже удалён или не найден
+                continue
+        add_flash(request, f"Удалено объектов: {len(base_ids)}.", "success")
     return RedirectResponse(url="/dashboard/properties", status_code=303)
 
 
@@ -615,4 +851,5 @@ async def delete_property(
                 shutil.rmtree(folder, ignore_errors=True)
         except Exception:
             continue
+    add_flash(request, "Объект удалён.", "success")
     return RedirectResponse(url="/dashboard/properties", status_code=303)

@@ -2,10 +2,13 @@
 Генерация XML-фида для выгрузки объявлений на Циан (импорт по URL фида).
 
 Формат: официальная схема v2 (feed_version=2, тег <object>).
-Категории аренды (из формы CianCategory): freeAppointmentObjectRent, officeRent, warehouseRent,
-industryRent, shoppingAreaRent, buildingRent, garageRent, commercialLandRent.
-Продажа: freeAppointmentObjectSale. В BargainTerms для аренды — PaymentPeriod, LeaseType.
-Документация: https://www.cian.ru/xml_import/doc/
+Категории и enum-значения — по официальной документации:
+  https://www.cian.ru/xml_import/doc/#common_cat  (общие категории и поля)
+
+Категории аренды: freeAppointmentObjectRent, officeRent, warehouseRent, industryRent,
+shoppingAreaRent, buildingRent, garageRent, commercialLandRent.
+Категории продажи: freeAppointmentObjectSale, officeSale, warehouseSale и др. (см. раздел выше).
+BargainTerms для аренды: PaymentPeriod, LeaseType; ConditionType, Layout, InputType, Building/Type — по доке.
 """
 import os
 import re
@@ -42,7 +45,7 @@ def _parse_phone(phone: str) -> Tuple[str, str]:
     return "+7", digits or "0000000000"
 
 
-# Маппинг типа здания (форма/русский) -> enum Циан Building/Type
+# Маппинг типа здания (форма/русский) -> enum Циан Building/Type (полный список по доке #common_cat)
 CIAN_BUILDING_TYPE_MAP = {
     "Бизнес-центр": "businessCenter",
     "Торговый центр": "shoppingCenter",
@@ -54,6 +57,49 @@ CIAN_BUILDING_TYPE_MAP = {
     "administrativeBuilding": "administrativeBuilding",
     "officeBuilding": "officeBuilding",
     "free": "free",
+    # Расширенный список из документации Циан (здание, офис, склад, производство, торговая площадь)
+    "businessCenter2": "businessCenter2",
+    "businessHouse": "businessHouse",
+    "businessPark": "businessPark",
+    "businessQuarter": "businessQuarter",
+    "businessQuarter2": "businessQuarter2",
+    "industrialComplex": "industrialComplex",
+    "industrialPark": "industrialPark",
+    "industrialSite": "industrialSite",
+    "industrialWarehouseComplex": "industrialWarehouseComplex",
+    "logisticsCenter": "logisticsCenter",
+    "logisticsComplex": "logisticsComplex",
+    "logisticsPark": "logisticsPark",
+    "mansion": "mansion",
+    "manufactureBuilding": "manufactureBuilding",
+    "manufacturingFacility": "manufacturingFacility",
+    "modular": "modular",
+    "multifunctionalComplex": "multifunctionalComplex",
+    "officeAndHotelComplex": "officeAndHotelComplex",
+    "officeAndResidentialComplex": "officeAndResidentialComplex",
+    "officeAndWarehouse": "officeAndWarehouse",
+    "officeAndWarehouseComplex": "officeAndWarehouseComplex",
+    "officeCenter": "officeCenter",
+    "officeComplex": "officeComplex",
+    "officeIndustrialComplex": "officeIndustrialComplex",
+    "officeQuarter": "officeQuarter",
+    "old": "old",
+    "outlet": "outlet",
+    "propertyComplex": "propertyComplex",
+    "residentialComplex": "residentialComplex",
+    "shoppingAndBusinessComplex": "shoppingAndBusinessComplex",
+    "shoppingAndCommunityCenter": "shoppingAndCommunityCenter",
+    "shoppingAndEntertainmentCenter": "shoppingAndEntertainmentCenter",
+    "shoppingAndWarehouseComplex": "shoppingAndWarehouseComplex",
+    "shoppingComplex": "shoppingComplex",
+    "specializedShoppingCenter": "specializedShoppingCenter",
+    "standaloneBuilding": "standaloneBuilding",
+    "technopark": "technopark",
+    "tradeAndExhibitionComplex": "tradeAndExhibitionComplex",
+    "tradingHouse": "tradingHouse",
+    "tradingOfficeComplex": "tradingOfficeComplex",
+    "warehouse": "warehouse",
+    "warehouseComplex": "warehouseComplex",
 }
 
 # Допустимые значения ConditionType (Помещение свободного назначения)
@@ -272,23 +318,32 @@ def generate_cian_feed(properties: list) -> bytes:
         publish = etree.SubElement(obj, "PublishTerms")
         etree.SubElement(publish, "PromotionType").text = "noPromotion"
 
-        # BargainTerms (по схеме Циан: для аренды — PaymentPeriod, LeaseType; для продажи — без них)
+        # BargainTerms: по доке Циан аренда — Price, PriceType, Currency, PaymentPeriod, LeaseType, VatType;
+        # продажа — Price, Currency, VatType, ContractType (leaseAssignment | sale), без PriceType/PaymentPeriod/LeaseType
         bargain = etree.SubElement(obj, "BargainTerms")
         price_val = int(prop.price) if prop.price is not None else 0
         etree.SubElement(bargain, "Price").text = str(price_val)
-        etree.SubElement(bargain, "PriceType").text = "all"
-        etree.SubElement(bargain, "Currency").text = "rur"
-        etree.SubElement(bargain, "VatType").text = "included"
+        currency_raw = (cian_data.get("Currency") or "rur").strip().lower() or "rur"
+        currency = currency_raw if currency_raw in ("eur", "rur", "usd") else "rur"
+        etree.SubElement(bargain, "Currency").text = currency
+        vat_raw = (cian_data.get("VatType") or "included").strip().lower() or "included"
+        etree.SubElement(bargain, "VatType").text = vat_raw if vat_raw in ("included", "usn") else "included"
         if deal_type == "Продажа":
-            pass  # для продажи по схеме без ContractType в примерах
+            # По доке для продажи: Price, Currency, VatType, ContractType (без PriceType)
+            contract_raw = (cian_data.get("ContractType") or "sale").strip().lower() or "sale"
+            contract = contract_raw if contract_raw in ("leaseassignment", "sale") else "sale"
+            if contract == "leaseassignment":
+                etree.SubElement(bargain, "ContractType").text = "leaseAssignment"
+            else:
+                etree.SubElement(bargain, "ContractType").text = "sale"
         else:
+            etree.SubElement(bargain, "PriceType").text = "all"
             payment_period = (cian_data.get("PaymentPeriod") or "monthly").strip() or "monthly"
             if payment_period not in ("annual", "monthly"):
                 payment_period = "monthly"
             etree.SubElement(bargain, "PaymentPeriod").text = payment_period
             lease_type = (cian_data.get("LeaseType") or "direct").strip() or "direct"
             if lease_type not in ("direct", "sublease"):
-                # маппинг из старого поля RentalType
                 rental = (cian_data.get("RentalType") or "").strip().lower()
                 lease_type = "sublease" if "суб" in rental or rental == "sublease" else "direct"
             etree.SubElement(bargain, "LeaseType").text = lease_type

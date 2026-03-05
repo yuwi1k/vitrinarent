@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-header d-print-none mb-4">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <h2 class="page-title mb-0">{% if is_copy %}Копирование: {{ model.title or 'Без названия' }}{% elif model %}Редактирование: {{ model.title or 'Без названия' }}{% else %}Создание объекта{% endif %}</h2>
+        <h2 class="page-title mb-0">{% if is_copy %}Копирование: {{ model.title or 'Без названия' }}{% elif model %}Редактирование: {{ model.title or 'Без названия' }}{% else %}Создание объекта{% endif %}{% if is_copy %} <span class="badge bg-warning text-dark ms-2">Копия</span>{% endif %}</h2>
         {% if (building_nav_items or [])|length > 1 %}
         <div class="ms-auto">
             <label for="dashboard-building-nav" class="form-label small text-muted mb-0 me-2">Здание и помещения:</label>
@@ -19,7 +19,18 @@
     </div>
 </div>
 
+{% if form_errors %}
+<div class="alert alert-danger alert-dismissible fade show mb-3" id="first-error" role="alert">
+    <ul class="mb-0 ps-3">
+        {% for msg in form_errors %}
+        <li>{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+</div>
+{% endif %}
 <form method="post" action="{% if is_copy %}/dashboard/properties/new{% elif model %}/dashboard/properties/edit/{{ model.id }}{% else %}/dashboard/properties/new{% endif %}" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
     {% if is_copy and model %}<input type="hidden" name="copy_from_id" value="{{ model.id }}">{% endif %}
     <ul class="nav nav-tabs mb-3" data-bs-toggle="tabs" role="tablist">
         <li class="nav-item" role="presentation">
@@ -52,7 +63,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Slug (URL)</label>
-                        <input type="text" name="slug" class="form-control" value="{{ '' if is_copy else (model.slug or '') if model else '' }}" placeholder="авто">
+                        <input type="text" name="slug" class="form-control" value="{{ '' if is_copy else (model.slug or '') if model else '' }}" placeholder="{% if is_copy %}Оставьте пустым — сгенерируется автоматически{% else %}авто{% endif %}">
+                        {% if is_copy %}<p class="form-hint text-muted small mt-1 mb-0">Для копии slug будет сгенерирован автоматически, если оставить поле пустым.</p>{% endif %}
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Описание</label>
@@ -780,6 +792,7 @@
                                     <option value="buildingSale" {% if cian.get('CianCategory') == 'buildingSale' %}selected{% endif %}>Здание</option>
                                     <option value="garageSale" {% if cian.get('CianCategory') == 'garageSale' %}selected{% endif %}>Гараж</option>
                                     <option value="commercialLandSale" {% if cian.get('CianCategory') == 'commercialLandSale' %}selected{% endif %}>Коммерческая земля</option>
+                                    <option value="businessSale" {% if cian.get('CianCategory') == 'businessSale' %}selected{% endif %}>Готовый бизнес</option>
                                     {% endif %}
                                 </select>
                                 <small class="text-muted">Выбор категории для аренды и продажи в фиде Циан.</small>
@@ -800,6 +813,34 @@
                                 <select class="form-select cian-field" name="cian_LeaseType" data-key="LeaseType">
                                     <option value="direct" {% if cian.get('LeaseType', 'direct') == 'direct' %}selected{% endif %}>Прямая аренда</option>
                                     <option value="sublease" {% if cian.get('LeaseType') == 'sublease' %}selected{% endif %}>Субаренда</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4" id="cian-contract-type-wrap" style="display:{% if deal_rent_cian %}none{% else %}block{% endif %};">
+                            <div class="mb-3">
+                                <label class="form-label">Тип договора (ContractType) — продажа</label>
+                                <select class="form-select cian-field" name="cian_ContractType" data-key="ContractType">
+                                    <option value="sale" {% if cian.get('ContractType', 'sale') == 'sale' %}selected{% endif %}>Продажа</option>
+                                    <option value="leaseAssignment" {% if cian.get('ContractType') == 'leaseAssignment' %}selected{% endif %}>Переуступка прав аренды</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">Валюта (Currency)</label>
+                                <select class="form-select cian-field" name="cian_Currency" data-key="Currency">
+                                    <option value="rur" {% if cian.get('Currency', 'rur') == 'rur' %}selected{% endif %}>Рубль</option>
+                                    <option value="usd" {% if cian.get('Currency') == 'usd' %}selected{% endif %}>Доллар</option>
+                                    <option value="eur" {% if cian.get('Currency') == 'eur' %}selected{% endif %}>Евро</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="mb-3">
+                                <label class="form-label">НДС (VatType)</label>
+                                <select class="form-select cian-field" name="cian_VatType" data-key="VatType">
+                                    <option value="included" {% if cian.get('VatType', 'included') == 'included' %}selected{% endif %}>НДС включен</option>
+                                    <option value="usn" {% if cian.get('VatType') == 'usn' %}selected{% endif %}>УСН</option>
                                 </select>
                             </div>
                         </div>
@@ -1008,100 +1049,18 @@
         <a href="/dashboard/properties" class="btn btn-outline-secondary ms-2">Отмена</a>
     </div>
 </form>
-<script>
-window.CIAN_CATEGORIES = {
-    rent: [
-        { value: 'freeAppointmentObjectRent', label: 'Помещение свободного назначения' },
-        { value: 'officeRent', label: 'Офис' },
-        { value: 'warehouseRent', label: 'Склад' },
-        { value: 'industryRent', label: 'Производство' },
-        { value: 'shoppingAreaRent', label: 'Торговая площадь' },
-        { value: 'buildingRent', label: 'Здание' },
-        { value: 'garageRent', label: 'Гараж' },
-        { value: 'commercialLandRent', label: 'Коммерческая земля' }
-    ],
-    sale: [
-        { value: 'freeAppointmentObjectSale', label: 'Помещение свободного назначения' },
-        { value: 'officeSale', label: 'Офис' },
-        { value: 'warehouseSale', label: 'Склад' },
-        { value: 'industrySale', label: 'Производство' },
-        { value: 'shoppingAreaSale', label: 'Торговая площадь' },
-        { value: 'buildingSale', label: 'Здание' },
-        { value: 'garageSale', label: 'Гараж' },
-        { value: 'commercialLandSale', label: 'Коммерческая земля' }
-    ],
-    rentToSale: { freeAppointmentObjectRent: 'freeAppointmentObjectSale', officeRent: 'officeSale', warehouseRent: 'warehouseSale', industryRent: 'industrySale', shoppingAreaRent: 'shoppingAreaSale', buildingRent: 'buildingSale', garageRent: 'garageSale', commercialLandRent: 'commercialLandSale' },
-    saleToRent: { freeAppointmentObjectSale: 'freeAppointmentObjectRent', officeSale: 'officeRent', warehouseSale: 'warehouseRent', industrySale: 'industryRent', shoppingAreaSale: 'shoppingAreaRent', buildingSale: 'buildingRent', garageSale: 'garageRent', commercialLandSale: 'commercialLandRent' }
-};
-(function() {
-    var form = document.querySelector('form[action*="/dashboard/properties"]');
-    var hidden = document.getElementById('avito_data_json');
-    if (!form || !hidden) return;
-    form.addEventListener('submit', function() {
-        var data = {};
-        form.querySelectorAll('.avito-field').forEach(function(el) {
-            var key = el.getAttribute('data-key');
-            var val = (el.value || '').trim();
-            if (key && val) data[key] = val;
-        });
-        hidden.value = JSON.stringify(data);
-
-        var cianHidden = document.getElementById('cian_data_json');
-        if (cianHidden) {
-            var cianData = {};
-            form.querySelectorAll('.cian-field').forEach(function(el) {
-                var key = el.getAttribute('data-key');
-                var val = (el.value || '').trim();
-                if (key) cianData[key] = val;
-            });
-            cianHidden.value = JSON.stringify(cianData);
-        }
-    });
-
-    function toggleAvitoByDealType() {
-        var sel = form.querySelector('select[name="deal_type"]');
-        var isRent = sel && sel.value === 'Аренда';
-        var rentReq = document.getElementById('avito-required-rent');
-        var saleReq = document.getElementById('avito-required-sale');
-        var rentBlock = document.getElementById('avito-block-rent');
-        var saleBlock = document.getElementById('avito-block-sale');
-        if (rentReq) rentReq.style.display = isRent ? 'block' : 'none';
-        if (saleReq) saleReq.style.display = isRent ? 'none' : 'block';
-        if (rentBlock) rentBlock.style.display = isRent ? 'block' : 'none';
-        if (saleBlock) saleBlock.style.display = isRent ? 'none' : 'block';
-        var cianRent = document.getElementById('cian-rent-type');
-        var cianSale = document.getElementById('cian-sale-type');
-        var cianRights = document.getElementById('cian-property-rights');
-        var cianPaymentWrap = document.getElementById('cian-payment-period-wrap');
-        var cianLeaseWrap = document.getElementById('cian-lease-type-wrap');
-        if (cianRent) cianRent.style.display = isRent ? 'block' : 'none';
-        if (cianSale) cianSale.style.display = isRent ? 'none' : 'block';
-        if (cianRights) cianRights.style.display = isRent ? 'none' : 'block';
-        if (cianPaymentWrap) cianPaymentWrap.style.display = isRent ? 'block' : 'none';
-        if (cianLeaseWrap) cianLeaseWrap.style.display = isRent ? 'block' : 'none';
-        var catSelect = document.getElementById('cian-category-select');
-        if (catSelect && window.CIAN_CATEGORIES) {
-            var cur = (catSelect.value || '').trim();
-            var opts = isRent ? window.CIAN_CATEGORIES.rent : window.CIAN_CATEGORIES.sale;
-            var map = isRent ? window.CIAN_CATEGORIES.saleToRent : window.CIAN_CATEGORIES.rentToSale;
-            catSelect.options.length = 0;
-            opts.forEach(function(o) {
-                var opt = new Option(o.label, o.value);
-                catSelect.options.add(opt);
-            });
-            var newVal = map[cur] || (isRent ? 'freeAppointmentObjectRent' : 'freeAppointmentObjectSale');
-            catSelect.value = newVal;
-        }
-    }
-    if (form.querySelector('select[name="deal_type"]')) {
-        form.querySelector('select[name="deal_type"]').addEventListener('change', toggleAvitoByDealType);
-        toggleAvitoByDealType();
-    }
-})();
-</script>
+<script src="/static/js/dashboard-property-form.js"></script>
 {% endblock %}
 
 {% block tail %}
+{% if form_errors %}
+<script>
+(function() {
+    var el = document.getElementById('first-error');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+})();
+</script>
+{% endif %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
 <script>

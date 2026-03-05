@@ -226,6 +226,41 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
     )
 
 
+@router.get("/sitemap.xml")
+async def sitemap_xml(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
+    """
+    Простой sitemap.xml для поисковых систем:
+    - главная, поиск, FAQ
+    - все активные объекты (Property.is_active == True).
+    """
+    # Базовый URL с учётом прокси
+    host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc or "").strip()
+    proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "https").split(",")[0].strip() or "https"
+    base = f"{proto}://{host}".rstrip("/") if host else str(request.url.replace(path="", query="")).rstrip("/")
+
+    static_paths = ["/", "/search", "/faq"]
+
+    # Активные объекты (все, не только корневые) — чтобы карточки помещений тоже попадали в карту сайта
+    stmt = select(Property).where(Property.is_active == True)
+    result = await db.execute(stmt)
+    props = result.scalars().all()
+
+    url_entries: list[str] = []
+    for path in static_paths:
+        url_entries.append(f"<url><loc>{base}{path}</loc></url>")
+    for p in props:
+        slug = p.slug or str(p.id)
+        url_entries.append(f"<url><loc>{base}/property/{slug}</loc></url>")
+
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        + "".join(url_entries)
+        + "</urlset>"
+    )
+    return Response(content=xml, media_type="application/xml")
+
+
 @router.get("/avito.xml")
 async def get_avito_feed_route(db: AsyncSession = Depends(get_db)):
     stmt = select(Property).where(Property.is_active == True, Property.parent_id.is_(None))

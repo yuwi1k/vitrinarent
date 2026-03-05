@@ -28,6 +28,7 @@
 <div class="card">
     <div class="card-body">
         <form method="post" action="/dashboard/settings" class="row g-3">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
             <div class="col-12">
                 <label class="form-label">Имя менеджера (ManagerName)</label>
                 <input type="text" name="avito_manager_name" class="form-control" value="{{ (settings.avito_manager_name or '') }}" placeholder="Менеджер Vitrina">

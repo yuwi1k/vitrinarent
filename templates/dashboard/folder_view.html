@@ -21,6 +21,7 @@
     </div>
     <div class="card-body">
         <form action="/dashboard/folders/{{ property_obj.id }}/upload" method="post" enctype="multipart/form-data" class="row g-3">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
             <div class="col-md-6">
                 <label class="form-label">Фото</label>
                 <input type="file" name="new_photos" id="input-new-photos" class="form-control" accept="image/*" multiple>

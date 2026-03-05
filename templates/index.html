@@ -8,6 +8,7 @@
 
     <meta name="description" content="Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа. Сервис для агентов." />
     <meta name="keywords" content="коммерческая недвижимость, аренда офиса, продажа склада, торговые площади, Vitrina" />
+    <link rel="canonical" href="{{ request.url.scheme }}://{{ request.url.netloc }}{{ request.url.path }}" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -162,6 +163,10 @@
         .vitrina-hero-content { padding: 5rem 0 3rem; }
         .vitrina-search-card .d-flex { flex-direction: column; gap: 0.75rem !important; }
         .vitrina-hero-cta { width: 100%; }
+      }
+      @media (max-width: 575.98px) {
+        .vitrina-hero-content { padding: 4.25rem 0 2.75rem; }
+        .vitrina-hero-subtitle { font-size: 1rem; }
       }
       /* --- Каталог на главной: ровные карточки и цвета под дизайн --- */
       .catalog-preview .heading { color: #5a6c7d !important; font-weight: 700; }
