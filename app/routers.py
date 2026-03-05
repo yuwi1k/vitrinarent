@@ -23,6 +23,15 @@ from app.services import build_search_query
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
+
+def _base_url(request: Request) -> str:
+    """Базовый URL сайта с учётом прокси (X-Forwarded-Proto/Host) для canonical и schema."""
+    host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or getattr(request.url, "netloc", "") or "").strip()
+    proto = (request.headers.get("x-forwarded-proto") or getattr(request.url, "scheme", "https") or "https").split(",")[0].strip().lower() or "https"
+    if not host:
+        host = getattr(request.url, "netloc", "") or "localhost:8000"
+    return f"{proto}://{host}".rstrip("/")
+
 # Разрешённые теги и атрибуты для описания объекта (защита от XSS)
 ALLOWED_TAGS = ["p", "br", "strong", "b", "em", "i", "u", "ul", "ol", "li", "a", "span"]
 ALLOWED_ATTRS = {"a": ["href", "title", "target", "rel"]}
@@ -59,10 +68,12 @@ async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
     rent_count = (await db.execute(select(func.count()).select_from(Property).where(Property.is_active == True, Property.deal_type == "Аренда"))).scalar() or 0
     sale_count = (await db.execute(select(func.count()).select_from(Property).where(Property.is_active == True, Property.deal_type == "Продажа"))).scalar() or 0
 
+    base_url = _base_url(request)
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
+            "base_url": base_url,
             "properties": properties,
             "total_properties": total_properties,
             "rent_count": rent_count,
@@ -136,6 +147,7 @@ async def search_page(
         "search.html",
         {
             "request": request,
+            "base_url": _base_url(request),
             "properties": properties,
             "page": page,
             "total_pages": total_pages,
@@ -158,7 +170,7 @@ async def search_page(
 
 @router.get("/faq")
 async def faq_page(request: Request):
-    return templates.TemplateResponse("faq.html", {"request": request})
+    return templates.TemplateResponse("faq.html", {"request": request, "base_url": _base_url(request)})
 
 
 @router.get("/property/{slug}")

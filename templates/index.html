@@ -10,7 +10,7 @@
     <meta name="keywords" content="коммерческая недвижимость, аренда офиса, продажа склада, торговые площади, Vitrina, витрина рент, vitrina, витрина рент рф />
     <meta name="yandex-verification" content="e6fcd66bd1186ee2" />
     <meta name="google-site-verification" content="oEtd5BxM5fAybSDNtTC5PJZCCKSnBITBUe5syl3J2WY" />
-    <link rel="canonical" href="{{ request.url.scheme }}://{{ request.url.netloc }}{{ request.url.path }}" />
+    <link rel="canonical" href="{{ base_url }}{{ request.url.path }}" />
 
     <script type="application/ld+json">
     {
@@ -19,17 +19,17 @@
         {
           "@type": "Organization",
           "name": "Vitrina",
-          "url": "{{ request.url.scheme }}://{{ request.url.netloc }}",
+          "url": "{{ base_url }}",
           "description": "Каталог коммерческой недвижимости: аренда и продажа офисов, складов, торговых площадей."
         },
         {
           "@type": "WebSite",
           "name": "Vitrina",
-          "url": "{{ request.url.scheme }}://{{ request.url.netloc }}",
+          "url": "{{ base_url }}",
           "description": "Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа.",
           "potentialAction": {
             "@type": "SearchAction",
-            "target": { "@type": "EntryPoint", "urlTemplate": "{{ request.url.scheme }}://{{ request.url.netloc }}/search?q={search_term_string}" },
+            "target": { "@type": "EntryPoint", "urlTemplate": "{{ base_url }}/search?q={search_term_string}" },
             "query-input": "required name=search_term_string"
           }
         }

@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Поиск коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа." />
-    <link rel="canonical" href="{{ request.url.scheme }}://{{ request.url.netloc }}{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}" />
+    <link rel="canonical" href="{{ base_url }}{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}" />
     <title>Vitrina — поиск недвижимости</title>
     <link rel="shortcut icon" href="/static/images/favicon.png" />
 
