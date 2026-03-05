@@ -185,6 +185,26 @@ async def health_readiness():
 
 
 # --- ПОДКЛЮЧЕНИЕ СТАТИКИ И ШАБЛОНОВ ---
+# Явно отдаём фон главной, чтобы картинка грузилась и за прокси, и из Docker
+def _find_hero_bg():
+    base = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "static", "images"))
+    if not os.path.isdir(base):
+        base = os.path.normpath(os.path.join("static", "images"))
+    for name in ("hero_bg_1.png", "hero_bg_1.jpg"):
+        path = os.path.join(base, name)
+        if os.path.isfile(path):
+            return path, "image/png" if name.endswith(".png") else "image/jpeg"
+    return None, None
+
+
+@app.get("/static/images/hero_bg_1.png", include_in_schema=False)
+async def hero_background_image():
+    path, media_type = _find_hero_bg()
+    if not path:
+        raise HTTPException(status_code=404, detail="Hero image not found")
+    return FileResponse(path, media_type=media_type)
+
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
