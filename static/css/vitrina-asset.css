@@ -452,9 +452,6 @@ a { text-decoration: none; color: inherit; }
   transform: translateX(3px);
 }
 
-.showcase-block:last-child:nth-child(odd) {
-  grid-column: 1 / -1;
-}
 
 /* ─── Section header ─── */
 .section-header {
