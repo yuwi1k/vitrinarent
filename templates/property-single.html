@@ -1,400 +1,268 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="shortcut icon" href="/static/images/favicon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/fonts/icomoon/style.css" />
-    <link rel="stylesheet" href="/static/fonts/flaticon/font/flaticon.css" />
-    <link rel="stylesheet" href="/static/css/tiny-slider.css" />
-    <link rel="stylesheet" href="/static/css/aos.css" />
-    <link rel="stylesheet" href="/static/css/style.css" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ property.title }} — Vitrina</title>
+  <link rel="shortcut icon" href="/static/images/favicon.png" />
 
-    <meta name="description" content="{{ (property.description or property.title or 'Объект недвижимости')[:160] }}{% if (property.description or property.title) and (property.description or '')|length > 160 %}...{% endif %}" />
-    <link rel="canonical" href="{{ site_url }}/property/{{ property.slug or property.id }}" />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="{{ property.title }} — Vitrina" />
-    <meta property="og:description" content="{{ (property.description or property.title or 'Коммерческая недвижимость')[:200] }}" />
-    <meta property="og:url" content="{{ site_url }}/property/{{ property.slug or property.id }}" />
+  <meta name="description" content="{{ (property.description or property.title or 'Объект недвижимости')[:160] }}" />
+  <link rel="canonical" href="{{ site_url }}/property/{{ property.slug or property.id }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{{ property.title }} — Vitrina" />
+  <meta property="og:description" content="{{ (property.description or property.title or 'Коммерческая недвижимость')[:200] }}" />
+  <meta property="og:url" content="{{ site_url }}/property/{{ property.slug or property.id }}" />
+  {% if property.main_image %}
+  <meta property="og:image" content="{{ site_url }}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" />
+  {% endif %}
+  <meta property="og:locale" content="ru_RU" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{{ property.title }} — Vitrina" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "{{ (property.title or 'Объект')|replace('\\', '\\\\')|replace('"', '\\"') }}",
+    "description": "{{ ((property.description or property.title or 'Объект недвижимости')[:500])|replace('\\', '\\\\')|replace('"', '\\"')|replace('\n', ' ') }}",
+    "url": "{{ site_url }}/property/{{ property.slug or property.id }}",
     {% if property.main_image %}
-    <meta property="og:image" content="{{ site_url }}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" />
+    "image": "{{ site_url }}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}",
     {% endif %}
-    <meta property="og:locale" content="ru_RU" />
-
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Product",
-      "name": "{{ (property.title or 'Объект')|replace('\\', '\\\\')|replace('"', '\\"') }}",
-      "description": "{{ ((property.description or property.title or 'Объект недвижимости')[:500])|replace('\\', '\\\\')|replace('"', '\\"')|replace('\n', ' ') }}",
-      "url": "{{ site_url }}/property/{{ property.slug or property.id }}",
-      {% if property.main_image %}
-      "image": "{{ site_url }}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}",
-      {% endif %}
-      "offers": {
-        "@type": "Offer",
-        "price": "{{ property.price or 0 }}",
-        "priceCurrency": "RUB",
-        "availability": "https://schema.org/InStock"
-      }
-      {% if property.address %},
-      "address": { "@type": "PostalAddress", "addressLocality": "{{ (property.address or '')|replace('\\', '\\\\')|replace('"', '\\"') }}" }
-      {% endif %}
+    "offers": {
+      "@type": "Offer",
+      "price": "{{ property.price or 0 }}",
+      "priceCurrency": "RUB",
+      "availability": "https://schema.org/InStock"
     }
-    </script>
+    {% if property.address %},
+    "address": { "@type": "PostalAddress", "addressLocality": "{{ (property.address or '')|replace('\\', '\\\\')|replace('"', '\\"') }}" }
+    {% endif %}
+  }
+  </script>
 
-    <style>
-      html { scroll-behavior: smooth; }
-      body { display: flex; flex-direction: column; min-height: 100vh; }
-      body main { flex: 1; }
-      body .site-footer { flex-shrink: 0; margin-top: auto; }
-      .vitrina-header {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 10;
-        padding: 1.25rem 0;
-        background: rgba(255,255,255,0.08);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-      }
-      .vitrina-header .vitrina-logo {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #fff;
-        text-decoration: none;
-        letter-spacing: -0.02em;
-        font-family: 'Work Sans', sans-serif;
-      }
-      .vitrina-header .vitrina-logo:hover { color: #fff; opacity: 0.9; }
-      .vitrina-header .burger.site-menu-toggle { background: transparent; border: none; padding: 0.25rem; }
-      .vitrina-nav {
-        display: flex;
-        align-items: center;
-        gap: 2.5rem;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-      .vitrina-nav a {
-        color: rgba(255,255,255,0.9);
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 0.95rem;
-        transition: color 0.2s;
-      }
-      .vitrina-nav a:hover,
-      .vitrina-nav a.active { color: #fff; }
-      .vitrina-page-hero {
-        position: relative;
-        min-height: 32vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 5rem 0 2.5rem;
-        background-size: cover;
-        background-position: center top;
-        background-repeat: no-repeat;
-      }
-      .vitrina-page-hero .vitrina-hero-title {
-        font-size: clamp(1.75rem, 4vw, 2.5rem);
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 0.5rem;
-        font-family: 'Work Sans', sans-serif;
-      }
-      .vitrina-page-hero .vitrina-hero-subtitle {
-        color: rgba(255,255,255,0.85);
-        font-size: 1rem;
-        margin-bottom: 0;
-      }
-      .vitrina-parent-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        padding: 0.25rem 0.75rem;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(148, 163, 184, 0.6);
-        color: rgba(248, 250, 252, 0.9);
-        font-size: 0.8rem;
-        letter-spacing: 0.03em;
-      }
-      .vitrina-parent-pill a {
-        color: #e5e7eb;
-        text-decoration: underline;
-        text-decoration-thickness: 1px;
-        text-underline-offset: 2px;
-      }
-      .vitrina-parent-pill a:hover {
-        color: #ffffff;
-      }
-      .vitrina-property-carousel img {
-        object-fit: cover;
-        height: 500px;
-        border-radius: 10px;
-        width: 100%;
-      }
-      @media (max-width: 767.98px) {
-        .vitrina-property-carousel img { height: 320px; }
-      }
-      .skip-link { position: absolute; top: -3rem; left: 0.5rem; z-index: 9999; padding: 0.5rem 1rem; background: #5a6c7d; color: #fff; text-decoration: none; border-radius: 4px; }
-      .skip-link:focus { top: 0.5rem; outline: 2px solid #fff; outline-offset: 2px; }
-      a:focus-visible, button:focus-visible { outline: 2px solid #5a6c7d; outline-offset: 2px; }
-    </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/vitrina-asset.css" />
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Перейти к содержимому</a>
 
-    <title>{{ property.title }} — Vitrina</title>
-  </head>
-  <body>
-    <a href="#main-content" class="skip-link">Перейти к содержимому</a>
-    <div class="site-mobile-menu site-navbar-target">
-      <div class="site-mobile-menu-header">
-        <div class="site-mobile-menu-close">
-          <span class="icofont-close js-menu-toggle"></span>
-        </div>
-      </div>
-      <div class="site-mobile-menu-body"></div>
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">Vitrina</a>
+      <nav class="nav" id="nav">
+        <a href="/" class="nav-link">Главная</a>
+        <a href="/search" class="nav-link active">Поиск</a>
+        <a href="/map" class="nav-link">Карта</a>
+        <a href="/faq" class="nav-link">FAQ</a>
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
+  </header>
 
-    {% set bg_image = (display_for_media.main_image if display_for_media.main_image else '/static/images/hero_bg_2.png') %}
-    {% set hero_title = property.title %}
-    <header class="vitrina-header">
-      <div class="container">
-        <div class="d-flex align-items-center justify-content-between">
-          <a href="/" class="vitrina-logo">Vitrina</a>
-          <ul class="js-clone-nav d-none d-lg-flex vitrina-nav mb-0">
-            <li><a href="/">Главная</a></li>
-            <li><a href="/search" class="active">Поиск</a></li>
-            <li><a href="/faq">FAQ</a></li>
-          </ul>
-          <button type="button" class="burger light me-auto float-end mt-1 site-menu-toggle js-menu-toggle d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Открыть меню" aria-expanded="false"><span></span></button>
-        </div>
-      </div>
-    </header>
+  <main id="main-content">
 
-    <div class="vitrina-page-hero" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.65)), url('{{ bg_image }}');">
-      <div class="container text-center">
-        <h1 class="vitrina-hero-title">{{ hero_title }}</h1>
-        <p class="vitrina-hero-subtitle">{{ property.address }}</p>
-        {% if property.parent %}
-        <p class="mt-2 mb-0">
-          <span class="vitrina-parent-pill">
-            <span aria-hidden="true">📍</span>
-            <span>Помещение в </span>
-            <a href="/property/{{ property.parent.slug or property.parent.id }}">
-              здании
-            </a>
-            <span>, ул. {{ property.parent.address }}</span>
-          </span>
-        </p>
-        {% endif %}
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb justify-content-center mb-0">
-            <li class="breadcrumb-item"><a href="/" class="text-white-50">Главная</a></li>
-            <li class="breadcrumb-item"><a href="/search" class="text-white-50">Каталог</a></li>
-            <li class="breadcrumb-item active text-white" aria-current="page">{{ hero_title }}</li>
-          </ol>
-        </nav>
-      </div>
-    </div>
+    {% set main_img = (display_for_media.main_image if (display_for_media.main_image and display_for_media.main_image.startswith('/')) else ('/' + (display_for_media.main_image or ''))) if display_for_media.main_image else '/static/images/hero_bg_2.png' %}
+    {% set all_images = [main_img] %}
+    {% for img in display_for_media.images %}
+      {% set _ = all_images.append(img.image_url if (img.image_url and img.image_url.startswith('/')) else ('/' + (img.image_url or ''))) %}
+    {% endfor %}
 
-    <main id="main-content" class="section" tabindex="-1">
-      <div class="container">
-        <div class="row justify-content-between">
-          
-          <div class="col-lg-7 mb-5 mb-lg-0">
-            {% set main_img_url = (display_for_media.main_image if (display_for_media.main_image and display_for_media.main_image.startswith('/')) else ('/' + (display_for_media.main_image or ''))) if display_for_media.main_image else '/static/images/hero_bg_1.jpg' %}
-            <div class="vitrina-property-carousel mb-5">
-              <div id="propertyCarousel" class="carousel slide" data-bs-ride="carousel">
-                <div class="carousel-indicators">
-                  <button type="button" data-bs-target="#propertyCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Фото 1"></button>
-                  {% for image in display_for_media.images %}
-                  <button type="button" data-bs-target="#propertyCarousel" data-bs-slide-to="{{ loop.index }}" aria-label="Фото {{ loop.index + 1 }}"></button>
-                  {% endfor %}
-                </div>
-                <div class="carousel-inner">
-                  <div class="carousel-item active">
-                    <img src="{{ main_img_url }}" alt="{{ property.title }}" class="d-block w-100 img-fluid" width="800" height="450" loading="lazy" />
-                  </div>
-                  {% for image in display_for_media.images %}
-                  <div class="carousel-item">
-                    <img src="{{ (image.image_url if (image.image_url and image.image_url.startswith('/')) else ('/' + (image.image_url or ''))) }}" alt="{{ property.title }}" class="d-block w-100 img-fluid" width="800" height="450" loading="lazy" />
-                  </div>
-                  {% endfor %}
-                </div>
-                {% if display_for_media.main_image or display_for_media.images %}
-                <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
-                  <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                  <span class="visually-hidden">Назад</span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
-                  <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                  <span class="visually-hidden">Вперёд</span>
-                </button>
-                {% endif %}
-              </div>
-            </div>
+    <div class="container">
+      <nav class="prop-crumbs">
+        <a href="/">Главная</a><span>/</span><a href="/search">Каталог</a><span>/</span><span>{{ property.title }}</span>
+      </nav>
 
-            <h2 class="heading text-primary mb-4">Описание объекта</h2>
-            <div class="text-black-50 mb-5">
-              {{ (property.description | sanitize_html) if property.description else "Описание пока не добавлено." }}
-            </div>
+      <div class="prop-grid">
 
-            {% if available_units %}
-            <h2 class="heading text-primary mb-3">Доступные площади в этом здании</h2>
-            <div class="list-group mb-5 rounded shadow-sm">
-              {% for child in available_units %}
-              <a href="/property/{{ child.slug or child.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                <div>
-                  <div class="fw-semibold">
-                    {{ child.title or ('Помещение #' ~ child.id) }}
-                  </div>
-                  <div class="text-muted small">
-                    {{ child.area }} м² · {{ "{:,.0f}".format(child.price).replace(',', ' ') }} ₽
-                  </div>
-                </div>
-                <span class="text-primary small">Открыть →</span>
-              </a>
+        <!-- Left column -->
+        <div class="prop-content">
+
+          <div class="prop-gallery" id="gallery">
+            <img src="{{ all_images[0] }}" alt="{{ property.title }}" id="gallery-img" />
+            {% if all_images|length > 1 %}
+            <button class="prop-gallery__nav prop-gallery__nav--prev" id="gallery-prev" aria-label="Назад">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button class="prop-gallery__nav prop-gallery__nav--next" id="gallery-next" aria-label="Вперёд">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="prop-gallery__dots" id="gallery-dots">
+              {% for img in all_images %}
+              <button class="prop-gallery__dot{% if loop.first %} active{% endif %}" data-idx="{{ loop.index0 }}" aria-label="Фото {{ loop.index }}"></button>
               {% endfor %}
             </div>
             {% endif %}
+          </div>
 
-            {% if property.documents %}
-            <h2 class="heading text-primary mb-4">Документы и планировки</h2>
-            <div class="list-group mb-5 rounded shadow-sm" style="border: 1px solid #e9ecef;">
+          <div class="prop-header">
+            {% if property.category %}
+            <span class="prop-badge">{{ property.category }}</span>
+            {% endif %}
+            <h1 class="prop-title">{{ property.title }}</h1>
+            {% if property.address %}
+            <p class="prop-address">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ property.address }}
+            </p>
+            {% endif %}
+          </div>
+
+          {% if property.parent %}
+          <div class="prop-parent">
+            Помещение в <a href="/property/{{ property.parent.slug or property.parent.id }}">здании</a> · {{ property.parent.address }}
+          </div>
+          {% endif %}
+
+          <!-- Price card (mobile) -->
+          <div class="prop-price-mobile">
+            <div class="prop-price__amount">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
+            <div class="prop-price__note">{% if property.deal_type == 'Аренда' %}в месяц · аренда{% else %}продажа{% endif %}</div>
+          </div>
+
+          {% if property.description %}
+          <section class="prop-section">
+            <h2 class="prop-section__title">Описание</h2>
+            <div class="prop-section__text">{{ (property.description | sanitize_html) }}</div>
+          </section>
+          {% endif %}
+
+          {% if available_units %}
+          <section class="prop-section">
+            <h2 class="prop-section__title">Доступные площади</h2>
+            <div class="prop-units">
+              {% for child in available_units %}
+              <a href="/property/{{ child.slug or child.id }}" class="prop-unit">
+                <div>
+                  <div class="prop-unit__name">{{ child.title or ('Помещение #' ~ child.id) }}</div>
+                  <div class="prop-unit__meta">{{ child.area }} м² · {{ "{:,.0f}".format(child.price).replace(',', ' ') }} ₽</div>
+                </div>
+                <span class="prop-unit__link">→</span>
+              </a>
+              {% endfor %}
+            </div>
+          </section>
+          {% endif %}
+
+          {% if property.documents %}
+          <section class="prop-section">
+            <h2 class="prop-section__title">Документы</h2>
+            <div class="prop-docs">
               {% for document in property.documents %}
-              <a href="{{ document.document_url }}" target="_blank" rel="noopener noreferrer" class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-3">
-                <span aria-hidden="true">📄</span>
+              <a href="{{ document.document_url }}" target="_blank" rel="noopener noreferrer" class="prop-doc">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 <span>{{ document.title }}</span>
               </a>
               {% endfor %}
             </div>
+          </section>
+          {% endif %}
+        </div>
+
+        <!-- Right column (sticky sidebar) -->
+        <aside class="prop-sidebar">
+          <div class="prop-price-card">
+            <div class="prop-price__amount">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
+            <div class="prop-price__note">{% if property.deal_type == 'Аренда' %}в месяц · аренда{% else %}продажа{% endif %}</div>
+            <div class="prop-price__divider"></div>
+
+            <table class="prop-specs">
+              <tr><td>Тип сделки</td><td>{{ property.deal_type }}</td></tr>
+              <tr><td>Категория</td><td>{{ property.category }}</td></tr>
+              <tr><td>Площадь</td><td>{{ property.area }} м²</td></tr>
+              {% if property.floor_number is not none or property.floors_total is not none %}
+              <tr>
+                <td>Этаж</td>
+                <td>{% if property.floor_number is not none %}{{ property.floor_number }}{% else %}—{% endif %} / {% if property.floors_total is not none %}{{ property.floors_total }}{% else %}—{% endif %}</td>
+              </tr>
+              {% endif %}
+              {% if property.ceiling_height is not none %}
+              <tr><td>Потолки</td><td>{{ '%.2f'|format(property.ceiling_height) }} м</td></tr>
+              {% endif %}
+              {% if property.power_kw is not none %}
+              <tr><td>Мощность</td><td>{{ '%.1f'|format(property.power_kw) }} кВт</td></tr>
+              {% endif %}
+              {% set avito = property.avito_data or {} %}
+              {% if avito.get('BuildingType') %}
+              <tr><td>Тип здания</td><td>{{ avito.get('BuildingType') }}</td></tr>
+              {% endif %}
+              {% if avito.get('Decoration') %}
+              <tr><td>Отделка</td><td>{{ avito.get('Decoration') }}</td></tr>
+              {% endif %}
+              {% if avito.get('Layout') %}
+              <tr><td>Планировка</td><td>{{ avito.get('Layout') }}</td></tr>
+              {% endif %}
+              {% if avito.get('ParkingType') %}
+              <tr><td>Парковка</td><td>{{ avito.get('ParkingType') }}</td></tr>
+              {% endif %}
+            </table>
+
+            {% if property.address %}
+            <div class="prop-price__divider"></div>
+            <div class="prop-specs-address">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ property.address }}
+            </div>
             {% endif %}
           </div>
 
-          <div class="col-lg-4">
-            
-            <h2 class="heading text-primary mb-4">Характеристики</h2>
-            <div class="property-specs bg-light p-4 rounded shadow-sm mb-5">
-              <ul class="list-unstyled mb-0">
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Тип сделки:</span> <strong>{{ property.deal_type }}</strong>
-                </li>
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Тип помещения:</span> <strong>{{ property.category }}</strong>
-                </li>
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Площадь:</span> <strong>{{ property.area }} м²</strong>
-                </li>
-                {% if property.floor_number is not none or property.floors_total is not none %}
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Этаж / этажность:</span>
-                  <strong>
-                    {% if property.floor_number is not none %}{{ property.floor_number }}{% else %}-{% endif %}
-                    /
-                    {% if property.floors_total is not none %}{{ property.floors_total }}{% else %}-{% endif %}
-                  </strong>
-                </li>
-                {% endif %}
-                {% if property.ceiling_height is not none %}
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Высота потолков:</span> <strong>{{ '%.2f'|format(property.ceiling_height) }} м</strong>
-                </li>
-                {% endif %}
-                {% if property.power_kw is not none %}
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Мощность:</span> <strong>{{ '%.1f'|format(property.power_kw) }} кВт</strong>
-                </li>
-                {% endif %}
-                {% set avito = property.avito_data or {} %}
-                {% if avito.get('BuildingType') %}
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Тип здания:</span> <strong>{{ avito.get('BuildingType') }}</strong>
-                </li>
-                {% endif %}
-                {% if avito.get('Decoration') %}
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Отделка:</span> <strong>{{ avito.get('Decoration') }}</strong>
-                </li>
-                {% endif %}
-                {% if avito.get('Layout') %}
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Планировка:</span> <strong>{{ avito.get('Layout') }}</strong>
-                </li>
-                {% endif %}
-                {% if avito.get('ParkingType') %}
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Парковка:</span> <strong>{{ avito.get('ParkingType') }}</strong>
-                </li>
-                {% endif %}
-                {% if avito.get('PropertyRights') %}
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Право собственности:</span> <strong>{{ avito.get('PropertyRights') }}</strong>
-                </li>
-                {% endif %}
-                {% if avito.get('RentalType') %}
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Тип аренды:</span> <strong>{{ avito.get('RentalType') }}</strong>
-                </li>
-                {% elif avito.get('TransactionType') %}
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Тип сделки (Авито):</span> <strong>{{ avito.get('TransactionType') }}</strong>
-                </li>
-                {% endif %}
-                <li class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                  <span class="text-black-50">Цена:</span> <strong class="text-primary fs-5">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</strong>
-                </li>
-                <li class="d-flex justify-content-between mb-2">
-                  <span class="text-black-50">Адрес:</span> <strong class="text-end" style="max-width: 60%;">{{ property.address }}</strong>
-                </li>
-              </ul>
-            </div>
-
-            <h2 class="heading text-primary mb-4">Расположение</h2>
-            <div class="map-wrap rounded overflow-hidden shadow-sm" style="height: 350px; background: #eee;">
-              {% if property.latitude and property.longitude %}
-                <iframe 
-                  src="https://yandex.ru/map-widget/v1/?ll={{ property.longitude }},{{ property.latitude }}&z=16&pt={{ property.longitude }},{{ property.latitude }},pm2rdm" 
-                  width="100%" 
-                  height="100%" 
-                  frameborder="0" 
-                  allowfullscreen="true">
-                </iframe>
-              {% else %}
-                <div class="d-flex align-items-center justify-content-center h-100 text-muted">
-                  <p class="mb-0">Координаты не указаны в базе</p>
-                </div>
-              {% endif %}
-            </div>
-
-            <p class="text-muted small mt-4 mb-0">По вопросам по объекту обращайтесь к вашему агенту.</p>
-
+          {% if property.latitude and property.longitude %}
+          <div class="prop-map">
+            <iframe
+              src="https://yandex.ru/map-widget/v1/?ll={{ property.longitude }},{{ property.latitude }}&z=16&pt={{ property.longitude }},{{ property.latitude }},pm2blm&scroll=false"
+              allowfullscreen="true"
+              loading="lazy">
+            </iframe>
           </div>
+          {% endif %}
 
-        </div>
+          <p class="prop-sidebar__note">По вопросам обращайтесь к вашему агенту.</p>
+        </aside>
       </div>
-    </main>
+    </div>
+  </main>
 
-    <footer class="site-footer section py-4">
-      <div class="container">
-        <div class="row">
-          <div class="col-12 text-center">
-            <p class="mb-0 small text-muted">
-              &copy; <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов.
-            </p>
-          </div>
-        </div>
-      </div>
-    </footer>
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-logo">Vitrina</div>
+      <p class="footer-text">© <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов</p>
+    </div>
+  </footer>
 
-    <script src="/static/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/aos.js"></script>
-    <script src="/static/js/navbar.js"></script>
-    <script src="/static/js/custom.js"></script>
-  </body>
+  <script src="/static/js/vitrina-asset.js"></script>
+  {% if all_images|length > 1 %}
+  <script>
+  (function() {
+    var images = {{ all_images | tojson }};
+    var idx = 0;
+    var img = document.getElementById('gallery-img');
+    var dots = document.querySelectorAll('.prop-gallery__dot');
+
+    function show(i) {
+      idx = (i + images.length) % images.length;
+      img.src = images[idx];
+      dots.forEach(function(d, j) { d.classList.toggle('active', j === idx); });
+    }
+
+    document.getElementById('gallery-prev').addEventListener('click', function() { show(idx - 1); });
+    document.getElementById('gallery-next').addEventListener('click', function() { show(idx + 1); });
+    dots.forEach(function(d) {
+      d.addEventListener('click', function() { show(parseInt(d.dataset.idx)); });
+    });
+
+    var startX = 0;
+    var gallery = document.getElementById('gallery');
+    gallery.addEventListener('touchstart', function(e) { startX = e.touches[0].clientX; }, {passive:true});
+    gallery.addEventListener('touchend', function(e) {
+      var dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) > 40) show(dx < 0 ? idx + 1 : idx - 1);
+    });
+  })();
+  </script>
+  {% endif %}
+</body>
 </html>

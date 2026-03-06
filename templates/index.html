@@ -1,475 +1,190 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="author" content="Vitrina" />
-    <link rel="shortcut icon" href="/static/images/favicon.png" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vitrina — Коммерческая недвижимость</title>
+  <meta name="description" content="Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа. Сервис для агентов." />
+  <meta name="keywords" content="коммерческая недвижимость, аренда офиса, продажа склада, торговые площади, Vitrina, витрина рент" />
+  <meta name="author" content="Vitrina" />
+  <link rel="shortcut icon" href="/static/images/favicon.png" />
+  <link rel="canonical" href="{{ base_url }}{{ request.url.path }}" />
 
-    <meta name="description" content="Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа. Сервис для агентов." />
-    <meta name="keywords" content="коммерческая недвижимость, аренда офиса, продажа склада, торговые площади, Vitrina, витрина рент, vitrina, витрина рент рф />
-    <meta name="yandex-verification" content="e6fcd66bd1186ee2" />
-    <meta name="google-site-verification" content="oEtd5BxM5fAybSDNtTC5PJZCCKSnBITBUe5syl3J2WY" />
-    <link rel="canonical" href="{{ base_url }}{{ request.url.path }}" />
+  <meta property="og:title" content="Vitrina — Коммерческая недвижимость" />
+  <meta property="og:description" content="Офисы, склады и торговые площади от собственника — подбор для агентов" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Vitrina — Коммерческая недвижимость" />
+  <meta name="twitter:description" content="Офисы, склады и торговые площади от собственника — подбор для агентов" />
+  <meta name="yandex-verification" content="e6fcd66bd1186ee2" />
+  <meta name="google-site-verification" content="oEtd5BxM5fAybSDNtTC5PJZCCKSnBITBUe5syl3J2WY" />
 
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Organization",
-          "name": "Vitrina",
-          "url": "{{ base_url }}",
-          "description": "Каталог коммерческой недвижимости: аренда и продажа офисов, складов, торговых площадей."
-        },
-        {
-          "@type": "WebSite",
-          "name": "Vitrina",
-          "url": "{{ base_url }}",
-          "description": "Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа.",
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": { "@type": "EntryPoint", "urlTemplate": "{{ base_url }}/search?q={search_term_string}" },
-            "query-input": "required name=search_term_string"
-          }
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "name": "Vitrina",
+        "url": "{{ base_url }}",
+        "description": "Каталог коммерческой недвижимости: аренда и продажа офисов, складов, торговых площадей."
+      },
+      {
+        "@type": "WebSite",
+        "name": "Vitrina",
+        "url": "{{ base_url }}",
+        "description": "Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": { "@type": "EntryPoint", "urlTemplate": "{{ base_url }}/search?q={search_term_string}" },
+          "query-input": "required name=search_term_string"
         }
-      ]
-    }
-    </script>
+      }
+    ]
+  }
+  </script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-    <link rel="stylesheet" href="/static/fonts/icomoon/style.css" />
-    <link rel="stylesheet" href="/static/fonts/flaticon/font/flaticon.css" />
+  <link rel="stylesheet" href="/static/css/vitrina-asset.css" />
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Перейти к содержимому</a>
 
-    <link rel="stylesheet" href="/static/css/tiny-slider.css" />
-    <link rel="stylesheet" href="/static/css/aos.css" />
-    <link rel="stylesheet" href="/static/css/style.css" />
-
-    <title>Vitrina — сервис для агентов</title>
-
-    <style>
-      html { scroll-behavior: smooth; overflow-x: hidden; }
-      body { display: flex; flex-direction: column; min-height: 100vh; width: 100%; max-width: 100vw; overflow-x: hidden; }
-      body main { flex: 1; width: 100%; max-width: 100%; min-width: 0; overflow-x: hidden; }
-      body .site-footer { flex-shrink: 0; margin-top: auto; width: 100%; max-width: 100%; }
-      .skip-link { position: absolute; top: -3rem; left: 0.5rem; z-index: 9999; padding: 0.5rem 1rem; background: #5a6c7d; color: #fff; text-decoration: none; border-radius: 4px; }
-      .skip-link:focus { top: 0.5rem; outline: 2px solid #fff; outline-offset: 2px; }
-      a:focus-visible, button:focus-visible { outline: 2px solid #5a6c7d; outline-offset: 2px; }
-      /* --- Hero & Header: B2B redesign --- */
-      .vitrina-hero-wrap {
-        position: relative;
-        min-height: 100vh;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        overflow-x: hidden;
-        background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.65)), url('/static/images/hero_bg_1.png?v=2');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-      }
-      .vitrina-hero-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.65) 100%);
-        pointer-events: none;
-      }
-      .vitrina-header {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        max-width: 100%;
-        z-index: 10;
-        padding: 1.25rem 0;
-        background: rgba(255,255,255,0.08);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-      }
-      .vitrina-header .vitrina-logo {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #fff;
-        text-decoration: none;
-        letter-spacing: -0.02em;
-        font-family: 'Work Sans', sans-serif;
-      }
-      .vitrina-header .vitrina-logo:hover {
-        color: #fff;
-        opacity: 0.9;
-      }
-      .vitrina-header .burger.site-menu-toggle {
-        background: transparent;
-        border: none;
-        padding: 0.25rem;
-      }
-      .vitrina-nav {
-        display: flex;
-        align-items: center;
-        gap: 2.5rem;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-      .vitrina-nav a {
-        color: rgba(255,255,255,0.9);
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 0.95rem;
-        transition: color 0.2s;
-      }
-      .vitrina-nav a:hover,
-      .vitrina-nav a.active {
-        color: #fff;
-      }
-      .vitrina-hero-content {
-        position: relative;
-        z-index: 2;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 6rem 0 4rem;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-      }
-      .vitrina-hero-title {
-        font-size: clamp(2rem, 5vw, 3.25rem);
-        font-weight: 700;
-        color: #fff;
-        line-height: 1.2;
-        margin-bottom: 1rem;
-        font-family: 'Work Sans', sans-serif;
-        text-shadow: 0 1px 4px rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.25);
-      }
-      .vitrina-hero-subtitle {
-        font-size: 1.15rem;
-        color: rgba(255,255,255,0.8);
-        font-weight: 400;
-        margin-bottom: 2.5rem;
-        max-width: 560px;
-        margin-left: auto;
-        margin-right: auto;
-      }
-      .vitrina-search-card {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-        padding: 1.5rem 1.5rem;
-        max-width: 720px;
-        width: 100%;
-        margin: 0 auto;
-        box-sizing: border-box;
-      }
-      .vitrina-search-card .form-control,
-      .vitrina-search-card .form-select {
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        padding: 0.65rem 1rem;
-        font-size: 0.95rem;
-        max-width: 100%;
-        box-sizing: border-box;
-      }
-      .vitrina-search-card .flex-grow-1 { min-width: 0; }
-      .vitrina-search-card .form-control:focus,
-      .vitrina-search-card .form-select:focus {
-        border-color: #5a6c7d;
-        box-shadow: 0 0 0 3px rgba(90, 108, 125, 0.15);
-      }
-      .vitrina-hero-cta {
-        background: #5a6c7d;
-        color: #fff;
-        font-weight: 600;
-        font-size: 1.1rem;
-        border: none;
-        border-radius: 10px;
-        padding: 0.85rem 2rem;
-        white-space: nowrap;
-        box-shadow: 0 4px 14px rgba(90, 108, 125, 0.4);
-        transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
-      }
-      .vitrina-hero-cta:hover {
-        background: #4a5568;
-        color: #fff;
-        box-shadow: 0 6px 20px rgba(90, 108, 125, 0.5);
-        transform: translateY(-1px);
-      }
-      @media (max-width: 991.98px) {
-        .vitrina-hero-wrap { min-height: auto; padding-bottom: 2rem; }
-        .vitrina-hero-content { padding: 6rem 0 2rem; justify-content: flex-start; }
-        .vitrina-search-card .d-flex { flex-direction: column; gap: 0.75rem !important; }
-        .vitrina-hero-cta { width: 100%; }
-        .vitrina-hero-title { font-size: 1.5rem; }
-        .vitrina-hero-subtitle { font-size: 0.95rem; margin-bottom: 1.5rem; }
-      }
-      @media (max-width: 575.98px) {
-        .vitrina-hero-content { padding: 6rem 0 1.5rem; }
-        .vitrina-hero-title { margin-top: 0.5rem; }
-        .vitrina-hero-subtitle { font-size: 0.9rem; }
-        .vitrina-search-card { padding: 1rem; min-width: 0; }
-        .vitrina-hero-content .container { max-width: 100%; padding-left: 0.75rem; padding-right: 0.75rem; }
-      }
-      /* --- Каталог на главной: ровные карточки и цвета под дизайн --- */
-      .catalog-preview .heading { color: #5a6c7d !important; font-weight: 700; }
-      .catalog-preview .vitrina-stat-card {
-        background: rgba(90, 108, 125, 0.06);
-        border: 1px solid rgba(90, 108, 125, 0.12);
-        border-radius: 12px;
-        padding: 1rem 1.25rem;
-        height: 100%;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 0.15rem;
-      }
-      .catalog-preview .vitrina-stat-card .small {
-        color: #495057;
-        min-height: 2.2em;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        text-align: center;
-      }
-      .catalog-preview .vitrina-stat-card .h4 { color: #5a6c7d; font-weight: 600; }
-      @media (max-width: 767.98px) {
-        .catalog-preview.section { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-        .catalog-preview .heading { font-size: 1.25rem; }
-        .catalog-preview .vitrina-stat-card { padding: 0.6rem 0.55rem; }
-        .catalog-preview .vitrina-stat-card .small { font-size: 0.75rem; }
-        .catalog-preview .vitrina-stat-card .h4 { font-size: 1.1rem; }
-        .catalog-preview .row.mb-4.g-3 { margin-bottom: 1rem !important; align-items: stretch; }
-        .vitrina-catalog-cta { font-size: 0.95rem !important; padding: 0.6rem 1.25rem !important; }
-        .catalog-preview .row.mt-5 { margin-top: 1.5rem !important; }
-      }
-      .catalog-preview .vitrina-property-card {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        background: #fff;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        border: 1px solid rgba(0,0,0,0.06);
-      }
-      .catalog-preview .vitrina-property-card .vitrina-property-img {
-        flex-shrink: 0;
-        height: 220px;
-        overflow: hidden;
-      }
-      .catalog-preview .vitrina-property-card .vitrina-property-img img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-      .catalog-preview .vitrina-property-card .vitrina-property-body {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        padding: 1.25rem;
-      }
-      .catalog-preview .vitrina-property-card .vitrina-property-body .vitrina-property-price {
-        color: #5a6c7d;
-        font-weight: 600;
-        font-size: 1.15rem;
-        margin-bottom: 0.5rem;
-      }
-      .catalog-preview .vitrina-property-card .vitrina-property-body .vitrina-property-meta { color: #6c757d; font-size: 0.9rem; }
-      .catalog-preview .vitrina-property-card .vitrina-property-body .btn-primary {
-        margin-top: auto;
-        background: #5a6c7d;
-        border-color: #5a6c7d;
-      }
-      .catalog-preview .vitrina-property-card .vitrina-property-body .btn-primary:hover {
-        background: #4a5568;
-        border-color: #4a5568;
-      }
-      .catalog-preview .vitrina-catalog-cta.btn-primary {
-        background: #5a6c7d;
-        border-color: #5a6c7d;
-      }
-      .catalog-preview .vitrina-catalog-cta.btn-primary:hover {
-        background: #4a5568;
-        border-color: #4a5568;
-      }
-    </style>
-  </head>
-  <body>
-    <a href="#main-content" class="skip-link">Перейти к содержимому</a>
-    <div class="site-mobile-menu site-navbar-target">
-      <div class="site-mobile-menu-header">
-        <div class="site-mobile-menu-close">
-          <span class="icofont-close js-menu-toggle"></span>
-        </div>
-      </div>
-      <div class="site-mobile-menu-body"></div>
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">Vitrina</a>
+      <nav class="nav" id="nav">
+        <a href="/" class="nav-link active">Главная</a>
+        <a href="/search" class="nav-link">Поиск</a>
+        <a href="/map" class="nav-link">Карта</a>
+        <a href="/faq" class="nav-link">FAQ</a>
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
+  </header>
 
-    <div class="vitrina-hero-wrap">
-      <div class="vitrina-hero-overlay" aria-hidden="true"></div>
-
-      <header class="vitrina-header">
-        <div class="container">
-          <div class="d-flex align-items-center justify-content-between">
-            <a href="/" class="vitrina-logo">Vitrina</a>
-            <ul class="js-clone-nav d-none d-lg-flex vitrina-nav mb-0">
-              <li><a href="/" class="active">Главная</a></li>
-              <li><a href="/search">Поиск</a></li>
-              <li><a href="/faq">FAQ</a></li>
-            </ul>
-            <button type="button" class="burger light ms-auto flex-shrink-0 site-menu-toggle js-menu-toggle d-inline-block d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Открыть меню" aria-expanded="false">
-              <span></span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div class="vitrina-hero-content">
-        <div class="container text-center">
-          <h1 class="vitrina-hero-title fw-bold">Найдите идеальное пространство для вашего бизнеса</h1>
-          <p class="vitrina-hero-subtitle h5">Проверенные офисы, склады и торговые площади от собственника</p>
-
-          <form id="hero-search-form" action="/search" method="GET" class="vitrina-search-card">
-            <div class="d-flex flex-column gap-2 gap-md-3">
-              <div class="d-flex flex-column flex-md-row gap-2 gap-md-3 align-items-stretch align-items-md-center">
-                <div class="flex-grow-1">
-                  <label for="hero-area-min" class="form-label small text-muted mb-1">Площадь от (м²)</label>
-                  <input type="number" id="hero-area-min" name="min_area" class="form-control" placeholder="От" min="1" step="1">
-                </div>
-                <div class="flex-grow-1">
-                  <label for="hero-area-max" class="form-label small text-muted mb-1">Площадь до (м²)</label>
-                  <input type="number" id="hero-area-max" name="max_area" class="form-control" placeholder="До" min="1" step="1">
-                </div>
-                <div class="flex-grow-1">
-                  <label for="hero-price-min" class="form-label small text-muted mb-1">Цена от (₽)</label>
-                  <input type="number" id="hero-price-min" name="min_price" class="form-control" placeholder="От" min="0" step="1">
-                </div>
-                <div class="flex-grow-1">
-                  <label for="hero-price-max" class="form-label small text-muted mb-1">Цена до (₽)</label>
-                  <input type="number" id="hero-price-max" name="max_price" class="form-control" placeholder="До" min="0" step="1">
-                </div>
-              </div>
-              <div class="d-flex flex-column flex-md-row gap-2 gap-md-3 align-items-stretch align-items-md-center">
-                <div class="flex-grow-1">
-                  <label for="hero-deal" class="form-label small text-muted mb-1">Тип сделки</label>
-                  <select id="hero-deal" name="deal_type" class="form-select">
-                    <option value="Все">Все</option>
-                    <option value="Аренда">Аренда</option>
-                    <option value="Продажа">Продажа</option>
-                  </select>
-                </div>
-                <div class="flex-grow-1">
-                  <label for="hero-category" class="form-label small text-muted mb-1">Тип помещения</label>
-                  <select id="hero-category" name="category" class="form-select">
-                    <option value="Все">Все типы</option>
-                    <option value="Офис">Офис</option>
-                    <option value="Торговая площадь">Торговая площадь</option>
-                    <option value="Свободного назначения">Свободного назначения</option>
-                    <option value="Промышленное">Промышленное</option>
-                    <option value="Склад">Склад</option>
-                    <option value="Здание">Здание</option>
-                    <option value="ГАБ">ГАБ</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </form>
-          <div class="mt-4 text-center">
-            <button type="submit" form="hero-search-form" class="vitrina-hero-cta btn">Перейти к поиску</button>
-          </div>
+  <main>
+    <section class="hero">
+      <div class="container hero-content">
+        <h1 class="hero-title">Коммерческая<br>недвижимость</h1>
+        <p class="hero-subtitle">Офисы, склады, торговые площади и здания от собственника</p>
+        <p class="hero-detail">{{ total_properties }} объектов в каталоге</p>
+        <div class="hero-actions">
+          <a href="/search" class="btn-pill btn-pill--primary">Выбрать</a>
         </div>
       </div>
+    </section>
+
+    <section class="showcase" id="categories">
+
+      <a href="/search?category=Офис" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/office.png');">
+        <div class="showcase-block__content">
+          <h2 class="showcase-block__title">Офисы</h2>
+          <p class="showcase-block__sub">Аренда и продажа от собственника</p>
+          <span class="btn-showcase">Подробнее</span>
+        </div>
+      </a>
+
+      <a href="/search?category=Торговая+площадь" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/shop.png');">
+        <div class="showcase-block__content">
+          <h2 class="showcase-block__title">Магазины</h2>
+          <p class="showcase-block__sub">Стрит-ритейл и торговые помещения</p>
+          <span class="btn-showcase">Подробнее</span>
+        </div>
+      </a>
+
+      <a href="/search?category=Склад" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/warehouse.png');">
+        <div class="showcase-block__content">
+          <h2 class="showcase-block__title">Склады</h2>
+          <p class="showcase-block__sub">Тёплые, холодные, класс A и B</p>
+          <span class="btn-showcase">Подробнее</span>
+        </div>
+      </a>
+
+      <a href="/search?category=Автосервис" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/venichle.png');">
+        <div class="showcase-block__content">
+          <h2 class="showcase-block__title">Автосервисы</h2>
+          <p class="showcase-block__sub">Боксы, СТО и автомоечные комплексы</p>
+          <span class="btn-showcase">Подробнее</span>
+        </div>
+      </a>
+
+      <a href="/search?category=Здание" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/building.png');">
+        <div class="showcase-block__content">
+          <h2 class="showcase-block__title">Здания</h2>
+          <p class="showcase-block__sub">Отдельно стоящие здания и комплексы</p>
+          <span class="btn-showcase">Подробнее</span>
+        </div>
+      </a>
+
+      <a href="/search?category=Промышленное" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/zavod.png');">
+        <div class="showcase-block__content">
+          <h2 class="showcase-block__title">Производство</h2>
+          <p class="showcase-block__sub">Промышленные помещения и цеха</p>
+          <span class="btn-showcase">Подробнее</span>
+        </div>
+      </a>
+
+      <a href="/search?category=ГАБ" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/gab.png');">
+        <div class="showcase-block__content">
+          <h2 class="showcase-block__title">ГАБ</h2>
+          <p class="showcase-block__sub">Готовый арендный бизнес с доходом</p>
+          <span class="btn-showcase">Подробнее</span>
+        </div>
+      </a>
+
+      <a href="/search" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/catalog.png');">
+        <div class="showcase-block__content">
+          <h2 class="showcase-block__title">Весь каталог</h2>
+          <p class="showcase-block__sub">{{ total_properties }} объектов — аренда и продажа</p>
+          <span class="btn-showcase">Открыть каталог</span>
+        </div>
+      </a>
+
+      <a href="/map" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" id="showcase-map" style="background-image:url('/static/images/map.png');">
+        <div class="showcase-block__content">
+          <h2 class="showcase-block__title">На карте</h2>
+          <p class="showcase-block__sub">Все объекты на интерактивной карте</p>
+          <span class="btn-showcase">Открыть карту</span>
+        </div>
+      </a>
+
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-logo">Vitrina</div>
+      <p class="footer-text">© <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов</p>
     </div>
+  </footer>
 
-    <main id="main-content" class="section catalog-preview" tabindex="-1">
-      <div class="container">
-        <div class="row mb-4 align-items-center justify-content-lg-center">
-          <div class="col-lg-6 text-lg-center">
-            <h2 class="font-weight-bold text-primary heading">Актуальные объекты</h2>
-          </div>
-        </div>
+  <script src="/static/js/vitrina-asset.js"></script>
+  <script>
+  (function() {
+    var reveals = document.querySelectorAll('.reveal');
+    if (!reveals.length) return;
 
-        <div class="row mb-4 g-3 justify-content-lg-center">
-          <div class="col-6 col-md-4">
-            <div class="vitrina-stat-card">
-              <div class="small mb-1">Аренда</div>
-              <div class="h4 mb-0">{{ rent_count }}</div>
-            </div>
-          </div>
-          <div class="col-6 col-md-4">
-            <div class="vitrina-stat-card">
-              <div class="small mb-1">Продажа</div>
-              <div class="h4 mb-0">{{ sale_count }}</div>
-            </div>
-          </div>
-        </div>
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          var delay = Array.prototype.indexOf.call(reveals, entry.target) * 80;
+          setTimeout(function() { entry.target.classList.add('visible'); }, delay);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
 
-        <div class="row g-4">
-          {% for property in properties %}
-          <div class="col-12 col-sm-6 col-lg-4 d-flex">
-            <div class="vitrina-property-card w-100">
-              <a href="/property/{{ property.slug or property.id }}" class="vitrina-property-img">
-                {% if property.main_image %}
-                  <img src="{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" alt="{{ property.title }}" class="img-fluid" width="400" height="220" loading="lazy">
-                {% else %}
-                  <img src="/static/images/hero_bg_1.jpg" alt="{{ property.title }}" class="img-fluid" width="400" height="220" loading="lazy">
-                {% endif %}
-              </a>
-              <div class="vitrina-property-body">
-                {% if property.category %}<span class="d-block text-uppercase small fw-bold text-muted mb-1" style="letter-spacing: 0.05em;">{{ property.category }}</span>{% endif %}
-                <div class="vitrina-property-price">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
-                <span class="d-block vitrina-property-meta mb-1">{{ property.address }}</span>
-                <span class="d-block vitrina-property-meta mb-3">{{ property.title }}</span>
-                <div class="specs d-flex mb-3">
-                  <span class="d-flex align-items-center me-3 vitrina-property-meta">
-                    <span class="icon-bed me-2"></span>
-                    <span class="caption">{{ property.area }} м²</span>
-                  </span>
-                </div>
-                <a href="/property/{{ property.slug or property.id }}" class="btn btn-primary py-2 px-3">Подробнее</a>
-              </div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-        <div class="row mt-5 mb-4">
-          <div class="col-12 text-center">
-            <a href="/search" class="btn btn-primary btn-lg px-5 py-3 vitrina-catalog-cta">Посмотреть полный каталог</a>
-          </div>
-        </div>
-      </div>
-    </main>
+    reveals.forEach(function(el) { observer.observe(el); });
 
-    <footer class="site-footer section py-4">
-      <div class="container">
-        <div class="row">
-          <div class="col-12 text-center">
-            <p class="mb-0 small text-muted">
-              &copy; <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов.
-            </p>
-          </div>
-        </div>
-      </div>
-    </footer>
-
-    <script src="/static/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/tiny-slider.js"></script>
-    <script src="/static/js/aos.js"></script>
-    <script src="/static/js/navbar.js"></script>
-    <script src="/static/js/counter.js"></script>
-    <script src="/static/js/custom.js"></script>
-  </body>
+  })();
+  </script>
+</body>
 </html>

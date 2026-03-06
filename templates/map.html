@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Объекты на карте — Vitrina</title>
+  <meta name="description" content="Коммерческая недвижимость на карте: офисы, склады, торговые площади." />
+  <link rel="shortcut icon" href="/static/images/favicon.png" />
+  <link rel="canonical" href="{{ base_url }}/map" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/vitrina-asset.css" />
+</head>
+<body class="map-page">
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">Vitrina</a>
+      <nav class="nav" id="nav">
+        <a href="/" class="nav-link">Главная</a>
+        <a href="/search" class="nav-link">Поиск</a>
+        <a href="/map" class="nav-link active">Карта</a>
+        <a href="/faq" class="nav-link">FAQ</a>
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="map-layout">
+    <aside class="map-sidebar" id="map-sidebar">
+      <div class="map-sidebar-header">
+        <h1 class="map-sidebar-title">На карте</h1>
+        <span class="map-sidebar-count" id="sidebar-count">{{ total_items }}</span>
+      </div>
+
+      <div class="map-categories" id="map-categories">
+        <button class="map-cat-btn active" data-cat="">Все</button>
+        <button class="map-cat-btn" data-cat="Офис">Офисы</button>
+        <button class="map-cat-btn" data-cat="Торговая площадь">Магазины</button>
+        <button class="map-cat-btn" data-cat="Склад">Склады</button>
+        <button class="map-cat-btn" data-cat="Здание">Здания</button>
+        <button class="map-cat-btn" data-cat="Промышленное">Производство</button>
+        <button class="map-cat-btn" data-cat="ГАБ">ГАБ</button>
+        <button class="map-cat-btn" data-cat="Автосервис">Автосервисы</button>
+      </div>
+
+      <div class="map-sidebar-list" id="map-sidebar-list">
+        {% for p in map_properties %}
+        <div class="map-card" data-id="{{ p.id }}" data-lat="{{ p.latitude }}" data-lng="{{ p.longitude }}" data-cat="{{ p.category }}" data-href="/property/{{ p.slug or p.id }}">
+          <div class="map-card-img">
+            {% if p.main_image %}
+            <img src="{{ p.main_image }}" alt="{{ p.title }}" loading="lazy" />
+            {% else %}
+            <div class="map-card-img-placeholder"></div>
+            {% endif %}
+            {% if p.category %}<span class="map-card-badge">{{ p.category }}</span>{% endif %}
+          </div>
+          <div class="map-card-info">
+            <div class="map-card-price">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽{% if p.deal_type == 'Аренда' %}<span>/мес</span>{% endif %}</div>
+            <div class="map-card-title">{{ p.title }}</div>
+            {% if p.area %}<div class="map-card-meta">{{ p.area }} м²</div>{% endif %}
+            <div class="map-card-address">{{ p.address }}</div>
+          </div>
+        </div>
+        {% endfor %}
+
+        {% if not map_properties %}
+        <div class="map-sidebar-empty">Объектов с координатами не найдено</div>
+        {% endif %}
+      </div>
+    </aside>
+
+    <div class="map-canvas" id="map"></div>
+  </div>
+
+  <script src="/static/js/vitrina-asset.js"></script>
+  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU{% if yandex_maps_api_key %}&apikey={{ yandex_maps_api_key }}{% endif %}&load=package.full" async></script>
+  <script>
+  (function() {
+    var props = {{ map_properties_json | safe }};
+    if (!Array.isArray(props)) props = [];
+
+    var activeCategory = '';
+    var ymap, clusterer;
+    var allPlacemarks = [];
+    var pmById = {};
+    var sidebarList;
+
+    function shortPrice(n) {
+      if (n == null) return '—';
+      if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + 'М';
+      if (n >= 1000) return Math.round(n / 1000) + 'К';
+      return String(n);
+    }
+
+    /* ── sidebar helpers ── */
+
+    function updateCount() {
+      var vis = document.querySelectorAll('.map-card:not([style*="display: none"])');
+      document.getElementById('sidebar-count').textContent = vis.length;
+    }
+
+    function showAll() {
+      document.querySelectorAll('.map-card').forEach(function(c) {
+        var ok = !activeCategory || c.dataset.cat === activeCategory;
+        c.style.display = ok ? '' : 'none';
+        c.classList.remove('active');
+      });
+      updateCount();
+    }
+
+    function showOnly(ids) {
+      var set = {};
+      ids.forEach(function(id) { set[id] = true; });
+      document.querySelectorAll('.map-card').forEach(function(c) {
+        var show = set[parseInt(c.dataset.id)];
+        c.style.display = show ? '' : 'none';
+        c.classList.remove('active');
+        if (show) c.classList.add('active');
+      });
+      updateCount();
+      if (sidebarList) sidebarList.scrollTop = 0;
+    }
+
+    /* ── category filter ── */
+
+    function filterCat(cat) {
+      activeCategory = cat;
+      document.querySelectorAll('.map-cat-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.cat === cat);
+      });
+
+      clusterer.removeAll();
+      var filtered = allPlacemarks.filter(function(pm) {
+        return !cat || pm._cat === cat;
+      });
+      clusterer.add(filtered);
+      showAll();
+    }
+
+    /* ── init ── */
+
+    function init() {
+      sidebarList = document.getElementById('map-sidebar-list');
+
+      ymap = new ymaps.Map('map', {
+        center: [55.751, 37.618],
+        zoom: 11,
+        controls: ['zoomControl']
+      }, {
+        suppressMapOpenBlock: true
+      });
+
+      ymap.behaviors.disable('scrollZoom');
+
+      clusterer = new ymaps.Clusterer({
+        preset: 'islands#invertedDarkBlueClusterIcons',
+        clusterDisableClickZoom: false,
+        clusterBalloonContentLayout: 'cluster#balloonCarousel',
+        groupByCoordinates: false
+      });
+
+      props.forEach(function(p) {
+        var slug = (p.slug && p.slug !== '') ? p.slug : p.id;
+        var label = shortPrice(p.price) + ' ₽';
+
+        var pm = new ymaps.Placemark([p.latitude, p.longitude], {
+          iconContent: label,
+          balloonContentHeader: '<b style="color:#f5f5f7;font-size:14px;">' + (p.title || '') + '</b>',
+          balloonContentBody:
+            (p.main_image ? '<img src="' + p.main_image + '" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-bottom:8px;">' : '') +
+            (p.address ? '<div style="color:#a1a1a6;font-size:12px;margin-bottom:6px;">' + p.address + '</div>' : '') +
+            '<div style="color:#2997ff;font-weight:700;font-size:15px;">' + (p.price ? Number(p.price).toLocaleString('ru-RU') + ' ₽' : '') + '</div>',
+          balloonContentFooter: '<a href="/property/' + slug + '" style="color:#2997ff;font-size:13px;">Подробнее →</a>',
+          hintContent: (p.title || '') + ' — ' + label
+        }, {
+          preset: 'islands#darkBlueDotIconWithCaption',
+          iconCaptionMaxWidth: '100',
+          iconColor: '#2997ff'
+        });
+
+        pm._id = p.id;
+        pm._cat = p.category || '';
+        allPlacemarks.push(pm);
+        pmById[p.id] = pm;
+      });
+
+      clusterer.add(allPlacemarks);
+      ymap.geoObjects.add(clusterer);
+
+      /* ── marker / cluster click → filter sidebar ── */
+
+      clusterer.events.add('click', function(e) {
+        var target = e.get('target');
+        if (!target) return;
+
+        // cluster
+        if (typeof target.getGeoObjects === 'function') {
+          var geos = target.getGeoObjects();
+          var ids = geos.map(function(g) { return g._id; }).filter(function(id) { return id !== undefined; });
+          if (ids.length) showOnly(ids);
+        }
+        // single placemark
+        else if (target._id !== undefined) {
+          showOnly([target._id]);
+        }
+      });
+
+      /* click empty map → reset */
+      ymap.events.add('click', function() {
+        showAll();
+      });
+
+      /* ── category buttons ── */
+      document.querySelectorAll('.map-cat-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          filterCat(btn.dataset.cat);
+        });
+      });
+
+      /* ── sidebar card interactions ── */
+      document.querySelectorAll('.map-card').forEach(function(card) {
+        card.style.cursor = 'pointer';
+
+        card.addEventListener('click', function(e) {
+          var id = parseInt(card.dataset.id);
+          var lat = parseFloat(card.dataset.lat);
+          var lng = parseFloat(card.dataset.lng);
+
+          document.querySelectorAll('.map-card').forEach(function(c) { c.classList.remove('active'); });
+          card.classList.add('active');
+
+          ymap.setCenter([lat, lng], 16, { duration: 300 });
+
+          var pm = pmById[id];
+          if (pm) setTimeout(function() { pm.balloon.open(); }, 350);
+        });
+
+        card.addEventListener('dblclick', function() {
+          window.location.href = card.dataset.href;
+        });
+      });
+
+      /* ── dark balloon styling ── */
+      var s = document.createElement('style');
+      s.textContent = [
+        '[class*="balloon__content"]{background:#1c1c1e!important;color:#f5f5f7!important}',
+        '[class*="balloon__close-button"]{color:#a1a1a6!important;opacity:1!important}',
+        '[class*="balloon__tail"]::after{background:#1c1c1e!important}',
+        '[class*="balloon__layout"]{background:#1c1c1e!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:12px!important}',
+        '[class*="balloon-content__header"]{color:#f5f5f7!important}',
+        '[class*="balloon-content__body"]{color:#f5f5f7!important}',
+        '[class*="balloon-content__footer"]{color:#f5f5f7!important}'
+      ].join('');
+      document.head.appendChild(s);
+    }
+
+    /* ── wait for API ── */
+    (function poll() {
+      if (typeof ymaps !== 'undefined') ymaps.ready(init);
+      else setTimeout(poll, 150);
+    })();
+  })();
+  </script>
+</body>
+</html>

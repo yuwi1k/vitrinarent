@@ -68,6 +68,14 @@ async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
     rent_count = (await db.execute(select(func.count()).select_from(Property).where(Property.is_active == True, Property.deal_type == "Аренда"))).scalar() or 0
     sale_count = (await db.execute(select(func.count()).select_from(Property).where(Property.is_active == True, Property.deal_type == "Продажа"))).scalar() or 0
 
+    category_names = ["Офис", "Торговая площадь", "Свободного назначения", "Промышленное", "Склад", "Здание", "ГАБ"]
+    cat_counts = {}
+    for cat in category_names:
+        cnt = (await db.execute(
+            select(func.count()).select_from(Property).where(Property.is_active == True, Property.category == cat)
+        )).scalar() or 0
+        cat_counts[cat] = cnt
+
     base_url = _base_url(request)
     return templates.TemplateResponse(
         "index.html",
@@ -78,6 +86,7 @@ async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
             "total_properties": total_properties,
             "rent_count": rent_count,
             "sale_count": sale_count,
+            "cat_counts": cat_counts,
         },
     )
 
@@ -164,6 +173,60 @@ async def search_page(
             "min_area": min_area,
             "max_area": max_area,
             "sort": sort or "date_desc",
+        },
+    )
+
+
+@router.get("/map")
+async def map_page(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    q: Optional[str] = None,
+    deal_type: Optional[str] = None,
+    category: Optional[str] = None,
+    min_price: Optional[str] = None,
+    max_price: Optional[str] = None,
+    min_area: Optional[str] = None,
+    max_area: Optional[str] = None,
+):
+    stmt = build_search_query(q, deal_type, category, min_price, max_price, min_area, max_area)
+    result = await db.execute(stmt)
+    all_props = result.scalars().all()
+
+    map_properties = [
+        {
+            "id": p.id,
+            "slug": p.slug or "",
+            "title": p.title or "",
+            "address": p.address or "",
+            "category": p.category or "",
+            "deal_type": p.deal_type or "",
+            "area": p.area,
+            "latitude": float(p.latitude),
+            "longitude": float(p.longitude),
+            "main_image": (p.main_image if (p.main_image and p.main_image.startswith("/")) else "/" + (p.main_image or "")) if p.main_image else "",
+            "price": p.price,
+        }
+        for p in all_props
+        if p.latitude is not None and p.longitude is not None
+    ]
+
+    return templates.TemplateResponse(
+        "map.html",
+        {
+            "request": request,
+            "base_url": _base_url(request),
+            "map_properties": map_properties,
+            "map_properties_json": json.dumps(map_properties),
+            "total_items": len(map_properties),
+            "yandex_maps_api_key": os.getenv("YANDEX_MAPS_API_KEY", ""),
+            "deal_type": deal_type,
+            "category": category,
+            "q": q,
+            "min_price": min_price,
+            "max_price": max_price,
+            "min_area": min_area,
+            "max_area": max_area,
         },
     )
 

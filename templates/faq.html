@@ -1,215 +1,82 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Часто задаваемые вопросы о сервисе Vitrina: коммерческая недвижимость, аренда и продажа." />
-    <link rel="canonical" href="{{ base_url }}{{ request.url.path }}" />
-    <title>Vitrina — FAQ</title>
-    <link rel="shortcut icon" href="/static/images/favicon.png" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Часто задаваемые вопросы о сервисе Vitrina: коммерческая недвижимость, аренда и продажа." />
+  <link rel="canonical" href="{{ base_url }}{{ request.url.path }}" />
+  <title>Vitrina — FAQ</title>
+  <link rel="shortcut icon" href="/static/images/favicon.png" />
 
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/fonts/icomoon/style.css" />
-    <link rel="stylesheet" href="/static/fonts/flaticon/font/flaticon.css" />
-    <link rel="stylesheet" href="/static/css/tiny-slider.css" />
-    <link rel="stylesheet" href="/static/css/aos.css" />
-    <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-    <style>
-      html { scroll-behavior: smooth; }
-      body {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-      }
-      body .vitrina-page-hero { flex-shrink: 0; }
-      body main {
-        flex: 1;
-      }
-      body .site-footer { flex-shrink: 0; margin-top: auto; }
-      .vitrina-header {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 10;
-        padding: 1.25rem 0;
-        background: rgba(255,255,255,0.08);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-      }
-      .vitrina-header .vitrina-logo {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #fff;
-        text-decoration: none;
-        letter-spacing: -0.02em;
-        font-family: 'Work Sans', sans-serif;
-      }
-      .vitrina-header .vitrina-logo:hover { color: #fff; opacity: 0.9; }
-      .vitrina-header .burger.site-menu-toggle { background: transparent; border: none; padding: 0.25rem; }
-      .vitrina-nav {
-        display: flex;
-        align-items: center;
-        gap: 2.5rem;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-      .vitrina-nav a {
-        color: rgba(255,255,255,0.9);
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 0.95rem;
-        transition: color 0.2s;
-      }
-      .vitrina-nav a:hover,
-      .vitrina-nav a.active { color: #fff; }
-      .vitrina-page-hero {
-        position: relative;
-        min-height: 32vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 5rem 0 4rem;
-        background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.65)), url('/static/images/hero_bg_2.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-      }
-      .vitrina-page-hero .container { padding-top: 3rem; padding-bottom: 1.5rem; }
-      .vitrina-page-hero .vitrina-hero-title {
-        font-size: clamp(1.75rem, 4vw, 2.5rem);
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 0.5rem;
-        font-family: 'Work Sans', sans-serif;
-        text-shadow: 0 1px 4px rgba(0,0,0,0.6), 0 0 24px rgba(0,0,0,0.35);
-      }
-      .vitrina-page-hero .vitrina-hero-subtitle {
-        color: rgba(255,255,255,0.85);
-        font-size: 1rem;
-        margin-bottom: 0;
-      }
-      /* Секция контента — в духе каталога на главной */
-      .vitrina-faq-section {
-        background: rgba(90, 108, 125, 0.04);
-        padding-bottom: 2.5rem;
-      }
-      .vitrina-faq-card {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        border: 1px solid rgba(0,0,0,0.06);
-        padding: 1.5rem 1.75rem;
-        height: 100%;
-        border-left: 4px solid #5a6c7d;
-      }
-      .vitrina-faq-card .vitrina-faq-title {
-        font-size: 1.15rem;
-        font-weight: 600;
-        color: #5a6c7d;
-        margin-bottom: 1rem;
-        font-family: 'Work Sans', sans-serif;
-      }
-      .vitrina-faq-card .vitrina-faq-subtitle {
-        color: #5a6c7d;
-        font-weight: 600;
-      }
-      .vitrina-faq-card ul,
-      .vitrina-faq-card p.small { font-size: 0.9rem; color: #495057; }
-      .vitrina-faq-card .vitrina-faq-bullet { color: #5a6c7d; }
-      .skip-link { position: absolute; top: -3rem; left: 0.5rem; z-index: 9999; padding: 0.5rem 1rem; background: #5a6c7d; color: #fff; text-decoration: none; border-radius: 4px; }
-      .skip-link:focus { top: 0.5rem; outline: 2px solid #fff; outline-offset: 2px; }
-      a:focus-visible, button:focus-visible { outline: 2px solid #5a6c7d; outline-offset: 2px; }
-      @media (max-width: 575.98px) {
-        .vitrina-page-hero { padding: 4rem 0 3rem; min-height: 28vh; }
-      }
-    </style>
-  </head>
-  <body>
-    <a href="#main-content" class="skip-link">Перейти к содержимому</a>
-    <div class="site-mobile-menu site-navbar-target">
-      <div class="site-mobile-menu-header">
-        <div class="site-mobile-menu-close">
-          <span class="icofont-close js-menu-toggle"></span>
-        </div>
-      </div>
-      <div class="site-mobile-menu-body"></div>
+  <link rel="stylesheet" href="/static/css/vitrina-asset.css" />
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Перейти к содержимому</a>
+
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">Vitrina</a>
+      <nav class="nav" id="nav">
+        <a href="/" class="nav-link">Главная</a>
+        <a href="/search" class="nav-link">Поиск</a>
+        <a href="/map" class="nav-link">Карта</a>
+        <a href="/faq" class="nav-link active">FAQ</a>
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
+  </header>
 
-    <header class="vitrina-header">
-      <div class="container">
-        <div class="d-flex align-items-center justify-content-between">
-          <a href="/" class="vitrina-logo">Vitrina</a>
-          <ul class="js-clone-nav d-none d-lg-flex vitrina-nav mb-0">
-            <li><a href="/">Главная</a></li>
-            <li><a href="/search">Поиск</a></li>
-            <li><a href="/faq" class="active">FAQ</a></li>
+  <section class="page-hero">
+    <div class="container">
+      <h1 class="page-hero__title">FAQ</h1>
+      <p class="page-hero__sub">Условия для агентов и покупка коммерческой недвижимости</p>
+    </div>
+  </section>
+
+  <main id="main-content" class="faq-section" tabindex="-1">
+    <div class="container">
+      <div class="faq-grid">
+        <div class="faq-card">
+          <h2>Для агентов</h2>
+          <ul>
+            <li><strong>Комиссия за продажу</strong><br />2% от суммы сделки.</li>
+            <li><strong>Комиссия за аренду</strong><br />50% от первого месячного платежа.</li>
+            <li><strong>Документы</strong><br />Агент предоставляет Акт просмотра объекта.</li>
+            <li><strong>Выплата комиссионных</strong><br />После полной оплаты покупки или получения первого арендного платежа.</li>
+            <li><strong>Условия сотрудничества</strong><br />Детали можно уточнить при обращении.</li>
           </ul>
-          <button type="button" class="burger light ms-auto flex-shrink-0 site-menu-toggle js-menu-toggle d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Открыть меню" aria-expanded="false"><span></span></button>
         </div>
-      </div>
-    </header>
-
-    <div class="vitrina-page-hero">
-      <div class="container text-center">
-        <h1 class="vitrina-hero-title">FAQ — как использовать Vitrina</h1>
-        <p class="vitrina-hero-subtitle">Условия для агентов и кому мы покупаем коммерческую недвижимость</p>
+        <div class="faq-card">
+          <h2>Мы покупаем коммерческую недвижимость</h2>
+          <p>Рассматриваем объекты от 5 000 м²: отдельные здания и комплексы, в том числе с обременениями или на торгах.</p>
+          <ul>
+            <li>Площадь от 5 000 м²</li>
+            <li>Отдельные здания и комплексы</li>
+            <li>Объекты на торгах и с долгами</li>
+            <li>Покупка компании с недвижимостью</li>
+            <li>Прямая покупка объекта</li>
+          </ul>
+          <p>Опишите объект или пришлите презентацию — рассмотрим и свяжемся.</p>
+        </div>
       </div>
     </div>
+  </main>
 
-    <main id="main-content" class="section vitrina-faq-section" tabindex="-1">
-      <div class="container">
-        <div class="row g-4">
-          <div class="col-md-6">
-            <div class="vitrina-faq-card">
-              <h2 class="vitrina-faq-title">Для агентов</h2>
-              <ul class="list-unstyled small mb-0">
-                <li class="mb-2"><strong>Комиссия за продажу</strong><br />2% от суммы сделки.</li>
-                <li class="mb-2"><strong>Комиссия за аренду</strong><br />50% от первого месячного платежа (1 МАП — месячная арендная плата).</li>
-                <li class="mb-2"><strong>Документы</strong><br />Агент предоставляет Акт просмотра объекта.</li>
-                <li class="mb-2"><strong>Выплата комиссионных</strong><br />Комиссионные выплачиваются после полной оплаты покупки (или после получения арендодателем первого платежа по аренде).</li>
-                <li class="mb-0"><strong>Условия сотрудничества</strong><br />Детали можно уточнить при обращении.</li>
-              </ul>
-            </div>
-          </div>
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-logo">Vitrina</div>
+      <p class="footer-text">© <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов</p>
+    </div>
+  </footer>
 
-          <div class="col-md-6">
-            <div class="vitrina-faq-card">
-              <h2 class="vitrina-faq-title mb-3">Мы покупаем коммерческую недвижимость</h2>
-              <p class="small mb-3">Рассматриваем объекты от 5 000 м²: отдельные здания и комплексы, в том числе с обременениями или на торгах. Готовы выкупить как актив компании, так и объект недвижимости.</p>
-              <ul class="list-unstyled small mb-3">
-                <li class="mb-2 d-flex align-items-start"><span class="vitrina-faq-bullet me-2">•</span> Площадь от 5 000 м²</li>
-                <li class="mb-2 d-flex align-items-start"><span class="vitrina-faq-bullet me-2">•</span> Отдельные здания и здания в составе комплексов</li>
-                <li class="mb-2 d-flex align-items-start"><span class="vitrina-faq-bullet me-2">•</span> Объекты на торгах и с долгами</li>
-                <li class="mb-2 d-flex align-items-start"><span class="vitrina-faq-bullet me-2">•</span> Покупка компании с недвижимостью</li>
-                <li class="mb-0 d-flex align-items-start"><span class="vitrina-faq-bullet me-2">•</span> Прямая покупка объекта недвижимости</li>
-              </ul>
-              <p class="small mb-0">Опишите объект или пришлите презентацию — мы рассмотрим и свяжемся с вами.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <footer class="site-footer section py-4">
-      <div class="container">
-        <div class="row">
-          <div class="col-12 text-center">
-            <p class="mb-0 small text-muted">
-              &copy; <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов.
-            </p>
-          </div>
-        </div>
-      </div>
-    </footer>
-
-    <script src="/static/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/tiny-slider.js"></script>
-    <script src="/static/js/aos.js"></script>
-    <script src="/static/js/navbar.js"></script>
-    <script src="/static/js/custom.js"></script>
-  </body>
+  <script src="/static/js/vitrina-asset.js"></script>
+</body>
 </html>

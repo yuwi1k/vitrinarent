@@ -1,423 +1,265 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Поиск коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа." />
-    <link rel="canonical" href="{{ base_url }}{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}" />
-    <title>Vitrina — поиск недвижимости</title>
-    <link rel="shortcut icon" href="/static/images/favicon.png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Поиск объектов — Vitrina</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/fonts/icomoon/style.css" />
-    <link rel="stylesheet" href="/static/fonts/flaticon/font/flaticon.css" />
-    <link rel="stylesheet" href="/static/css/tiny-slider.css" />
-    <link rel="stylesheet" href="/static/css/aos.css" />
-    <link rel="stylesheet" href="/static/css/style.css" />
+  <meta property="og:title" content="Поиск объектов — Vitrina" />
+  <meta property="og:description" content="Удобный поиск коммерческой недвижимости: офисы, склады, торговые площади" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Поиск объектов — Vitrina" />
+  <meta name="twitter:description" content="Удобный поиск коммерческой недвижимости" />
 
-    <style>
-      html { scroll-behavior: smooth; }
-      body { display: flex; flex-direction: column; min-height: 100vh; }
-      body main { flex: 1; }
-      body .site-footer { flex-shrink: 0; margin-top: auto; }
-      .vitrina-header {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 10;
-        padding: 1.25rem 0;
-        background: rgba(255,255,255,0.08);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-      }
-      .vitrina-header .vitrina-logo {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #fff;
-        text-decoration: none;
-        letter-spacing: -0.02em;
-        font-family: 'Work Sans', sans-serif;
-      }
-      .vitrina-header .vitrina-logo:hover { color: #fff; opacity: 0.9; }
-      .vitrina-header .burger.site-menu-toggle { background: transparent; border: none; padding: 0.25rem; }
-      .vitrina-nav {
-        display: flex;
-        align-items: center;
-        gap: 2.5rem;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-      .vitrina-nav a {
-        color: rgba(255,255,255,0.9);
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 0.95rem;
-        transition: color 0.2s;
-      }
-      .vitrina-nav a:hover,
-      .vitrina-nav a.active { color: #fff; }
-      .vitrina-page-hero {
-        position: relative;
-        min-height: 32vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.65)), url('/static/images/hero_bg_2.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-      }
-      .vitrina-page-hero .vitrina-hero-title {
-        font-size: clamp(1.75rem, 4vw, 2.5rem);
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 0.5rem;
-        font-family: 'Work Sans', sans-serif;
-        text-shadow: 0 1px 4px rgba(0,0,0,0.6), 0 0 24px rgba(0,0,0,0.35);
-      }
-      .vitrina-page-hero .breadcrumb { background: transparent; }
-      .vitrina-page-hero .breadcrumb-item a { color: rgba(255,255,255,0.9); }
-      .vitrina-page-hero .breadcrumb-item.active { color: rgba(255,255,255,0.7); }
-      .vitrina-page-hero .text-white { text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
-      @media (max-width: 991.98px) {
-        .vitrina-page-hero { padding-top: 5.5rem; min-height: 24vh; align-items: flex-start; padding-bottom: 1.5rem; }
-        .vitrina-page-hero .container { padding-top: 0.5rem; }
-      }
-      @media (max-width: 575.98px) {
-        .vitrina-page-hero { padding-top: 6rem; min-height: 22vh; }
-      }
-      .vitrina-search-card {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-        padding: 1.5rem;
-      }
-      .vitrina-search-card .form-control,
-      .vitrina-search-card .form-select {
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        padding: 0.65rem 1rem;
-        font-size: 0.95rem;
-      }
-      .vitrina-search-card .form-control:focus,
-      .vitrina-search-card .form-select:focus {
-        border-color: #5a6c7d;
-        box-shadow: 0 0 0 3px rgba(90, 108, 125, 0.2);
-      }
-      .vitrina-search-btn {
-        background: #5a6c7d;
-        color: #fff;
-        font-weight: 600;
-        border: none;
-        border-radius: 8px;
-        padding: 0.65rem 1.75rem;
-        white-space: nowrap;
-        transition: background 0.2s;
-      }
-      .vitrina-search-btn:hover { background: #4a5568; color: #fff; }
-      /* Карточки объектов — как на главной, без подчёркивания цены */
-      .vitrina-search-property-card {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        background: #fff;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        border: 1px solid rgba(0,0,0,0.06);
-      }
-      .vitrina-search-property-card .vitrina-property-img {
-        flex-shrink: 0;
-        height: 220px;
-        overflow: hidden;
-      }
-      .vitrina-search-property-card .vitrina-property-img img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-      .vitrina-search-property-card .vitrina-property-body {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        padding: 1.25rem;
-      }
-      .vitrina-search-property-card .vitrina-property-price {
-        color: #5a6c7d;
-        font-weight: 600;
-        font-size: 1.15rem;
-        margin-bottom: 0.5rem;
-        text-decoration: none;
-      }
-      .vitrina-search-property-card .vitrina-property-meta { color: #6c757d; font-size: 0.9rem; }
-      .vitrina-search-property-card .vitrina-property-body .btn-primary {
-        margin-top: auto;
-        background: #5a6c7d;
-        border-color: #5a6c7d;
-      }
-      .vitrina-search-property-card .vitrina-property-body .btn-primary:hover {
-        background: #4a5568;
-        border-color: #4a5568;
-      }
-      @media (max-width: 991.98px) {
-        .vitrina-search-card .row > [class^="col-"] { margin-bottom: 0.5rem; }
-        .vitrina-search-btn { width: 100%; }
-      }
-      .vitrina-map { overflow: hidden; }
-      .skip-link { position: absolute; top: -3rem; left: 0.5rem; z-index: 9999; padding: 0.5rem 1rem; background: #5a6c7d; color: #fff; text-decoration: none; border-radius: 4px; }
-      .skip-link:focus { top: 0.5rem; outline: 2px solid #fff; outline-offset: 2px; }
-      a:focus-visible, button:focus-visible { outline: 2px solid #5a6c7d; outline-offset: 2px; }
-    </style>
+  <meta name="description" content="Поиск коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа." />
+  <link rel="shortcut icon" href="/static/images/favicon.png" />
+  <link rel="canonical" href="{{ base_url }}{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/static/css/vitrina-asset.css">
 </head>
-
 <body>
-    <a href="#main-content" class="skip-link">Перейти к содержимому</a>
-    <div class="site-mobile-menu site-navbar-target">
-      <div class="site-mobile-menu-header">
-        <div class="site-mobile-menu-close">
-          <span class="icofont-close js-menu-toggle"></span>
-        </div>
-      </div>
-      <div class="site-mobile-menu-body"></div>
-    </div>
+  <a href="#main-content" class="skip-link">Перейти к содержимому</a>
 
-    <header class="vitrina-header">
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">Vitrina</a>
+      <nav class="nav" id="nav">
+        <a href="/" class="nav-link">Главная</a>
+        <a href="/search" class="nav-link active">Поиск</a>
+        <a href="/map" class="nav-link">Карта</a>
+        <a href="/faq" class="nav-link">FAQ</a>
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="search-section">
       <div class="container">
-        <div class="d-flex align-items-center justify-content-between">
-          <a href="/" class="vitrina-logo">Vitrina</a>
-          <ul class="js-clone-nav d-none d-lg-flex vitrina-nav mb-0">
-            <li><a href="/">Главная</a></li>
-            <li><a href="/search" class="active">Поиск</a></li>
-            <li><a href="/faq">FAQ</a></li>
-          </ul>
-          <button type="button" class="burger light ms-auto flex-shrink-0 site-menu-toggle js-menu-toggle d-lg-none" data-toggle="collapse" data-target="#main-navbar" aria-label="Открыть меню" aria-expanded="false"><span></span></button>
+        <div class="search-header">
+          <h1 class="page-title">Каталог</h1>
+          <span class="results-count">{{ total_items }} объектов</span>
         </div>
-      </div>
-    </header>
 
-    <div class="vitrina-page-hero">
-      <div class="container text-center">
-        <h1 class="vitrina-hero-title">Поиск объектов</h1>
-        <p class="text-white mb-0 opacity-90">Найдено объектов: {{ total_items }}</p>
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb justify-content-center mb-0">
-            <li class="breadcrumb-item"><a href="/">Главная</a></li>
-            <li class="breadcrumb-item active">Поиск</li>
-          </ol>
-        </nav>
-      </div>
-    </div>
+        <div class="search-container">
+          <!-- Sidebar Filters -->
+          <aside class="search-sidebar">
+            <div class="filter-card side-filter">
+              <form class="filter-form" action="/search" method="GET">
+                <input type="hidden" name="page" value="1" />
 
-    <main id="main-content" class="section" tabindex="-1">
-        <div class="container">
-
-            <div class="row mb-4">
-                <div class="col-lg-12">
-                    <form action="/search" method="GET" class="vitrina-search-card mb-5">
-                      <div class="row g-3">
-                        <div class="col-12 col-md-3">
-                          <label class="form-label small text-muted mb-1">Поиск по адресу или названию</label>
-                          <input type="text" name="q" class="form-control" placeholder="БЦ, Арбат, склад" value="{{ q or '' }}">
-                        </div>
-                        <div class="col-6 col-md-3">
-                          <label class="form-label small text-muted mb-1">Площадь от (м²)</label>
-                          <input type="number" name="min_area" class="form-control" placeholder="От" min="1" step="1" value="{{ min_area or '' }}">
-                        </div>
-                        <div class="col-6 col-md-3">
-                          <label class="form-label small text-muted mb-1">Площадь до (м²)</label>
-                          <input type="number" name="max_area" class="form-control" placeholder="До" min="1" step="1" value="{{ max_area or '' }}">
-                        </div>
-                        <div class="col-12 col-md-3">
-                          <label class="form-label small text-muted mb-1">Тип сделки</label>
-                          <select name="deal_type" class="form-select">
-                            <option value="Все" {% if deal_type == 'Все' or not deal_type %}selected{% endif %}>Все</option>
-                            <option value="Аренда" {% if deal_type == 'Аренда' %}selected{% endif %}>Аренда</option>
-                            <option value="Продажа" {% if deal_type == 'Продажа' %}selected{% endif %}>Продажа</option>
-                          </select>
-                        </div>
-                        <div class="col-12 col-md-3">
-                          <label class="form-label small text-muted mb-1">Тип помещения</label>
-                          <select name="category" class="form-select">
-                            <option value="Все" {% if category == 'Все' or not category %}selected{% endif %}>Все типы</option>
-                            <option value="Офис" {% if category == 'Офис' %}selected{% endif %}>Офис</option>
-                            <option value="Торговая площадь" {% if category == 'Торговая площадь' %}selected{% endif %}>Торговая площадь</option>
-                            <option value="Свободного назначения" {% if category == 'Свободного назначения' %}selected{% endif %}>Свободного назначения</option>
-                            <option value="Промышленное" {% if category == 'Промышленное' %}selected{% endif %}>Промышленное</option>
-                            <option value="Склад" {% if category == 'Склад' %}selected{% endif %}>Склад</option>
-                            <option value="Здание" {% if category == 'Здание' %}selected{% endif %}>Здание</option>
-                            <option value="ГАБ" {% if category == 'ГАБ' %}selected{% endif %}>ГАБ</option>
-                          </select>
-                        </div>
-                        <div class="col-6 col-md-3">
-                          <label class="form-label small text-muted mb-1">Цена от (₽)</label>
-                          <input type="number" name="min_price" class="form-control" placeholder="От" min="0" value="{{ request.query_params.get('min_price', '') or min_price or '' }}">
-                        </div>
-                        <div class="col-6 col-md-3">
-                          <label class="form-label small text-muted mb-1">Цена до (₽)</label>
-                          <input type="number" name="max_price" class="form-control" placeholder="До" min="0" value="{{ request.query_params.get('max_price', '') or max_price or '' }}">
-                        </div>
-                        <div class="col-6 col-md-3">
-                          <label class="form-label small text-muted mb-1">Сортировка</label>
-                          <select name="sort" class="form-select" aria-label="Сортировка результатов">
-                            <option value="date_desc" {% if (sort or 'date_desc') == 'date_desc' %}selected{% endif %}>Сначала новые</option>
-                            <option value="date_asc" {% if sort == 'date_asc' %}selected{% endif %}>Сначала старые</option>
-                            <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Цена: по возрастанию</option>
-                            <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Цена: по убыванию</option>
-                            <option value="area_asc" {% if sort == 'area_asc' %}selected{% endif %}>Площадь: по возрастанию</option>
-                            <option value="area_desc" {% if sort == 'area_desc' %}selected{% endif %}>Площадь: по убыванию</option>
-                          </select>
-                        </div>
-                        <div class="col-6 col-md-3 d-flex align-items-end">
-                          <button type="submit" class="vitrina-search-btn btn w-100">Найти</button>
-                        </div>
-                      </div>
-                    </form>
+                <div class="form-group">
+                  <label for="deal-type">Тип сделки</label>
+                  <select id="deal-type" name="deal_type">
+                    <option value="Все" {% if not deal_type or deal_type == 'Все' %}selected{% endif %}>Все</option>
+                    <option value="Аренда" {% if deal_type == 'Аренда' %}selected{% endif %}>Аренда</option>
+                    <option value="Продажа" {% if deal_type == 'Продажа' %}selected{% endif %}>Продажа</option>
+                  </select>
                 </div>
+
+                <div class="form-group">
+                  <label for="property-type">Тип помещения</label>
+                  <select id="property-type" name="category">
+                    <option value="Все" {% if not category or category == 'Все' %}selected{% endif %}>Все типы</option>
+                    <option value="Офис" {% if category == 'Офис' %}selected{% endif %}>Офис</option>
+                    <option value="Торговая площадь" {% if category == 'Торговая площадь' %}selected{% endif %}>Торговая площадь</option>
+                    <option value="Свободного назначения" {% if category == 'Свободного назначения' %}selected{% endif %}>Свободного назначения</option>
+                    <option value="Промышленное" {% if category == 'Промышленное' %}selected{% endif %}>Промышленное</option>
+                    <option value="Склад" {% if category == 'Склад' %}selected{% endif %}>Склад</option>
+                    <option value="Здание" {% if category == 'Здание' %}selected{% endif %}>Здание</option>
+                    <option value="ГАБ" {% if category == 'ГАБ' %}selected{% endif %}>ГАБ</option>
+                  </select>
+                </div>
+
+                <div class="filter-extra-wrapper">
+                  <button type="button" class="btn-toggle-extra" id="btn-toggle-extra" aria-expanded="false">
+                    Дополнительно
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </button>
+
+                  <div class="filter-extra" id="filter-extra">
+                    <div class="form-group">
+                      <label for="search-input">Адрес или название</label>
+                      <input type="text" id="search-input" name="q" placeholder="Москва..." value="{{ q or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                      <label>Площадь (м²)</label>
+                      <div class="input-range">
+                        <input type="number" name="min_area" placeholder="От" min="0" value="{{ min_area or '' }}">
+                        <input type="number" name="max_area" placeholder="До" min="0" value="{{ max_area or '' }}">
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label>Цена (₽)</label>
+                      <div class="input-range">
+                        <input type="number" name="min_price" placeholder="От" min="0" value="{{ min_price or '' }}">
+                        <input type="number" name="max_price" placeholder="До" min="0" value="{{ max_price or '' }}">
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="sort">Сортировка</label>
+                      <select id="sort" name="sort">
+                        <option value="date_desc" {% if (sort or 'date_desc') == 'date_desc' %}selected{% endif %}>Сначала новые</option>
+                        <option value="date_asc" {% if sort == 'date_asc' %}selected{% endif %}>Сначала старые</option>
+                        <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Цена: по возрастанию</option>
+                        <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Цена: по убыванию</option>
+                        <option value="area_asc" {% if sort == 'area_asc' %}selected{% endif %}>Площадь: по возрастанию</option>
+                        <option value="area_desc" {% if sort == 'area_desc' %}selected{% endif %}>Площадь: по убыванию</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Найти</button>
+              </form>
+            </div>
+          </aside>
+
+          <!-- Results Grid -->
+          <div class="search-results">
+            <!-- Map toggle -->
+            <div class="map-toggle-wrapper">
+              <button type="button" class="btn btn-outline btn-map-toggle" id="btn-map-toggle">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Показать объекты на карте
+              </button>
+            </div>
+            <div class="map-container" id="map-container" style="display:none;">
+              <div id="map" style="width:100%; height:450px; border-radius: var(--radius-lg);"></div>
             </div>
 
-            <h2 class="heading text-primary mb-3">Карта объектов</h2>
-            <div id="map" class="vitrina-map shadow-sm" style="height: 500px; border-radius: 15px; margin-bottom: 30px;"></div>
-
             {% if properties %}
-            <h2 class="heading text-primary mb-4">Найденные объекты</h2>
-            <div class="row g-4">
-                {% for property in properties %}
-                <div class="col-12 col-sm-6 col-lg-4 d-flex">
-                    <div class="vitrina-search-property-card w-100">
-                        <a href="/property/{{ property.slug or property.id }}" class="vitrina-property-img">
-                            <img src="{% if property.main_image %}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}{% else %}/static/images/hero_bg_1.jpg{% endif %}" alt="{{ property.title }}" class="img-fluid" width="400" height="220" loading="lazy">
-                        </a>
-                        <div class="vitrina-property-body">
-                            {% if property.category %}<span class="d-block text-uppercase small fw-bold text-muted mb-1" style="letter-spacing: 0.05em;">{{ property.category }}</span>{% endif %}
-                            <div class="vitrina-property-price">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
-                            <span class="d-block vitrina-property-meta mb-1">{{ property.address }}</span>
-                            <span class="d-block vitrina-property-meta mb-3">{{ property.title }}</span>
-                            <div class="specs d-flex mb-3">
-                                <span class="d-flex align-items-center me-3 vitrina-property-meta">
-                                    <span class="icon-bed me-2"></span>
-                                    <span class="caption">{{ property.area }} м²</span>
-                                </span>
-                            </div>
-                            <a href="/property/{{ property.slug or property.id }}" class="btn btn-primary py-2 px-3">Подробнее</a>
-                        </div>
-                    </div>
+            <div class="objects-grid search-grid">
+              {% for property in properties %}
+              <article class="object-card">
+                <a class="object-image" href="/property/{{ property.slug or property.id }}">
+                  {% if property.main_image %}
+                    <img src="{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" alt="{{ property.title }}" loading="lazy">
+                  {% else %}
+                    <img src="/static/images/hero_bg_2.png" alt="{{ property.title }}" loading="lazy">
+                  {% endif %}
+                  {% if property.category %}<span class="badge">{{ property.category }}</span>{% endif %}
+                </a>
+                <div class="object-content">
+                  <div class="object-price">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽{% if property.deal_type == 'Аренда' %}/мес{% endif %}</div>
+                  <h3 class="object-title">{{ property.title }}</h3>
+                  <p class="object-address">{{ property.address or '—' }}</p>
+                  <div class="object-metrics">
+                    <span class="metric">{{ property.area or '—' }} м²</span>
+                  </div>
+                  <a href="/property/{{ property.slug or property.id }}" class="btn btn-outline btn-block">Подробнее</a>
                 </div>
-                {% endfor %}
+              </article>
+              {% endfor %}
             </div>
 
             {% if total_pages > 1 %}
-            <nav aria-label="Навигация по страницам" class="mt-5">
-                <ul class="pagination justify-content-center flex-wrap">
-                    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-                        {% if page > 1 %}
-                        <a class="page-link" href="/search?page={{ page - 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ (sort or 'date_desc')|urlencode }}">Назад</a>
-                        {% else %}
-                        <span class="page-link">Назад</span>
-                        {% endif %}
-                    </li>
-                    {% for p in pages %}
-                    <li class="page-item {% if p == page %}active{% endif %}">
-                        <a class="page-link" href="/search?page={{ p }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ (sort or 'date_desc')|urlencode }}">{{ p }}</a>
-                    </li>
-                    {% endfor %}
-                    <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-                        {% if page < total_pages %}
-                        <a class="page-link" href="/search?page={{ page + 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ (sort or 'date_desc')|urlencode }}">Вперед</a>
-                        {% else %}
-                        <span class="page-link">Вперед</span>
-                        {% endif %}
-                    </li>
-                </ul>
-            </nav>
-            {% endif %}
+            <div class="pagination" aria-label="Навигация по страницам">
+              {% set qs = 'q=' ~ (q or '')|urlencode ~ '&deal_type=' ~ (deal_type or '')|urlencode ~ '&category=' ~ (category or '')|urlencode ~ '&min_price=' ~ (min_price or '')|urlencode ~ '&max_price=' ~ (max_price or '')|urlencode ~ '&min_area=' ~ (min_area or '')|urlencode ~ '&max_area=' ~ (max_area or '')|urlencode ~ '&sort=' ~ (sort or 'date_desc')|urlencode %}
 
-            {% else %}
-            <div class="row">
-                <div class="col-12 text-center py-5">
-                    <h3 class="text-black-50">Объектов не найдено</h3>
-                    <p class="text-muted mt-2">Попробуйте изменить параметры поиска.</p>
-                </div>
+              {% if page > 1 %}
+                <a href="/search?page={{ page - 1 }}&{{ qs }}" class="page-link">Назад</a>
+              {% else %}
+                <span class="page-link">Назад</span>
+              {% endif %}
+
+              {% for p in pages %}
+                <a href="/search?page={{ p }}&{{ qs }}" class="page-link{% if p == page %} active{% endif %}">{{ p }}</a>
+              {% endfor %}
+
+              {% if page < total_pages %}
+                <a href="/search?page={{ page + 1 }}&{{ qs }}" class="page-link">Вперед</a>
+              {% else %}
+                <span class="page-link">Вперед</span>
+              {% endif %}
             </div>
             {% endif %}
 
-        </div>
-    </main>
-
-    <footer class="site-footer section py-4">
-      <div class="container">
-        <div class="row">
-          <div class="col-12 text-center">
-            <p class="mb-0 small text-muted">
-              &copy; <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов.
-            </p>
+            {% else %}
+            <div style="text-align:center; padding: 3rem 0; color: var(--color-text-secondary);">
+              <p style="font-size:1.125rem; margin-bottom:0.5rem;">Ничего не найдено</p>
+              <p style="font-size:0.875rem; color: var(--color-text-tertiary);">Попробуйте изменить параметры поиска</p>
+            </div>
+            {% endif %}
           </div>
         </div>
       </div>
-    </footer>
+    </section>
+  </main>
 
-    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU{% if yandex_maps_api_key %}&apikey={{ yandex_maps_api_key }}{% endif %}" type="text/javascript"></script>
-    <script src="/static/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/tiny-slider.js"></script>
-    <script src="/static/js/aos.js"></script>
-    <script src="/static/js/navbar.js"></script>
-    <script src="/static/js/custom.js"></script>
-    <script>
-      (function() {
-        function esc(s) { if (s == null || s === '') return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-        var mapProperties = {{ (map_properties_json | default('[]')) | safe }};
-        if (!Array.isArray(mapProperties)) mapProperties = [];
-        function init() {
-          var mapEl = document.getElementById('map');
-          if (!mapEl) return;
-          if (typeof ymaps === 'undefined') { console.error('Yandex Maps API не загружен'); return; }
-          var map = new ymaps.Map('map', {
-            center: [55.7558, 37.6173],
-            zoom: 10
-          });
-          for (var i = 0; i < mapProperties.length; i++) {
-            var p = mapProperties[i];
-            if (p.latitude == null || p.longitude == null) continue;
-            var slugOrId = (p.slug != null && p.slug !== '') ? p.slug : p.id;
-            var balloonBody = '<div style="font-family: \'Work Sans\', sans-serif; padding: 5px;">' +
-              (p.category ? '<div style="font-size: 10px; color: #6c757d; text-transform: uppercase; font-weight: 700; margin-bottom: 2px;">' + esc(p.category) + '</div>' : '') +
-              '<div style="font-weight: 700; color: #1a1e21; margin-bottom: 4px; font-size: 14px;">' + esc(p.title || 'Объект #' + p.id) + '</div>' +
-              '<div style="color: #5a6c7d; font-weight: 600; font-size: 13px; margin-bottom: 8px;">' + (p.price != null ? Number(p.price).toLocaleString('ru-RU') + ' ₽' : '') + '</div>' +
-              '<a href="/property/' + esc(String(slugOrId)) + '" style="display: inline-block; background: #5a6c7d; color: #fff; text-decoration: none; padding: 4px 10px; border-radius: 4px; font-size: 12px;">Подробнее</a>' +
-              '</div>';
-            var placemark = new ymaps.Placemark(
-              [p.latitude, p.longitude],
-              { balloonContent: balloonBody },
-              { preset: 'islands#redDotIcon' }
-            );
-            map.geoObjects.add(placemark);
-          }
-          if (map.geoObjects.getLength() > 0) {
-            try {
-              var b = map.geoObjects.getBounds();
-              if (b) map.setBounds(b, { checkZoomRange: true, zoomMargin: 50 });
-            } catch (e) { console.warn('setBounds:', e); }
-          }
-        }
-        if (typeof ymaps !== 'undefined') {
-          ymaps.ready(init);
-        } else {
-          function waitYmaps() {
-            if (typeof ymaps !== 'undefined') { ymaps.ready(init); return; }
-            setTimeout(waitYmaps, 100);
-          }
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', waitYmaps);
-          } else {
-            waitYmaps();
-          }
-        }
-      })();
-    </script>
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-logo">Vitrina</div>
+      <p class="footer-text">© <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов</p>
+    </div>
+  </footer>
+
+  <script src="/static/js/vitrina-asset.js"></script>
+  <script>
+  (function() {
+    var mapBtn = document.getElementById('btn-map-toggle');
+    var mapContainer = document.getElementById('map-container');
+    if (!mapBtn || !mapContainer) return;
+
+    var mapLoaded = false;
+    var mapProperties = {{ (map_properties_json | default('[]')) | safe }};
+    if (!Array.isArray(mapProperties)) mapProperties = [];
+
+    function esc(s) {
+      if (s == null || s === '') return '';
+      var d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function initMap() {
+      if (typeof ymaps === 'undefined') return;
+      var map = new ymaps.Map('map', { center: [55.7558, 37.6173], zoom: 10, controls: ['zoomControl'] }, { suppressMapOpenBlock: true });
+      map.behaviors.disable('scrollZoom');
+      for (var i = 0; i < mapProperties.length; i++) {
+        var p = mapProperties[i];
+        if (p.latitude == null || p.longitude == null) continue;
+        var slugOrId = (p.slug != null && p.slug !== '') ? p.slug : p.id;
+        var body = '<div style="font-family:Inter,sans-serif;padding:8px;">' +
+          (p.category ? '<div style="font-size:10px;color:#64748b;text-transform:uppercase;font-weight:600;margin-bottom:4px;">' + esc(p.category) + '</div>' : '') +
+          '<div style="font-weight:700;color:#1e293b;margin-bottom:4px;font-size:14px;">' + esc(p.title || 'Объект #' + p.id) + '</div>' +
+          '<div style="color:#5a6c7d;font-weight:600;font-size:13px;margin-bottom:8px;">' + (p.price != null ? Number(p.price).toLocaleString('ru-RU') + ' ₽' : '') + '</div>' +
+          '<a href="/property/' + esc(String(slugOrId)) + '" style="display:inline-block;background:#5a6c7d;color:#fff;text-decoration:none;padding:6px 12px;border-radius:6px;font-size:12px;">Подробнее</a></div>';
+        map.geoObjects.add(new ymaps.Placemark([p.latitude, p.longitude], { balloonContent: body }, { preset: 'islands#redDotIcon' }));
+      }
+      if (map.geoObjects.getLength() > 0) {
+        try { var b = map.geoObjects.getBounds(); if (b) map.setBounds(b, { checkZoomRange: true, zoomMargin: 50 }); } catch(e) {}
+      }
+    }
+
+    mapBtn.addEventListener('click', function() {
+      var isHidden = mapContainer.style.display === 'none';
+      mapContainer.style.display = isHidden ? 'block' : 'none';
+      mapBtn.innerHTML = isHidden
+        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Скрыть карту'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Показать на карте';
+
+      if (isHidden && !mapLoaded) {
+        mapLoaded = true;
+        var script = document.createElement('script');
+        script.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU{% if yandex_maps_api_key %}&apikey={{ yandex_maps_api_key }}{% endif %}';
+        script.onload = function() { ymaps.ready(initMap); };
+        document.head.appendChild(script);
+      }
+    });
+  })();
+  </script>
 </body>
-
 </html>
