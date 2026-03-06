@@ -349,14 +349,14 @@ a { text-decoration: none; color: inherit; }
 .showcase {
   scroll-margin-top: 3.5rem;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
   padding: 0;
   background: var(--color-bg);
 }
 
 .showcase-block {
-  min-height: 520px;
+  min-height: 440px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -407,7 +407,7 @@ a { text-decoration: none; color: inherit; }
 }
 
 .showcase-block__title {
-  font-size: 3rem;
+  font-size: 2.25rem;
   font-weight: 600;
   letter-spacing: -0.04em;
   line-height: 1.08;
@@ -1405,8 +1405,9 @@ body.map-page {
 @media (max-width: 1024px) {
   .hero-title { font-size: 3.25rem; }
   .objects-grid { grid-template-columns: repeat(2, 1fr); }
-  .showcase-block__title { font-size: 2.75rem; }
-  .showcase-block { min-height: 420px; }
+  .showcase { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .showcase-block__title { font-size: 2.25rem; }
+  .showcase-block { min-height: 380px; }
 }
 
 @media (max-width: 992px) {
