@@ -129,6 +129,43 @@
 
           <!-- Results Grid -->
           <div class="search-results">
+            {% set has_filters = (deal_type and deal_type != 'Все') or (category and category != 'Все') or q or min_price or max_price or min_area or max_area %}
+            {% if has_filters %}
+            <div class="active-filters">
+              {% if deal_type and deal_type != 'Все' %}
+              <a class="filter-chip" href="/search?deal_type=Все&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
+                {{ deal_type }}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </a>
+              {% endif %}
+              {% if category and category != 'Все' %}
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category=Все&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
+                {{ category }}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </a>
+              {% endif %}
+              {% if q %}
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
+                «{{ q }}»
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </a>
+              {% endif %}
+              {% if min_area or max_area %}
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&sort={{ sort }}">
+                Площадь: {{ min_area or '—' }}–{{ max_area or '∞' }} м²
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </a>
+              {% endif %}
+              {% if min_price or max_price %}
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
+                Цена: {{ min_price or '—' }}–{{ max_price or '∞' }} ₽
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </a>
+              {% endif %}
+              <a class="filter-chip filter-chip--reset" href="/search">Сбросить всё</a>
+            </div>
+            {% endif %}
+
             <!-- Map toggle -->
             <div class="map-toggle-wrapper">
               <button type="button" class="btn btn-outline btn-map-toggle" id="btn-map-toggle">
@@ -151,9 +188,13 @@
                     <img src="/static/images/hero_bg_2.png" alt="{{ property.title }}" loading="lazy">
                   {% endif %}
                   {% if property.category %}<span class="badge">{{ property.category }}</span>{% endif %}
+                  {% if property.deal_type == 'Аренда' %}<span class="badge-deal badge-deal--rent">Аренда</span>{% elif property.deal_type == 'Продажа' %}<span class="badge-deal badge-deal--sale">Продажа</span>{% endif %}
                 </a>
                 <div class="object-content">
                   <div class="object-price">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽{% if property.deal_type == 'Аренда' %}/мес{% endif %}</div>
+                  {% if property.area and property.price and property.area > 0 %}
+                  <div class="object-price-per-m2">{{ "{:,.0f}".format(property.price // property.area).replace(',', ' ') }} ₽/м²{% if property.deal_type == 'Аренда' %} в мес{% endif %}</div>
+                  {% endif %}
                   <h3 class="object-title">{{ property.title }}</h3>
                   <p class="object-address">{{ property.address or '—' }}</p>
                   <div class="object-metrics">
@@ -170,9 +211,9 @@
               {% set qs = 'q=' ~ (q or '')|urlencode ~ '&deal_type=' ~ (deal_type or '')|urlencode ~ '&category=' ~ (category or '')|urlencode ~ '&min_price=' ~ (min_price or '')|urlencode ~ '&max_price=' ~ (max_price or '')|urlencode ~ '&min_area=' ~ (min_area or '')|urlencode ~ '&max_area=' ~ (max_area or '')|urlencode ~ '&sort=' ~ (sort or 'date_desc')|urlencode %}
 
               {% if page > 1 %}
-                <a href="/search?page={{ page - 1 }}&{{ qs }}" class="page-link">Назад</a>
+                <a href="/search?page={{ page - 1 }}&{{ qs }}" class="page-link">← Назад</a>
               {% else %}
-                <span class="page-link">Назад</span>
+                <span class="page-link page-link--disabled">← Назад</span>
               {% endif %}
 
               {% for p in pages %}
@@ -180,9 +221,9 @@
               {% endfor %}
 
               {% if page < total_pages %}
-                <a href="/search?page={{ page + 1 }}&{{ qs }}" class="page-link">Вперед</a>
+                <a href="/search?page={{ page + 1 }}&{{ qs }}" class="page-link">Вперед →</a>
               {% else %}
-                <span class="page-link">Вперед</span>
+                <span class="page-link page-link--disabled">Вперед →</span>
               {% endif %}
             </div>
             {% endif %}
@@ -200,9 +241,23 @@
   </main>
 
   <footer class="footer">
-    <div class="container footer-container">
-      <div class="footer-logo">Vitrina</div>
-      <p class="footer-text">© <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов</p>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">Vitrina</div>
+          <p class="footer-tagline">Каталог коммерческой недвижимости: офисы, склады, торговые площади от собственника</p>
+        </div>
+        <div class="footer-nav-col">
+          <h3>Навигация</h3>
+          <a href="/">Главная</a>
+          <a href="/search">Каталог</a>
+          <a href="/map">Карта объектов</a>
+          <a href="/faq">FAQ</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-text">© {{ now().year }} vitrina.rent — сервис для агентов</p>
+      </div>
     </div>
   </footer>
 

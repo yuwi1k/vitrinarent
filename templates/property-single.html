@@ -22,7 +22,7 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Product",
+    "@type": "RealEstateListing",
     "name": "{{ (property.title or 'Объект')|replace('\\', '\\\\')|replace('"', '\\"') }}",
     "description": "{{ ((property.description or property.title or 'Объект недвижимости')[:500])|replace('\\', '\\\\')|replace('"', '\\"')|replace('\n', ' ') }}",
     "url": "{{ site_url }}/property/{{ property.slug or property.id }}",
@@ -82,9 +82,10 @@
         <!-- Left column -->
         <div class="prop-content">
 
-          <div class="prop-gallery" id="gallery">
+          <div class="prop-gallery" id="gallery" style="cursor:zoom-in;">
             <img src="{{ all_images[0] }}" alt="{{ property.title }}" id="gallery-img" />
             {% if all_images|length > 1 %}
+            <span class="prop-gallery__counter" id="gallery-counter">1 / {{ all_images|length }}</span>
             <button class="prop-gallery__nav prop-gallery__nav--prev" id="gallery-prev" aria-label="Назад">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
@@ -122,6 +123,9 @@
           <div class="prop-price-mobile">
             <div class="prop-price__amount">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
             <div class="prop-price__note">{% if property.deal_type == 'Аренда' %}в месяц · аренда{% else %}продажа{% endif %}</div>
+            {% if property.area and property.price and property.area > 0 %}
+            <div class="prop-price__per-m2">{{ "{:,.0f}".format(property.price // property.area).replace(',', ' ') }} ₽/м²{% if property.deal_type == 'Аренда' %} в мес{% endif %}</div>
+            {% endif %}
           </div>
 
           {% if property.description %}
@@ -168,6 +172,9 @@
           <div class="prop-price-card">
             <div class="prop-price__amount">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
             <div class="prop-price__note">{% if property.deal_type == 'Аренда' %}в месяц · аренда{% else %}продажа{% endif %}</div>
+            {% if property.area and property.price and property.area > 0 %}
+            <div class="prop-price__per-m2">{{ "{:,.0f}".format(property.price // property.area).replace(',', ' ') }} ₽/м²{% if property.deal_type == 'Аренда' %} в мес{% endif %}</div>
+            {% endif %}
             <div class="prop-price__divider"></div>
 
             <table class="prop-specs">
@@ -180,26 +187,40 @@
                 <td>{% if property.floor_number is not none %}{{ property.floor_number }}{% else %}—{% endif %} / {% if property.floors_total is not none %}{{ property.floors_total }}{% else %}—{% endif %}</td>
               </tr>
               {% endif %}
-              {% if property.ceiling_height is not none %}
-              <tr><td>Потолки</td><td>{{ '%.2f'|format(property.ceiling_height) }} м</td></tr>
-              {% endif %}
-              {% if property.power_kw is not none %}
-              <tr><td>Мощность</td><td>{{ '%.1f'|format(property.power_kw) }} кВт</td></tr>
-              {% endif %}
-              {% set avito = property.avito_data or {} %}
-              {% if avito.get('BuildingType') %}
-              <tr><td>Тип здания</td><td>{{ avito.get('BuildingType') }}</td></tr>
-              {% endif %}
-              {% if avito.get('Decoration') %}
-              <tr><td>Отделка</td><td>{{ avito.get('Decoration') }}</td></tr>
-              {% endif %}
-              {% if avito.get('Layout') %}
-              <tr><td>Планировка</td><td>{{ avito.get('Layout') }}</td></tr>
-              {% endif %}
-              {% if avito.get('ParkingType') %}
-              <tr><td>Парковка</td><td>{{ avito.get('ParkingType') }}</td></tr>
-              {% endif %}
             </table>
+
+            {% set avito = property.avito_data or {} %}
+            {% set has_extra_specs = (property.ceiling_height is not none) or (property.power_kw is not none) or avito.get('BuildingType') or avito.get('Decoration') or avito.get('Layout') or avito.get('ParkingType') %}
+            {% if has_extra_specs %}
+            <div class="prop-specs-extra-wrap" id="prop-specs-extra-wrap">
+              <button type="button" class="prop-specs-toggle" id="prop-specs-toggle" aria-expanded="false">
+                Все характеристики
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="prop-specs-extra" id="prop-specs-extra">
+                <table class="prop-specs">
+                  {% if property.ceiling_height is not none %}
+                  <tr><td>Потолки</td><td>{{ '%.2f'|format(property.ceiling_height) }} м</td></tr>
+                  {% endif %}
+                  {% if property.power_kw is not none %}
+                  <tr><td>Мощность</td><td>{{ '%.1f'|format(property.power_kw) }} кВт</td></tr>
+                  {% endif %}
+                  {% if avito.get('BuildingType') %}
+                  <tr><td>Тип здания</td><td>{{ avito.get('BuildingType') }}</td></tr>
+                  {% endif %}
+                  {% if avito.get('Decoration') %}
+                  <tr><td>Отделка</td><td>{{ avito.get('Decoration') }}</td></tr>
+                  {% endif %}
+                  {% if avito.get('Layout') %}
+                  <tr><td>Планировка</td><td>{{ avito.get('Layout') }}</td></tr>
+                  {% endif %}
+                  {% if avito.get('ParkingType') %}
+                  <tr><td>Парковка</td><td>{{ avito.get('ParkingType') }}</td></tr>
+                  {% endif %}
+                </table>
+              </div>
+            </div>
+            {% endif %}
 
             {% if property.address %}
             <div class="prop-price__divider"></div>
@@ -227,31 +248,62 @@
   </main>
 
   <footer class="footer">
-    <div class="container footer-container">
-      <div class="footer-logo">Vitrina</div>
-      <p class="footer-text">© <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов</p>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">Vitrina</div>
+          <p class="footer-tagline">Каталог коммерческой недвижимости: офисы, склады, торговые площади от собственника</p>
+        </div>
+        <div class="footer-nav-col">
+          <h3>Навигация</h3>
+          <a href="/">Главная</a>
+          <a href="/search">Каталог</a>
+          <a href="/map">Карта объектов</a>
+          <a href="/faq">FAQ</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-text">© {{ now().year }} vitrina.rent — сервис для агентов</p>
+      </div>
     </div>
   </footer>
 
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-label="Просмотр фото">
+    <button class="lightbox__close" id="lightbox-close" aria-label="Закрыть">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+    <button class="lightbox__nav lightbox__nav--prev" id="lightbox-prev" aria-label="Предыдущее фото">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <img src="" alt="" id="lightbox-img" />
+    <button class="lightbox__nav lightbox__nav--next" id="lightbox-next" aria-label="Следующее фото">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+    <div class="lightbox__counter" id="lightbox-counter"></div>
+  </div>
+
   <script src="/static/js/vitrina-asset.js"></script>
-  {% if all_images|length > 1 %}
   <script>
   (function() {
     var images = {{ all_images | tojson }};
     var idx = 0;
     var img = document.getElementById('gallery-img');
+    var counter = document.getElementById('gallery-counter');
     var dots = document.querySelectorAll('.prop-gallery__dot');
 
     function show(i) {
       idx = (i + images.length) % images.length;
       img.src = images[idx];
+      if (counter) counter.textContent = (idx + 1) + ' / ' + images.length;
       dots.forEach(function(d, j) { d.classList.toggle('active', j === idx); });
     }
 
-    document.getElementById('gallery-prev').addEventListener('click', function() { show(idx - 1); });
-    document.getElementById('gallery-next').addEventListener('click', function() { show(idx + 1); });
+    {% if all_images|length > 1 %}
+    document.getElementById('gallery-prev').addEventListener('click', function(e) { e.stopPropagation(); show(idx - 1); });
+    document.getElementById('gallery-next').addEventListener('click', function(e) { e.stopPropagation(); show(idx + 1); });
     dots.forEach(function(d) {
-      d.addEventListener('click', function() { show(parseInt(d.dataset.idx)); });
+      d.addEventListener('click', function(e) { e.stopPropagation(); show(parseInt(d.dataset.idx)); });
     });
 
     var startX = 0;
@@ -261,8 +313,77 @@
       var dx = e.changedTouches[0].clientX - startX;
       if (Math.abs(dx) > 40) show(dx < 0 ? idx + 1 : idx - 1);
     });
+    {% endif %}
+
+    /* Lightbox */
+    var lb = document.getElementById('lightbox');
+    var lbImg = document.getElementById('lightbox-img');
+    var lbCounter = document.getElementById('lightbox-counter');
+    var lbIdx = 0;
+
+    function lbShow(i) {
+      lbIdx = (i + images.length) % images.length;
+      lbImg.src = images[lbIdx];
+      lbCounter.textContent = (lbIdx + 1) + ' / ' + images.length;
+    }
+
+    function openLightbox() {
+      lbShow(idx);
+      lb.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      lb.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('gallery').addEventListener('click', function(e) {
+      if (e.target.closest('.prop-gallery__nav') || e.target.closest('.prop-gallery__dot')) return;
+      openLightbox();
+    });
+
+    document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+    lb.addEventListener('click', function(e) {
+      if (e.target === lb) closeLightbox();
+    });
+    document.getElementById('lightbox-prev').addEventListener('click', function(e) { e.stopPropagation(); lbShow(lbIdx - 1); });
+    document.getElementById('lightbox-next').addEventListener('click', function(e) { e.stopPropagation(); lbShow(lbIdx + 1); });
+
+    document.addEventListener('keydown', function(e) {
+      if (!lb.classList.contains('active')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') lbShow(lbIdx - 1);
+      if (e.key === 'ArrowRight') lbShow(lbIdx + 1);
+    });
+
+    /* Кнопка «Все характеристики» */
+    var specsToggle = document.getElementById('prop-specs-toggle');
+    var specsWrap = document.getElementById('prop-specs-extra-wrap');
+    var specsExtra = document.getElementById('prop-specs-extra');
+    if (specsToggle && specsWrap && specsExtra) {
+      specsToggle.addEventListener('click', function() {
+        var wasOpen = specsWrap.classList.contains('open');
+        if (wasOpen) {
+          specsExtra.style.maxHeight = specsExtra.scrollHeight + 'px';
+          specsExtra.offsetHeight;
+          specsExtra.style.maxHeight = '0px';
+          specsWrap.classList.remove('open');
+          specsToggle.setAttribute('aria-expanded', 'false');
+        } else {
+          specsWrap.classList.add('open');
+          specsExtra.style.maxHeight = specsExtra.scrollHeight + 'px';
+          specsExtra.addEventListener('transitionend', function handler() {
+            if (specsWrap.classList.contains('open')) {
+              specsExtra.style.maxHeight = 'none';
+            }
+            specsExtra.removeEventListener('transitionend', handler);
+          });
+          specsToggle.setAttribute('aria-expanded', 'true');
+        }
+      });
+    }
   })();
   </script>
-  {% endif %}
 </body>
 </html>

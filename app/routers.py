@@ -19,9 +19,13 @@ from app.models import Property
 from app.feed import generate_avito_feed
 from app.feed_cian import generate_cian_feed
 from app.services import build_search_query
+from app.settings_store import get_public_contacts
+
+from datetime import datetime as _dt
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+templates.env.globals["now"] = _dt.now
 
 
 def _base_url(request: Request) -> str:
@@ -87,6 +91,7 @@ async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
             "rent_count": rent_count,
             "sale_count": sale_count,
             "cat_counts": cat_counts,
+            **get_public_contacts(),
         },
     )
 
@@ -173,6 +178,7 @@ async def search_page(
             "min_area": min_area,
             "max_area": max_area,
             "sort": sort or "date_desc",
+            **get_public_contacts(),
         },
     )
 
@@ -227,13 +233,14 @@ async def map_page(
             "max_price": max_price,
             "min_area": min_area,
             "max_area": max_area,
+            **get_public_contacts(),
         },
     )
 
 
 @router.get("/faq")
 async def faq_page(request: Request):
-    return templates.TemplateResponse("faq.html", {"request": request, "base_url": _base_url(request)})
+    return templates.TemplateResponse("faq.html", {"request": request, "base_url": _base_url(request), **get_public_contacts()})
 
 
 @router.get("/property/{slug}")
@@ -297,6 +304,7 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
             "building_nav_items": building_nav_items,
             "display_for_media": display_for_media,
             "site_url": site_url,
+            **get_public_contacts(),
         },
     )
 

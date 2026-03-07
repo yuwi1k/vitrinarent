@@ -13,6 +13,40 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="/static/css/vitrina-asset.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Какая комиссия за продажу?",
+        "acceptedAnswer": { "@type": "Answer", "text": "2% от суммы сделки." }
+      },
+      {
+        "@type": "Question",
+        "name": "Какая комиссия за аренду?",
+        "acceptedAnswer": { "@type": "Answer", "text": "50% от первого месячного платежа." }
+      },
+      {
+        "@type": "Question",
+        "name": "Какие документы нужны от агента?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Агент предоставляет Акт просмотра объекта." }
+      },
+      {
+        "@type": "Question",
+        "name": "Когда выплачиваются комиссионные?",
+        "acceptedAnswer": { "@type": "Answer", "text": "После полной оплаты покупки или получения первого арендного платежа." }
+      },
+      {
+        "@type": "Question",
+        "name": "Какие объекты вы покупаете?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Рассматриваем объекты от 5 000 м²: отдельные здания и комплексы, в том числе с обременениями или на торгах." }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <a href="#main-content" class="skip-link">Перейти к содержимому</a>
@@ -36,44 +70,117 @@
 
   <section class="page-hero">
     <div class="container">
-      <h1 class="page-hero__title">FAQ</h1>
+      <h1 class="page-hero__title">Часто задаваемые вопросы</h1>
       <p class="page-hero__sub">Условия для агентов и покупка коммерческой недвижимости</p>
     </div>
   </section>
 
   <main id="main-content" class="faq-section" tabindex="-1">
-    <div class="container">
-      <div class="faq-grid">
-        <div class="faq-card">
-          <h2>Для агентов</h2>
-          <ul>
-            <li><strong>Комиссия за продажу</strong><br />2% от суммы сделки.</li>
-            <li><strong>Комиссия за аренду</strong><br />50% от первого месячного платежа.</li>
-            <li><strong>Документы</strong><br />Агент предоставляет Акт просмотра объекта.</li>
-            <li><strong>Выплата комиссионных</strong><br />После полной оплаты покупки или получения первого арендного платежа.</li>
-            <li><strong>Условия сотрудничества</strong><br />Детали можно уточнить при обращении.</li>
-          </ul>
-        </div>
-        <div class="faq-card">
-          <h2>Мы покупаем коммерческую недвижимость</h2>
-          <p>Рассматриваем объекты от 5 000 м²: отдельные здания и комплексы, в том числе с обременениями или на торгах.</p>
-          <ul>
-            <li>Площадь от 5 000 м²</li>
-            <li>Отдельные здания и комплексы</li>
-            <li>Объекты на торгах и с долгами</li>
-            <li>Покупка компании с недвижимостью</li>
-            <li>Прямая покупка объекта</li>
-          </ul>
-          <p>Опишите объект или пришлите презентацию — рассмотрим и свяжемся.</p>
+    <div class="container" style="max-width:800px;">
+
+      <h2 style="font-size:1.375rem;font-weight:700;letter-spacing:-0.02em;color:var(--color-text);margin-bottom:1.25rem;">Для агентов</h2>
+
+      <div class="faq-item open">
+        <button class="faq-question" aria-expanded="true">
+          Какая комиссия за продажу?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer__inner">
+            <strong>2% от суммы сделки.</strong> Комиссия выплачивается после полной оплаты покупки.
+          </div>
         </div>
       </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Какая комиссия за аренду?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer__inner">
+            <strong>50% от первого месячного платежа.</strong> Выплачивается после получения первого арендного платежа от арендатора.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Какие документы нужны от агента?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer__inner">
+            Агент предоставляет <strong>Акт просмотра объекта</strong>. Детали условий сотрудничества можно уточнить при обращении.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Когда выплачиваются комиссионные?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer__inner">
+            Комиссионные выплачиваются после полной оплаты покупки или после получения первого арендного платежа — в зависимости от типа сделки.
+          </div>
+        </div>
+      </div>
+
+      <h2 style="font-size:1.375rem;font-weight:700;letter-spacing:-0.02em;color:var(--color-text);margin:2.5rem 0 1.25rem;">Покупка недвижимости</h2>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Какие объекты вы покупаете?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer__inner">
+            Рассматриваем объекты <strong>от 5 000 м²</strong>: отдельные здания и комплексы, в том числе с обременениями или на торгах.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          Какие форматы покупки возможны?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer__inner">
+            <ul style="list-style:none;padding:0;margin:0;">
+              <li style="margin-bottom:0.5rem;">— Прямая покупка объекта</li>
+              <li style="margin-bottom:0.5rem;">— Покупка компании с недвижимостью</li>
+              <li style="margin-bottom:0.5rem;">— Объекты на торгах и с долгами</li>
+            </ul>
+            <p style="margin-top:0.75rem;">Опишите объект или пришлите презентацию — рассмотрим и свяжемся.</p>
+          </div>
+        </div>
+      </div>
+
+
     </div>
   </main>
 
   <footer class="footer">
-    <div class="container footer-container">
-      <div class="footer-logo">Vitrina</div>
-      <p class="footer-text">© <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов</p>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">Vitrina</div>
+          <p class="footer-tagline">Каталог коммерческой недвижимости: офисы, склады, торговые площади от собственника</p>
+        </div>
+        <div class="footer-nav-col">
+          <h3>Навигация</h3>
+          <a href="/">Главная</a>
+          <a href="/search">Каталог</a>
+          <a href="/map">Карта объектов</a>
+          <a href="/faq">FAQ</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-text">© {{ now().year }} vitrina.rent — сервис для агентов</p>
+      </div>
     </div>
   </footer>
 

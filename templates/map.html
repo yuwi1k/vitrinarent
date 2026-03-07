@@ -35,6 +35,12 @@
         <span class="map-sidebar-count" id="sidebar-count">{{ total_items }}</span>
       </div>
 
+      <div class="map-deal-btns" id="map-deal-btns">
+        <button class="map-cat-btn active" data-deal="">Все сделки</button>
+        <button class="map-cat-btn" data-deal="Аренда">Аренда</button>
+        <button class="map-cat-btn" data-deal="Продажа">Продажа</button>
+      </div>
+
       <div class="map-categories" id="map-categories">
         <button class="map-cat-btn active" data-cat="">Все</button>
         <button class="map-cat-btn" data-cat="Офис">Офисы</button>
@@ -48,7 +54,7 @@
 
       <div class="map-sidebar-list" id="map-sidebar-list">
         {% for p in map_properties %}
-        <div class="map-card" data-id="{{ p.id }}" data-lat="{{ p.latitude }}" data-lng="{{ p.longitude }}" data-cat="{{ p.category }}" data-href="/property/{{ p.slug or p.id }}">
+        <div class="map-card" data-id="{{ p.id }}" data-lat="{{ p.latitude }}" data-lng="{{ p.longitude }}" data-cat="{{ p.category }}" data-deal="{{ p.deal_type }}" data-href="/property/{{ p.slug or p.id }}">
           <div class="map-card-img">
             {% if p.main_image %}
             <img src="{{ p.main_image }}" alt="{{ p.title }}" loading="lazy" />
@@ -59,9 +65,13 @@
           </div>
           <div class="map-card-info">
             <div class="map-card-price">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽{% if p.deal_type == 'Аренда' %}<span>/мес</span>{% endif %}</div>
+            {% if p.area and p.price and p.area > 0 %}
+            <div class="map-card-price-per-m2">{{ "{:,.0f}".format(p.price // p.area).replace(',', ' ') }} ₽/м²{% if p.deal_type == 'Аренда' %} в мес{% endif %}</div>
+            {% endif %}
             <div class="map-card-title">{{ p.title }}</div>
             {% if p.area %}<div class="map-card-meta">{{ p.area }} м²</div>{% endif %}
             <div class="map-card-address">{{ p.address }}</div>
+            <a href="/property/{{ p.slug or p.id }}" class="map-card-link">Подробнее →</a>
           </div>
         </div>
         {% endfor %}
@@ -83,6 +93,7 @@
     if (!Array.isArray(props)) props = [];
 
     var activeCategory = '';
+    var activeDeal = '';
     var ymap, clusterer;
     var allPlacemarks = [];
     var pmById = {};
@@ -102,10 +113,15 @@
       document.getElementById('sidebar-count').textContent = vis.length;
     }
 
+    function matchFilters(c) {
+      var catOk = !activeCategory || c.dataset.cat === activeCategory;
+      var dealOk = !activeDeal || c.dataset.deal === activeDeal;
+      return catOk && dealOk;
+    }
+
     function showAll() {
       document.querySelectorAll('.map-card').forEach(function(c) {
-        var ok = !activeCategory || c.dataset.cat === activeCategory;
-        c.style.display = ok ? '' : 'none';
+        c.style.display = matchFilters(c) ? '' : 'none';
         c.classList.remove('active');
       });
       updateCount();
@@ -126,18 +142,31 @@
 
     /* ── category filter ── */
 
-    function filterCat(cat) {
-      activeCategory = cat;
-      document.querySelectorAll('.map-cat-btn').forEach(function(b) {
-        b.classList.toggle('active', b.dataset.cat === cat);
-      });
-
+    function applyFilters() {
       clusterer.removeAll();
       var filtered = allPlacemarks.filter(function(pm) {
-        return !cat || pm._cat === cat;
+        var catOk = !activeCategory || pm._cat === activeCategory;
+        var dealOk = !activeDeal || pm._deal === activeDeal;
+        return catOk && dealOk;
       });
       clusterer.add(filtered);
       showAll();
+    }
+
+    function filterCat(cat) {
+      activeCategory = cat;
+      document.querySelectorAll('#map-categories .map-cat-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.cat === cat);
+      });
+      applyFilters();
+    }
+
+    function filterDeal(deal) {
+      activeDeal = deal;
+      document.querySelectorAll('#map-deal-btns .map-cat-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.deal === deal);
+      });
+      applyFilters();
     }
 
     /* ── init ── */
@@ -183,6 +212,7 @@
 
         pm._id = p.id;
         pm._cat = p.category || '';
+        pm._deal = p.deal_type || '';
         allPlacemarks.push(pm);
         pmById[p.id] = pm;
       });
@@ -214,9 +244,16 @@
       });
 
       /* ── category buttons ── */
-      document.querySelectorAll('.map-cat-btn').forEach(function(btn) {
+      document.querySelectorAll('#map-categories .map-cat-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
           filterCat(btn.dataset.cat);
+        });
+      });
+
+      /* ── deal type buttons ── */
+      document.querySelectorAll('#map-deal-btns .map-cat-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          filterDeal(btn.dataset.deal);
         });
       });
 
@@ -225,6 +262,8 @@
         card.style.cursor = 'pointer';
 
         card.addEventListener('click', function(e) {
+          if (e.target.closest('.map-card-link')) return;
+
           var id = parseInt(card.dataset.id);
           var lat = parseFloat(card.dataset.lat);
           var lng = parseFloat(card.dataset.lng);
@@ -236,10 +275,6 @@
 
           var pm = pmById[id];
           if (pm) setTimeout(function() { pm.balloon.open(); }, 350);
-        });
-
-        card.addEventListener('dblclick', function() {
-          window.location.href = card.dataset.href;
         });
       });
 

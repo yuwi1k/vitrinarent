@@ -62,8 +62,17 @@ async def settings_save(
     request: Request,
     avito_manager_name: str = Form(""),
     avito_contact_phone: str = Form(""),
+    contact_phone: str = Form(""),
+    contact_email: str = Form(""),
+    contact_telegram: str = Form(""),
 ):
-    save_settings(avito_manager_name=avito_manager_name, avito_contact_phone=avito_contact_phone)
+    save_settings(
+        avito_manager_name=avito_manager_name,
+        avito_contact_phone=avito_contact_phone,
+        contact_phone=contact_phone,
+        contact_email=contact_email,
+        contact_telegram=contact_telegram,
+    )
     settings_data = get_settings_for_edit()
     return templates.TemplateResponse(
         "dashboard/settings.html",

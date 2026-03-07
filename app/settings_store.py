@@ -12,6 +12,9 @@ _SETTINGS_FILE = os.path.join(_PROJECT_ROOT, "data", "settings.json")
 DEFAULTS = {
     "avito_manager_name": "",
     "avito_contact_phone": "",
+    "contact_phone": "",
+    "contact_email": "",
+    "contact_telegram": "",
 }
 
 
@@ -60,6 +63,38 @@ def get_avito_contact_phone() -> str:
     )
 
 
+def get_contact_phone() -> str:
+    s = _read_settings()
+    v = (s.get("contact_phone") or "").strip()
+    if v:
+        return v
+    return os.getenv("CONTACT_PHONE", "").strip()
+
+
+def get_contact_email() -> str:
+    s = _read_settings()
+    v = (s.get("contact_email") or "").strip()
+    if v:
+        return v
+    return os.getenv("CONTACT_EMAIL", "").strip()
+
+
+def get_contact_telegram() -> str:
+    s = _read_settings()
+    v = (s.get("contact_telegram") or "").strip()
+    if v:
+        return v
+    return os.getenv("CONTACT_TELEGRAM", "").strip()
+
+
+def get_public_contacts() -> dict:
+    return {
+        "contact_phone": get_contact_phone(),
+        "contact_email": get_contact_email(),
+        "contact_telegram": get_contact_telegram(),
+    }
+
+
 def get_settings_for_edit() -> dict:
     """Текущие значения для формы настроек (дашборд)."""
     s = _read_settings()
@@ -68,12 +103,27 @@ def get_settings_for_edit() -> dict:
         or os.getenv("AVITO_MANAGER_NAME", os.getenv("MANAGER_NAME", "")),
         "avito_contact_phone": (s.get("avito_contact_phone") or "").strip()
         or os.getenv("AVITO_CONTACT_PHONE", os.getenv("CONTACT_PHONE", "")),
+        "contact_phone": (s.get("contact_phone") or "").strip()
+        or os.getenv("CONTACT_PHONE", ""),
+        "contact_email": (s.get("contact_email") or "").strip()
+        or os.getenv("CONTACT_EMAIL", ""),
+        "contact_telegram": (s.get("contact_telegram") or "").strip()
+        or os.getenv("CONTACT_TELEGRAM", ""),
     }
 
 
-def save_settings(avito_manager_name: str = "", avito_contact_phone: str = "") -> None:
+def save_settings(
+    avito_manager_name: str = "",
+    avito_contact_phone: str = "",
+    contact_phone: str = "",
+    contact_email: str = "",
+    contact_telegram: str = "",
+) -> None:
     """Сохранить настройки из формы дашборда."""
     data = _read_settings()
     data["avito_manager_name"] = (avito_manager_name or "").strip()
     data["avito_contact_phone"] = (avito_contact_phone or "").strip()
+    data["contact_phone"] = (contact_phone or "").strip()
+    data["contact_email"] = (contact_email or "").strip()
+    data["contact_telegram"] = (contact_telegram or "").strip()
     _write_settings(data)

@@ -11,13 +11,13 @@
 </nav>
 
 <div class="page-header d-print-none mb-4">
-    <h2 class="page-title">Настройки контактов для фида Авито</h2>
-    <p class="text-muted mt-1 mb-0">Имя менеджера и телефон подставляются в выгружаемый XML для Авито. Если не заданы — используются значения из переменных окружения (.env).</p>
+    <h2 class="page-title">Настройки</h2>
+    <p class="text-muted mt-1 mb-0">Контактные данные для сайта и фидов. Если не заданы — используются значения из переменных окружения (.env).</p>
 </div>
 
 {% if success %}
 <div class="alert alert-success" role="alert">
-    Настройки сохранены. Они будут использоваться при следующей выгрузке фида Авито.
+    Настройки сохранены.
 </div>
 {% endif %}
 
@@ -25,15 +25,35 @@
 <div class="alert alert-danger" role="alert">{{ error }}</div>
 {% endif %}
 
-<div class="card">
+<div class="card mb-4">
+    <div class="card-header"><h3 class="card-title mb-0">Контакты на сайте</h3></div>
     <div class="card-body">
         <form method="post" action="/dashboard/settings" class="row g-3">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
+            <div class="col-md-6">
+                <label class="form-label">Телефон</label>
+                <input type="text" name="contact_phone" class="form-control" value="{{ (settings.contact_phone or '') }}" placeholder="+7 (999) 000-00-00">
+                <small class="form-text text-muted">Отображается в footer, на карточках объектов и FAQ</small>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" name="contact_email" class="form-control" value="{{ (settings.contact_email or '') }}" placeholder="info@vitrina.rent">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Telegram (имя пользователя без @)</label>
+                <input type="text" name="contact_telegram" class="form-control" value="{{ (settings.contact_telegram or '') }}" placeholder="vitrina_rent">
+            </div>
+
+            <div class="col-12"><hr></div>
+
             <div class="col-12">
+                <h4 class="mb-2" style="font-size: 1rem;">Фид Авито</h4>
+            </div>
+            <div class="col-md-6">
                 <label class="form-label">Имя менеджера (ManagerName)</label>
                 <input type="text" name="avito_manager_name" class="form-control" value="{{ (settings.avito_manager_name or '') }}" placeholder="Менеджер Vitrina">
             </div>
-            <div class="col-12">
+            <div class="col-md-6">
                 <label class="form-label">Телефон для объявлений Авито (ContactPhone)</label>
                 <input type="text" name="avito_contact_phone" class="form-control" value="{{ (settings.avito_contact_phone or '') }}" placeholder="+79990000000">
             </div>

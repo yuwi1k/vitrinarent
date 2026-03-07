@@ -160,9 +160,23 @@
   </main>
 
   <footer class="footer">
-    <div class="container footer-container">
-      <div class="footer-logo">Vitrina</div>
-      <p class="footer-text">© <script>document.write(new Date().getFullYear());</script> vitrina.rent — сервис для агентов</p>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">Vitrina</div>
+          <p class="footer-tagline">Каталог коммерческой недвижимости: офисы, склады, торговые площади от собственника</p>
+        </div>
+        <div class="footer-nav-col">
+          <h3>Навигация</h3>
+          <a href="/">Главная</a>
+          <a href="/search">Каталог</a>
+          <a href="/map">Карта объектов</a>
+          <a href="/faq">FAQ</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-text">© {{ now().year }} vitrina.rent — сервис для агентов</p>
+      </div>
     </div>
   </footer>
 
