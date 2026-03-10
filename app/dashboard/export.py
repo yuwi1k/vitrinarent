@@ -169,7 +169,7 @@ async def export_cian_feed(db: AsyncSession = Depends(get_db)):
     """Скачать XML-фид для выгрузки на Циан (коммерческая недвижимость)."""
     stmt = (
         select(Property)
-        .where(Property.is_active.is_(True), Property.parent_id.is_(None))
+        .where(Property.is_active.is_(True))
         .options(selectinload(Property.images))
         .order_by(Property.id.asc())
     )

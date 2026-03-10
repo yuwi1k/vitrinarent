@@ -38,7 +38,7 @@
     </div>
   </header>
 
-  <div class="map-layout">
+  <main class="map-layout">
     <aside class="map-sidebar" id="map-sidebar">
       <div class="map-sidebar-header">
         <h1 class="map-sidebar-title">На карте</h1>
@@ -93,7 +93,7 @@
     </aside>
 
     <div class="map-canvas" id="map"></div>
-  </div>
+  </main>
 
   <script src="/static/js/vitrina-asset.js"></script>
   <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU{% if yandex_maps_api_key %}&apikey={{ yandex_maps_api_key }}{% endif %}&load=package.full" async></script>

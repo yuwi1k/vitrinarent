@@ -1070,7 +1070,7 @@
 </script>
 {% endif %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script src="https://api-maps.yandex.ru/2.1/?apikey={{ yandex_maps_api_key }}&lang=ru_RU" type="text/javascript"></script>
+<script src="https://api-maps.yandex.ru/2.1/?{% if yandex_maps_api_key %}apikey={{ yandex_maps_api_key }}&{% endif %}lang=ru_RU" type="text/javascript"></script>
 <script>
 (function() {
     var latInput = document.getElementById('field-latitude');
@@ -1146,7 +1146,7 @@ async function deleteImage(imageId, btn) {
     if (!confirm('Удалить фото?')) return;
     if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
     try {
-        var r = await fetch('/dashboard/ajax/images/' + imageId, { method: 'DELETE' });
+        var r = await fetch('/dashboard/ajax/images/' + imageId, { method: 'DELETE', headers: csrfHeaders() });
         var data = await r.json();
         if (data.status === 'ok') {
             var el = document.getElementById('gallery-img-' + imageId);
@@ -1163,7 +1163,7 @@ async function deleteDocument(docId, btn) {
     if (!confirm('Удалить документ?')) return;
     if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
     try {
-        var r = await fetch('/dashboard/ajax/documents/' + docId, { method: 'DELETE' });
+        var r = await fetch('/dashboard/ajax/documents/' + docId, { method: 'DELETE', headers: csrfHeaders() });
         var data = await r.json();
         if (data.status === 'ok') {
             var el = document.getElementById('doc-row-' + docId);
@@ -1194,7 +1194,7 @@ async function deleteDocument(docId, btn) {
                 showToast('Сохраняем порядок фото…', 'info', 2000);
                 fetch('/dashboard/ajax/images/reorder', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ order: order })
                 }).then(function(r) { return r.json(); }).then(function(data) {
                     if (data.status === 'ok') showToast('Порядок фото сохранён', 'success');

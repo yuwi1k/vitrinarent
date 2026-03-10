@@ -25,6 +25,27 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="/static/css/vitrina-asset.css">
+
+  {% if properties %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Каталог коммерческой недвижимости",
+    "numberOfItems": {{ total_items }},
+    "itemListElement": [
+      {% for property in properties %}
+      {
+        "@type": "ListItem",
+        "position": {{ (page - 1) * properties|length + loop.index }},
+        "url": "{{ base_url }}/property/{{ property.slug or property.id }}",
+        "name": "{{ (property.title or 'Объект')|replace('\\', '\\\\')|replace('"', '\\"') }}"
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+  </script>
+  {% endif %}
 </head>
 <body>
   <a href="#main-content" class="skip-link">Перейти к содержимому</a>

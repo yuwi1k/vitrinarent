@@ -340,9 +340,14 @@ async def sitemap_xml(request: Request, db: AsyncSession = Depends(get_db)) -> R
         )
     for p in props:
         slug = p.slug or str(p.id)
+        lastmod = ""
+        if p.updated_at:
+            lastmod = f"<lastmod>{p.updated_at.strftime('%Y-%m-%d')}</lastmod>"
+        elif p.created_at:
+            lastmod = f"<lastmod>{p.created_at.strftime('%Y-%m-%d')}</lastmod>"
         url_entries.append(
             f"<url><loc>{base}/property/{slug}</loc>"
-            f"<changefreq>weekly</changefreq><priority>0.6</priority></url>"
+            f"{lastmod}<changefreq>weekly</changefreq><priority>0.6</priority></url>"
         )
 
     xml = (
@@ -356,7 +361,7 @@ async def sitemap_xml(request: Request, db: AsyncSession = Depends(get_db)) -> R
 
 @router.get("/avito.xml")
 async def get_avito_feed_route(db: AsyncSession = Depends(get_db)):
-    stmt = select(Property).where(Property.is_active == True, Property.parent_id.is_(None))
+    stmt = select(Property).where(Property.is_active == True)
     result = await db.execute(stmt)
     properties = result.scalars().all()
     xml_content = generate_avito_feed(properties)
@@ -368,7 +373,7 @@ async def get_cian_feed_route(db: AsyncSession = Depends(get_db)):
     """Публичный XML-фид для импорта объявлений на Циан (URL указать в ЛК Циан)."""
     stmt = (
         select(Property)
-        .where(Property.is_active == True, Property.parent_id.is_(None))
+        .where(Property.is_active == True)
         .options(selectinload(Property.images))
     )
     result = await db.execute(stmt)

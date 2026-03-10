@@ -283,9 +283,12 @@ async def robots_txt(request: Request) -> PlainTextResponse:
 app.add_middleware(LoginRateLimitMiddleware)
 app.add_middleware(RequireDashboardAuthMiddleware)
 app.add_middleware(CSRFMiddleware)
+_is_production = os.getenv("ENVIRONMENT", "").lower() == "production"
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SESSION_SECRET_KEY", "supersecretkey123") or "supersecretkey123",
+    same_site="lax",
+    https_only=_is_production,
 )
 
 

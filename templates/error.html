@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ title }} — Vitrina</title>
+  <meta name="description" content="{{ title }}: {{ detail or 'Страница не найдена' }}" />
+  <meta name="robots" content="noindex, nofollow" />
   <link rel="shortcut icon" href="/static/images/favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -26,7 +28,7 @@
     </div>
   </header>
   <main class="error-page">
-    <div class="error-code">{{ status_code }}</div>
+    <h1 class="error-code">{{ status_code }}</h1>
     <div class="error-title">{{ title }}</div>
     <div class="error-desc">{{ detail }}</div>
     <div class="error-actions">

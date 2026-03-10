@@ -85,6 +85,13 @@
     <div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index:11080"></div>
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
     <script>
+      window.__CSRF_TOKEN = '{{ csrf_token(request) }}';
+      function csrfHeaders(extra) {
+        var h = { 'X-CSRF-Token': window.__CSRF_TOKEN };
+        if (extra) { for (var k in extra) h[k] = extra[k]; }
+        return h;
+      }
+
       /**
        * showToast(message, type, delay)
        * type: 'success' | 'danger' | 'warning' | 'info'
@@ -133,7 +140,7 @@
         var origHTML = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Загрузка…';
-        fetch(url, { method: method, headers: opts.headers || {} })
+        fetch(url, { method: method, headers: csrfHeaders(opts.headers) })
           .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
           .then(function(res) {
             btn.disabled = false;

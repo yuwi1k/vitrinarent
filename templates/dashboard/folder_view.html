@@ -102,7 +102,7 @@ async function deletePhoto(imageId, btn) {
     if (!confirm('Удалить фото?')) return;
     if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
     try {
-        var r = await fetch('/dashboard/ajax/images/' + imageId, { method: 'DELETE' });
+        var r = await fetch('/dashboard/ajax/images/' + imageId, { method: 'DELETE', headers: csrfHeaders() });
         var data = await r.json();
         if (data.status === 'ok') {
             var el = document.getElementById('photo-row-' + imageId);
@@ -119,7 +119,7 @@ async function deleteDocument(docId, btn) {
     if (!confirm('Удалить документ?')) return;
     if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
     try {
-        var r = await fetch('/dashboard/ajax/documents/' + docId, { method: 'DELETE' });
+        var r = await fetch('/dashboard/ajax/documents/' + docId, { method: 'DELETE', headers: csrfHeaders() });
         var data = await r.json();
         if (data.status === 'ok') {
             var el = document.getElementById('document-row-' + docId);

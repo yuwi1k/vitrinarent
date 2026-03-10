@@ -14,10 +14,18 @@
   <meta property="og:url" content="{{ site_url }}/property/{{ property.slug or property.id }}" />
   {% if property.main_image %}
   <meta property="og:image" content="{{ site_url }}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" />
+  {% else %}
+  <meta property="og:image" content="{{ site_url }}/static/images/og-default.png" />
   {% endif %}
   <meta property="og:locale" content="ru_RU" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="{{ property.title }} — Vitrina" />
+  <meta name="twitter:description" content="{{ (property.description or property.title or 'Коммерческая недвижимость')[:200] }}" />
+  {% if property.main_image %}
+  <meta name="twitter:image" content="{{ site_url }}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" />
+  {% else %}
+  <meta name="twitter:image" content="{{ site_url }}/static/images/og-default.png" />
+  {% endif %}
 
   <script type="application/ld+json">
   {
@@ -235,6 +243,7 @@
           <div class="prop-map">
             <iframe
               src="https://yandex.ru/map-widget/v1/?ll={{ property.longitude }},{{ property.latitude }}&z=16&pt={{ property.longitude }},{{ property.latitude }},pm2blm&scroll=false"
+              title="Карта: {{ property.address or property.title }}"
               allowfullscreen="true"
               loading="lazy">
             </iframe>
@@ -320,9 +329,12 @@
     var lbCounter = document.getElementById('lightbox-counter');
     var lbIdx = 0;
 
+    var propTitle = {{ (property.title or 'Фото объекта') | tojson }};
+
     function lbShow(i) {
       lbIdx = (i + images.length) % images.length;
       lbImg.src = images[lbIdx];
+      lbImg.alt = propTitle + ' — фото ' + (lbIdx + 1);
       lbCounter.textContent = (lbIdx + 1) + ' / ' + images.length;
     }
 

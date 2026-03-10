@@ -123,9 +123,10 @@ def generate_avito_feed_full(properties: List) -> bytes:
                 full = site_url + url
                 if full not in image_urls:
                     image_urls.append(full)
-        images_el = etree.SubElement(ad, "Images")
-        for url in (image_urls[:40] if image_urls else [""]):
-            etree.SubElement(images_el, "Image", url=url)
+        if image_urls:
+            images_el = etree.SubElement(ad, "Images")
+            for url in image_urls[:40]:
+                etree.SubElement(images_el, "Image", url=url)
         _add("VideoURL", _avito("VideoURL"))
         etree.SubElement(ad, "Address").text = (getattr(prop, "address", None) or "").strip() or "Москва"
         if getattr(prop, "longitude", None) is not None:
