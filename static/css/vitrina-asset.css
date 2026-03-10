@@ -1506,6 +1506,62 @@ body.map-page {
   backdrop-filter: blur(8px);
 }
 
+/* ─── Hierarchy context on cards ─── */
+.object-context {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+}
+
+.object-context svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.object-context a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.object-context--unit {
+  background: rgba(255, 149, 0, 0.1);
+  color: #ffb347;
+}
+
+.object-context--unit a {
+  color: #ffb347;
+}
+
+.object-context--unit a:hover {
+  color: #ffd080;
+}
+
+.object-context--building {
+  background: rgba(41, 151, 255, 0.1);
+  color: #60b0ff;
+}
+
+.object-card--building {
+  border-color: rgba(41, 151, 255, 0.15);
+}
+
+.object-card--building:hover {
+  border-color: rgba(41, 151, 255, 0.3);
+}
+
+.object-card--unit {
+  border-color: rgba(255, 149, 0, 0.12);
+}
+
+.object-card--unit:hover {
+  border-color: rgba(255, 149, 0, 0.25);
+}
+
 /* ─── Active filter chips ─── */
 .active-filters {
   display: flex;

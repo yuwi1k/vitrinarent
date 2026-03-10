@@ -127,8 +127,9 @@ async def search_page(
     min_area: Optional[str] = None,
     max_area: Optional[str] = None,
     sort: Optional[str] = Query("date_desc", description="price_asc|price_desc|area_asc|area_desc|date_desc|date_asc"),
+    object_type: Optional[str] = Query(None, description="building|unit"),
 ):
-    stmt = build_search_query(q, deal_type, category, min_price, max_price, min_area, max_area)
+    stmt = build_search_query(q, deal_type, category, min_price, max_price, min_area, max_area, object_type)
 
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total_items = (await db.execute(count_stmt)).scalar() or 0
@@ -181,6 +182,7 @@ async def search_page(
             "min_area": min_area,
             "max_area": max_area,
             "sort": sort or "date_desc",
+            "object_type": object_type or "",
             **get_public_contacts(),
         },
     )

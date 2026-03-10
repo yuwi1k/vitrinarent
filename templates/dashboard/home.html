@@ -47,21 +47,6 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <span class="avatar avatar-md bg-blue-lt rounded me-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l-2 0l9 -9l9 9l-2 0" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" /></svg>
-                    </span>
-                    <div>
-                        <div class="text-muted small">На главной</div>
-                        <div class="h3 mb-0">{{ on_main_count }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-lg-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
                     <span class="avatar avatar-md bg-yellow-lt rounded me-3">
                         <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chart-pie" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 3.2a9 9 0 1 0 10.8 10.8a1 1 0 0 0 -1 -1h-3.8a4.1 4.1 0 1 1 -5 -5v-4a.9 .9 0 0 0 -1 -1.2" /><path d="M15 3.5a9 9 0 0 1 5.5 5.5h-4.5a.9 .9 0 0 1 -1 -1v-4.5" /></svg>
                     </span>
@@ -83,6 +68,21 @@
                     <div>
                         <div class="text-muted small">На Авито / не на Авито</div>
                         <div class="h3 mb-0">{{ avito_published }} / {{ avito_not_published }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <span class="avatar avatar-md bg-cyan-lt rounded me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-building-skyscraper" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21l18 0" /><path d="M5 21v-14l8 -4v18" /><path d="M19 21v-10l-6 -4" /><path d="M9 9l0 .01" /><path d="M9 12l0 .01" /><path d="M9 15l0 .01" /><path d="M9 18l0 .01" /></svg>
+                    </span>
+                    <div>
+                        <div class="text-muted small">На Циан / не на Циан</div>
+                        <div class="h3 mb-0">{{ cian_published }} / {{ cian_not_published }}</div>
                     </div>
                 </div>
             </div>
@@ -119,6 +119,32 @@
     </div>
 </div>
 
+{% if no_photo or no_coords or no_address %}
+<div class="row row-deck row-cards mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Качество данных</h3>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-3">
+                    {% if no_photo %}
+                    <span class="badge bg-orange-lt fs-6 py-2 px-3">Без фото: {{ no_photo }}</span>
+                    {% endif %}
+                    {% if no_coords %}
+                    <span class="badge bg-orange-lt fs-6 py-2 px-3">Без координат: {{ no_coords }}</span>
+                    {% endif %}
+                    {% if no_address %}
+                    <span class="badge bg-orange-lt fs-6 py-2 px-3">Без адреса: {{ no_address }}</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mt-2 mb-0">Объекты без фото, координат или адреса хуже отображаются на сайте и в фидах.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -152,3 +178,4 @@
     </div>
 </div>
 {% endblock %}
+

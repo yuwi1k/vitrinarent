@@ -42,12 +42,16 @@
         <li class="nav-item" role="presentation">
             <a href="#pane-media" class="nav-link" data-bs-toggle="tab" role="tab">Медиа</a>
         </li>
+        {% if avito_api_configured %}
         <li class="nav-item" role="presentation">
             <a href="#pane-avito" class="nav-link" data-bs-toggle="tab" role="tab">Авито</a>
         </li>
+        {% endif %}
+        {% if cian_api_configured %}
         <li class="nav-item" role="presentation">
             <a href="#pane-cian" class="nav-link" data-bs-toggle="tab" role="tab">Циан</a>
         </li>
+        {% endif %}
         <li class="nav-item" role="presentation">
             <a href="#pane-settings" class="nav-link" data-bs-toggle="tab" role="tab">Настройки</a>
         </li>
@@ -71,8 +75,8 @@
                         <textarea name="description" class="form-control" rows="4">{{ model.description or '' }}</textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Адрес</label>
-                        <input type="text" name="address" class="form-control" value="{{ model.address or '' }}">
+                        <label class="form-label required">Адрес</label>
+                        <input type="text" name="address" id="field-address" class="form-control" value="{{ model.address or '' }}" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Родительский объект</label>
@@ -233,6 +237,7 @@
             </div>
         </div>
 
+        {% if avito_api_configured %}
         <div class="tab-pane" id="pane-avito" role="tabpanel">
             {% set avito = (model.avito_data or {}) if model else {} %}
             {% set deal_rent = (model and (model.deal_type or '') == 'Аренда') %}
@@ -758,7 +763,9 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
+        {% if cian_api_configured %}
         <div class="tab-pane" id="pane-cian" role="tabpanel">
             {% set cian = (model.cian_data or {}) if model else {} %}
             {% set deal_rent_cian = (model and (model.deal_type or '') == 'Аренда') %}
@@ -1023,6 +1030,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <div class="tab-pane" id="pane-settings" role="tabpanel">
             <div class="card mb-3">
@@ -1062,29 +1070,72 @@
 </script>
 {% endif %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+<script src="https://api-maps.yandex.ru/2.1/?apikey={{ yandex_maps_api_key }}&lang=ru_RU" type="text/javascript"></script>
 <script>
 (function() {
     var latInput = document.getElementById('field-latitude');
     var lonInput = document.getElementById('field-longitude');
+    var addressInput = document.getElementById('field-address');
     var lat = latInput && latInput.value ? parseFloat(latInput.value) : 55.751574;
     var lon = lonInput && lonInput.value ? parseFloat(lonInput.value) : 37.573856;
 
+    function updateCoords(coords) {
+        if (latInput) latInput.value = coords[0].toPrecision(8);
+        if (lonInput) lonInput.value = coords[1].toPrecision(8);
+    }
+
+    function reverseGeocode(coords) {
+        ymaps.geocode(coords, { results: 1 }).then(function(res) {
+            var first = res.geoObjects.get(0);
+            if (first && addressInput) {
+                var addr = first.getAddressLine();
+                if (addr) addressInput.value = addr;
+            }
+        });
+    }
+
     function initMap() {
         if (!document.getElementById('map')) return;
-        var map = new ymaps.Map('map', { center: [lat, lon], zoom: 12 });
+        var map = new ymaps.Map('map', {
+            center: [lat, lon],
+            zoom: 12,
+            controls: ['zoomControl', 'typeSelector']
+        });
+
+        var searchControl = new ymaps.control.SearchControl({
+            options: {
+                float: 'right',
+                noPlacemark: true,
+                placeholderContent: 'Введите адрес...'
+            }
+        });
+        map.controls.add(searchControl);
+
         var placemark = new ymaps.Placemark([lat, lon], {}, { preset: 'islands#redIcon', draggable: true });
         map.geoObjects.add(placemark);
+
+        searchControl.events.add('resultselect', function() {
+            var idx = searchControl.getSelectedIndex();
+            searchControl.getResult(idx).then(function(res) {
+                var coords = res.geometry.getCoordinates();
+                placemark.geometry.setCoordinates(coords);
+                updateCoords(coords);
+                var name = res.properties.get('text');
+                if (name && addressInput) addressInput.value = name;
+            });
+        });
+
         map.events.add('click', function(e) {
             var c = e.get('coords');
             placemark.geometry.setCoordinates(c);
-            if (latInput) latInput.value = c[0].toPrecision(8);
-            if (lonInput) lonInput.value = c[1].toPrecision(8);
+            updateCoords(c);
+            reverseGeocode(c);
         });
+
         placemark.events.add('dragend', function() {
             var c = placemark.geometry.getCoordinates();
-            if (latInput) latInput.value = c[0].toPrecision(8);
-            if (lonInput) lonInput.value = c[1].toPrecision(8);
+            updateCoords(c);
+            reverseGeocode(c);
         });
     }
     if (typeof ymaps !== 'undefined') ymaps.ready(initMap);

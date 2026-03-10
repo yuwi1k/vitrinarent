@@ -84,6 +84,15 @@
                   </select>
                 </div>
 
+                <div class="form-group">
+                  <label for="object-type">Формат</label>
+                  <select id="object-type" name="object_type">
+                    <option value="" {% if not object_type %}selected{% endif %}>Все объекты</option>
+                    <option value="building" {% if object_type == 'building' %}selected{% endif %}>Здания целиком</option>
+                    <option value="unit" {% if object_type == 'unit' %}selected{% endif %}>Отдельные помещения</option>
+                  </select>
+                </div>
+
                 <div class="filter-extra-wrapper">
                   <button type="button" class="btn-toggle-extra" id="btn-toggle-extra" aria-expanded="false">
                     Дополнительно
@@ -133,35 +142,42 @@
 
           <!-- Results Grid -->
           <div class="search-results">
-            {% set has_filters = (deal_type and deal_type != 'Все') or (category and category != 'Все') or q or min_price or max_price or min_area or max_area %}
+            {% set has_filters = (deal_type and deal_type != 'Все') or (category and category != 'Все') or q or min_price or max_price or min_area or max_area or object_type %}
             {% if has_filters %}
             <div class="active-filters">
+              {% set _ot = '&object_type=' ~ object_type if object_type else '' %}
               {% if deal_type and deal_type != 'Все' %}
-              <a class="filter-chip" href="/search?deal_type=Все&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
+              <a class="filter-chip" href="/search?deal_type=Все&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}{{ _ot }}">
                 {{ deal_type }}
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </a>
               {% endif %}
               {% if category and category != 'Все' %}
-              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category=Все&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category=Все&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}{{ _ot }}">
                 {{ category }}
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </a>
               {% endif %}
+              {% if object_type %}
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
+                {% if object_type == 'building' %}Здания целиком{% elif object_type == 'unit' %}Отдельные помещения{% else %}{{ object_type }}{% endif %}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </a>
+              {% endif %}
               {% if q %}
-              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}{{ _ot }}">
                 «{{ q }}»
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </a>
               {% endif %}
               {% if min_area or max_area %}
-              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&sort={{ sort }}">
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&sort={{ sort }}{{ _ot }}">
                 Площадь: {{ min_area or '—' }}–{{ max_area or '∞' }} м²
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </a>
               {% endif %}
               {% if min_price or max_price %}
-              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}{{ _ot }}">
                 Цена: {{ min_price or '—' }}–{{ max_price or '∞' }} ₽
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </a>
@@ -184,7 +200,8 @@
             {% if properties %}
             <div class="objects-grid search-grid">
               {% for property in properties %}
-              <article class="object-card">
+              {% set active_children = property.children|selectattr('is_active')|list if property.children else [] %}
+              <article class="object-card{% if active_children %} object-card--building{% endif %}{% if property.parent_id %} object-card--unit{% endif %}">
                 <a class="object-image" href="/property/{{ property.slug or property.id }}">
                   {% if property.main_image %}
                     <img src="{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" alt="{{ property.title }}" loading="lazy">
@@ -195,6 +212,18 @@
                   {% if property.deal_type == 'Аренда' %}<span class="badge-deal badge-deal--rent">Аренда</span>{% elif property.deal_type == 'Продажа' %}<span class="badge-deal badge-deal--sale">Продажа</span>{% endif %}
                 </a>
                 <div class="object-content">
+                  {% if property.parent %}
+                  <div class="object-context object-context--unit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9l0 .01"/><path d="M9 12l0 .01"/><path d="M9 15l0 .01"/></svg>
+                    <span>Помещение в <a href="/property/{{ property.parent.slug or property.parent.id }}">{{ property.parent.title or 'здании' }}</a></span>
+                  </div>
+                  {% elif active_children %}
+                  <div class="object-context object-context--building">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9l0 .01"/><path d="M9 12l0 .01"/><path d="M9 15l0 .01"/></svg>
+                    {% set n = active_children|length %}
+                    <span>Здание &middot; {{ n }} {{ 'помещение' if n % 10 == 1 and n % 100 != 11 else 'помещения' if n % 10 in [2,3,4] and n % 100 not in [12,13,14] else 'помещений' }} внутри</span>
+                  </div>
+                  {% endif %}
                   <div class="object-price">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽{% if property.deal_type == 'Аренда' %}/мес{% endif %}</div>
                   {% if property.area and property.price and property.area > 0 %}
                   <div class="object-price-per-m2">{{ "{:,.0f}".format(property.price // property.area).replace(',', ' ') }} ₽/м²{% if property.deal_type == 'Аренда' %} в мес{% endif %}</div>
@@ -212,7 +241,7 @@
 
             {% if total_pages > 1 %}
             <div class="pagination" aria-label="Навигация по страницам">
-              {% set qs = 'q=' ~ (q or '')|urlencode ~ '&deal_type=' ~ (deal_type or '')|urlencode ~ '&category=' ~ (category or '')|urlencode ~ '&min_price=' ~ (min_price or '')|urlencode ~ '&max_price=' ~ (max_price or '')|urlencode ~ '&min_area=' ~ (min_area or '')|urlencode ~ '&max_area=' ~ (max_area or '')|urlencode ~ '&sort=' ~ (sort or 'date_desc')|urlencode %}
+              {% set qs = 'q=' ~ (q or '')|urlencode ~ '&deal_type=' ~ (deal_type or '')|urlencode ~ '&category=' ~ (category or '')|urlencode ~ '&min_price=' ~ (min_price or '')|urlencode ~ '&max_price=' ~ (max_price or '')|urlencode ~ '&min_area=' ~ (min_area or '')|urlencode ~ '&max_area=' ~ (max_area or '')|urlencode ~ '&sort=' ~ (sort or 'date_desc')|urlencode ~ '&object_type=' ~ (object_type or '')|urlencode %}
 
               {% if page > 1 %}
                 <a href="/search?page={{ page - 1 }}&{{ qs }}" class="page-link">← Назад</a>

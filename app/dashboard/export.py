@@ -1,6 +1,7 @@
 """
 Экспорт фидов (Авито, Циан), CSV и синхронизация статусов.
 """
+import asyncio
 import csv
 import io
 import logging
@@ -223,7 +224,6 @@ async def cian_sync_offer_statuses(db: AsyncSession = Depends(get_db)):
             if page > max_pages:
                 logger.warning("CIAN sync: reached max_pages=%d limit, stopping pagination", max_pages)
                 break
-            import asyncio
             await asyncio.sleep(0.12)
     except Exception as exc:
         logger.exception("CIAN sync failed")

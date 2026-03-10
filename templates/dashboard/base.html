@@ -117,7 +117,9 @@
       window.addEventListener('unhandledrejection', function(e) {
         showToast('Произошла ошибка: ' + (e.reason && e.reason.message ? e.reason.message : 'Неизвестная ошибка'), 'danger');
       });
-      window.onerror = function(msg) {
+      window.onerror = function(msg, source) {
+        if (!msg || msg === 'Script error.' || msg === 'Script error') return;
+        if (source && (source.indexOf('api-maps') !== -1 || source.indexOf('yandex') !== -1)) return;
         showToast('Ошибка JS: ' + msg, 'danger');
       };
 
@@ -183,11 +185,6 @@
           });
         });
 
-        var cianStatusBtn = document.getElementById('cian-import-status-btn');
-        if (cianStatusBtn) {
-          cianStatusBtn.setAttribute('target', '_blank');
-          cianStatusBtn.setAttribute('rel', 'noopener');
-        }
       })();
     </script>
     {% block tail %}{% endblock %}

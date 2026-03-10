@@ -291,19 +291,22 @@ function submitDelete(propertyId, childrenCount) {
     document.body.appendChild(form);
     form.submit();
 }
-document.getElementById('btn-bulk-delete').addEventListener('click', function() {
-    var parentRows = document.querySelectorAll('tr.parent-row');
-    var ids = [];
-    parentRows.forEach(function(tr) {
-        var cb = tr.querySelector('input.row-select[name="ids"]');
-        if (cb && cb.checked) ids.push(cb.value);
+var bulkDeleteBtn = document.getElementById('btn-bulk-delete');
+if (bulkDeleteBtn) {
+    bulkDeleteBtn.addEventListener('click', function() {
+        var parentRows = document.querySelectorAll('tr.parent-row');
+        var ids = [];
+        parentRows.forEach(function(tr) {
+            var cb = tr.querySelector('input.row-select[name="ids"]');
+            if (cb && cb.checked) ids.push(cb.value);
+        });
+        if (ids.length === 0) {
+            showToast('Выберите хотя бы один объект (корневой) для удаления.', 'warning');
+            return;
+        }
+        window.location.href = '/dashboard/properties/bulk-delete-confirm?ids=' + ids.join(',');
     });
-    if (ids.length === 0) {
-        showToast('Выберите хотя бы один объект (корневой) для удаления.', 'warning');
-        return;
-    }
-    window.location.href = '/dashboard/properties/bulk-delete-confirm?ids=' + ids.join(',');
-});
+}
 (function() {
     var selectAll = document.getElementById('select-all');
     var rowChecks = document.querySelectorAll('.row-select');

@@ -187,7 +187,6 @@ async def _render_edit_form_error(request: Request, db: AsyncSession, id: int, e
     )
 
 
-import os
 from fastapi.responses import JSONResponse
 
 

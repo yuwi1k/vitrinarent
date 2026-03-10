@@ -57,6 +57,14 @@ def add_flash(request: "Request", message: str, type: str = "success") -> None:
 # Делаем csrf_token и get_flash доступными во всех шаблонах.
 templates.env.globals["csrf_token"] = csrf_token
 templates.env.globals["get_flash"] = get_flash
+templates.env.globals["yandex_maps_api_key"] = os.getenv("YANDEX_MAPS_API_KEY", "")
+templates.env.globals["avito_api_configured"] = bool(
+    (os.getenv("AVITO_API_CLIENT_ID") or "").strip()
+    and (os.getenv("AVITO_API_CLIENT_SECRET") or "").strip()
+)
+templates.env.globals["cian_api_configured"] = bool(
+    (os.getenv("CIAN_ACCESS_KEY") or "").strip()
+)
 
 
 def _validate_upload_file(

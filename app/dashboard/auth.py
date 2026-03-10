@@ -6,7 +6,7 @@ import os
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
 
-from app.admin_password import get_admin_password
+from app.admin_password import check_admin_password
 from app.dashboard.common import templates
 
 router = APIRouter()
@@ -39,8 +39,7 @@ async def login_submit(
 ):
     """Обработка формы входа: проверка учётных данных, установка сессии, редирект на /dashboard."""
     expected_username = _get_expected_username()
-    expected_password = get_admin_password()
-    if (username or "").strip() == expected_username and password == expected_password:
+    if (username or "").strip() == expected_username and check_admin_password(password):
         request.session["is_admin"] = True
         return RedirectResponse(url="/dashboard", status_code=303)
     return templates.TemplateResponse(

@@ -1,6 +1,12 @@
-from sqlalchemy import Column, Integer, BigInteger, String, Float, Boolean, Text, ForeignKey, JSON
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, Integer, BigInteger, String, Float, Boolean, Text, ForeignKey, JSON, DateTime
 from sqlalchemy.orm import relationship, backref
 from app.database import Base
+
+
+def _utcnow():
+    return datetime.now(timezone.utc)
 
 class Property(Base):
     __tablename__ = "properties"
@@ -41,6 +47,9 @@ class Property(Base):
     floor_number = Column(Integer, nullable=True)      # этаж, на котором находится помещение
     power_kw = Column(Float, nullable=True)            # доступная мощность, кВт
     ceiling_height = Column(Float, nullable=True)      # высота потолков, м
+
+    created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=True)
+    updated_at = Column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow, nullable=True)
 
     # Родительский объект (для иерархии "матрешек")
     parent_id = Column(Integer, ForeignKey("properties.id"), nullable=True)

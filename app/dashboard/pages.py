@@ -38,8 +38,6 @@ async def dashboard_home(
     total = total_r.scalar() or 0
     active_r = await db.execute(select(func.count(Property.id)).where(Property.is_active.is_(True)))
     active_count = active_r.scalar() or 0
-    on_main_r = await db.execute(select(func.count(Property.id)).where(Property.show_on_main.is_(True)))
-    on_main_count = on_main_r.scalar() or 0
     rent_r = await db.execute(select(func.count(Property.id)).where(Property.deal_type == "Аренда"))
     rent_count = rent_r.scalar() or 0
     sale_r = await db.execute(select(func.count(Property.id)).where(Property.deal_type == "Продажа"))
@@ -54,17 +52,57 @@ async def dashboard_home(
         if v is not None and str(v).strip():
             avito_published += 1
     avito_not_published = max(0, (total or 0) - avito_published)
+
+    no_photo_r = await db.execute(
+        select(func.count(Property.id)).where(
+            Property.parent_id.is_(None),
+            or_(Property.main_image.is_(None), Property.main_image == ""),
+        )
+    )
+    no_photo = no_photo_r.scalar() or 0
+
+    no_coords_r = await db.execute(
+        select(func.count(Property.id)).where(
+            Property.parent_id.is_(None),
+            or_(Property.latitude.is_(None), Property.longitude.is_(None)),
+        )
+    )
+    no_coords = no_coords_r.scalar() or 0
+
+    cian_rows_r = await db.execute(select(Property.cian_data))
+    cian_rows = cian_rows_r.scalars().all()
+    cian_published = 0
+    for data in cian_rows:
+        if not data or not isinstance(data, dict):
+            continue
+        v = data.get("CianOfferId")
+        if v is not None and str(v).strip():
+            cian_published += 1
+    cian_not_published = max(0, (total or 0) - cian_published)
+
+    no_address_r = await db.execute(
+        select(func.count(Property.id)).where(
+            Property.parent_id.is_(None),
+            or_(Property.address.is_(None), Property.address == ""),
+        )
+    )
+    no_address = no_address_r.scalar() or 0
+
     return templates.TemplateResponse(
         "dashboard/home.html",
         {
             "request": request,
             "total": total,
             "active_count": active_count,
-            "on_main_count": on_main_count,
             "rent_count": rent_count,
             "sale_count": sale_count,
             "avito_published": avito_published,
             "avito_not_published": avito_not_published,
+            "cian_published": cian_published,
+            "cian_not_published": cian_not_published,
+            "no_photo": no_photo,
+            "no_coords": no_coords,
+            "no_address": no_address,
             **_api_integration_status(),
         },
     )

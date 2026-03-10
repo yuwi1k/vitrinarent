@@ -29,9 +29,19 @@ def build_search_query(
     max_price: Optional[str] = None,
     min_area: Optional[str] = None,
     max_area: Optional[str] = None,
+    object_type: Optional[str] = None,
 ):
-    # Все активные объекты; и корневые, и дочерние (помещения)
-    stmt = select(Property).where(Property.is_active == True)
+    from sqlalchemy.orm import selectinload
+
+    stmt = select(Property).where(Property.is_active == True).options(
+        selectinload(Property.children),
+        selectinload(Property.parent),
+    )
+
+    if object_type == "building":
+        stmt = stmt.where(Property.parent_id.is_(None))
+    elif object_type == "unit":
+        stmt = stmt.where(Property.parent_id.isnot(None))
 
     if q and q.strip():
         pattern = f"%{q.strip()}%"

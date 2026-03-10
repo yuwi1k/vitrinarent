@@ -2,7 +2,7 @@
 Настройки дашборда: смена пароля, контакты для фидов.
 """
 from fastapi import APIRouter, Request, Depends, Form
-from app.admin_password import get_admin_password, set_admin_password
+from app.admin_password import check_admin_password, set_admin_password
 from app.dashboard.common import check_admin, templates
 from app.settings_store import get_settings_for_edit, save_settings
 
@@ -27,7 +27,7 @@ async def settings_password_change(
     error = None
     if not current_password.strip():
         error = "Введите текущий пароль."
-    elif current_password != get_admin_password():
+    elif not check_admin_password(current_password):
         error = "Текущий пароль неверен."
     elif not new_password.strip():
         error = "Введите новый пароль."
