@@ -8,9 +8,13 @@
   <meta property="og:title" content="Поиск объектов — Vitrina" />
   <meta property="og:description" content="Удобный поиск коммерческой недвижимости: офисы, склады, торговые площади" />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ base_url }}{{ request.url.path }}" />
+  <meta property="og:image" content="{{ base_url }}/static/images/og-default.png" />
+  <meta property="og:locale" content="ru_RU" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Поиск объектов — Vitrina" />
   <meta name="twitter:description" content="Удобный поиск коммерческой недвижимости" />
+  <meta name="twitter:image" content="{{ base_url }}/static/images/og-default.png" />
 
   <meta name="description" content="Поиск коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа." />
   <link rel="shortcut icon" href="/static/images/favicon.png" />
@@ -135,31 +139,31 @@
               {% if deal_type and deal_type != 'Все' %}
               <a class="filter-chip" href="/search?deal_type=Все&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
                 {{ deal_type }}
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </a>
               {% endif %}
               {% if category and category != 'Все' %}
               <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category=Все&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
                 {{ category }}
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </a>
               {% endif %}
               {% if q %}
               <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
                 «{{ q }}»
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </a>
               {% endif %}
               {% if min_area or max_area %}
               <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&sort={{ sort }}">
                 Площадь: {{ min_area or '—' }}–{{ max_area or '∞' }} м²
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </a>
               {% endif %}
               {% if min_price or max_price %}
               <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
                 Цена: {{ min_price or '—' }}–{{ max_price or '∞' }} ₽
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </a>
               {% endif %}
               <a class="filter-chip filter-chip--reset" href="/search">Сбросить всё</a>
@@ -242,21 +246,20 @@
 
   <footer class="footer">
     <div class="container">
-      <div class="footer-grid">
-        <div class="footer-brand">
-          <div class="footer-logo">Vitrina</div>
-          <p class="footer-tagline">Каталог коммерческой недвижимости: офисы, склады, торговые площади от собственника</p>
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-logo">Vitrina</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-tagline">Коммерческая недвижимость</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-copy">&copy; {{ now().year }}</span>
         </div>
-        <div class="footer-nav-col">
-          <h3>Навигация</h3>
+        <nav class="footer-nav">
           <a href="/">Главная</a>
           <a href="/search">Каталог</a>
-          <a href="/map">Карта объектов</a>
+          <a href="/map">Карта</a>
           <a href="/faq">FAQ</a>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p class="footer-text">© {{ now().year }} vitrina.rent — сервис для агентов</p>
+        </nav>
       </div>
     </div>
   </footer>

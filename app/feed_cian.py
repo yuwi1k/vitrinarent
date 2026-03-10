@@ -10,11 +10,14 @@ shoppingAreaRent, buildingRent, garageRent, commercialLandRent.
 Категории продажи: freeAppointmentObjectSale, officeSale, warehouseSale и др. (см. раздел выше).
 BargainTerms для аренды: PaymentPeriod, LeaseType; ConditionType, Layout, InputType, Building/Type — по доке.
 """
+import logging
 import os
 import re
 from typing import List, Tuple
 
 from lxml import etree
+
+logger = logging.getLogger(__name__)
 
 
 def _cdata_safe(s: str) -> str:
@@ -27,7 +30,7 @@ def _get_cian_contacts() -> tuple[str, str]:
         from app.settings_store import get_avito_manager_name, get_avito_contact_phone
         return get_avito_manager_name(), get_avito_contact_phone()
     except ImportError:
-        pass
+        logger.debug("settings_store not available for CIAN feed, falling back to env vars")
     manager = os.getenv("AVITO_MANAGER_NAME", os.getenv("MANAGER_NAME", "Менеджер")) or "Менеджер"
     phone = os.getenv("AVITO_CONTACT_PHONE", os.getenv("CONTACT_PHONE", "+79990000000")) or "+79990000000"
     return manager.strip(), phone.strip()
@@ -213,7 +216,7 @@ def generate_cian_feed(properties: list) -> bytes:
                 etree.SubElement(coords, "Lat").text = str(float(lat))
                 etree.SubElement(coords, "Lng").text = str(float(lng))
             except (TypeError, ValueError):
-                pass
+                logger.warning("CIAN feed: invalid coordinates for property %s: lat=%s lng=%s", prop.id, lat, lng)
 
         phones = etree.SubElement(obj, "Phones")
         phone_schema = etree.SubElement(phones, "PhoneSchema")
@@ -228,7 +231,7 @@ def generate_cian_feed(properties: list) -> bytes:
             try:
                 etree.SubElement(obj, "FloorNumber").text = str(int(float(str(floor_val).strip())))
             except (ValueError, TypeError):
-                pass
+                logger.warning("CIAN feed: invalid floor value for property %s: %s", prop.id, floor_val)
         elif getattr(prop, "floor_number", None) is not None:
             etree.SubElement(obj, "FloorNumber").text = str(int(prop.floor_number))
 
@@ -289,6 +292,7 @@ def generate_cian_feed(properties: list) -> bytes:
             try:
                 etree.SubElement(building, "FloorsCount").text = str(int(float(str(floors_val).strip())))
             except (ValueError, TypeError):
+                logger.warning("CIAN feed: invalid FloorsTotal for property %s: %s, defaulting to 1", prop.id, floors_val)
                 etree.SubElement(building, "FloorsCount").text = "1"
         elif getattr(prop, "floors_total", None) is not None:
             etree.SubElement(building, "FloorsCount").text = str(int(prop.floors_total))
@@ -301,7 +305,7 @@ def generate_cian_feed(properties: list) -> bytes:
             try:
                 etree.SubElement(building, "CeilingHeight").text = str(float(str(ceiling_val).strip().replace(",", ".")))
             except (ValueError, TypeError):
-                pass
+                logger.warning("CIAN feed: invalid CeilingHeight for property %s: %s", prop.id, ceiling_val)
         elif getattr(prop, "ceiling_height", None) is not None:
             etree.SubElement(building, "CeilingHeight").text = str(prop.ceiling_height)
         bld_type_raw = (cian_data.get("BuildingType") or "").strip()

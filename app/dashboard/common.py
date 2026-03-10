@@ -1,9 +1,12 @@
 """
 Общие зависимости и хелперы для роутов дашборда: шаблоны, проверка авторизации, валидация файлов.
 """
+import logging
 import os
 from typing import Optional, TYPE_CHECKING
 import secrets
+
+logger = logging.getLogger(__name__)
 
 from fastapi import Request, HTTPException
 from fastapi.templating import Jinja2Templates

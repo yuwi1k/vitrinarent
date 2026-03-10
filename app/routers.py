@@ -2,9 +2,12 @@
 Публичные маршруты приложения: главная, поиск, FAQ, карточка объекта, фид Авито.
 """
 import json
+import logging
 import math
 import os
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 import bleach
 from fastapi import APIRouter, Request, Depends, HTTPException, Query, Response
@@ -294,7 +297,7 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
     else:
         available_units = [child for child in (building.children or []) if child.is_active]
 
-    site_url = os.getenv("SITE_URL", "http://127.0.0.1:8000").rstrip("/")
+    site_url = _base_url(request)
     return templates.TemplateResponse(
         "property-single.html",
         {
@@ -321,19 +324,24 @@ async def sitemap_xml(request: Request, db: AsyncSession = Depends(get_db)) -> R
     proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "https").split(",")[0].strip() or "https"
     base = f"{proto}://{host}".rstrip("/") if host else str(request.url.replace(path="", query="")).rstrip("/")
 
-    static_paths = ["/", "/search", "/faq"]
+    static_paths = ["/", "/search", "/faq", "/map"]
 
-    # Активные объекты (все, не только корневые) — чтобы карточки помещений тоже попадали в карту сайта
     stmt = select(Property).where(Property.is_active == True)
     result = await db.execute(stmt)
     props = result.scalars().all()
 
     url_entries: list[str] = []
     for path in static_paths:
-        url_entries.append(f"<url><loc>{base}{path}</loc></url>")
+        url_entries.append(
+            f"<url><loc>{base}{path}</loc>"
+            f"<changefreq>weekly</changefreq><priority>0.8</priority></url>"
+        )
     for p in props:
         slug = p.slug or str(p.id)
-        url_entries.append(f"<url><loc>{base}/property/{slug}</loc></url>")
+        url_entries.append(
+            f"<url><loc>{base}/property/{slug}</loc>"
+            f"<changefreq>weekly</changefreq><priority>0.6</priority></url>"
+        )
 
     xml = (
         '<?xml version="1.0" encoding="UTF-8"?>'

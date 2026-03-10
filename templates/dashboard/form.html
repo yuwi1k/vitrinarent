@@ -1091,34 +1091,38 @@
     else window.addEventListener('load', function() { if (typeof ymaps !== 'undefined') ymaps.ready(initMap); });
 })();
 
-async function deleteImage(imageId) {
+async function deleteImage(imageId, btn) {
     if (!confirm('Удалить фото?')) return;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
     try {
         var r = await fetch('/dashboard/ajax/images/' + imageId, { method: 'DELETE' });
         var data = await r.json();
         if (data.status === 'ok') {
             var el = document.getElementById('gallery-img-' + imageId);
             if (el) el.remove();
-        } else alert('Ошибка удаления');
+            showToast('Фото удалено', 'success');
+        } else { showToast('Ошибка удаления фото', 'danger'); }
     } catch (e) {
-        alert('Ошибка сети');
-        console.error(e);
+        showToast('Ошибка сети: ' + e.message, 'danger');
     }
+    if (btn) { btn.disabled = false; btn.innerHTML = '&times;'; }
 }
 
-async function deleteDocument(docId) {
+async function deleteDocument(docId, btn) {
     if (!confirm('Удалить документ?')) return;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
     try {
         var r = await fetch('/dashboard/ajax/documents/' + docId, { method: 'DELETE' });
         var data = await r.json();
         if (data.status === 'ok') {
             var el = document.getElementById('doc-row-' + docId);
             if (el) el.remove();
-        } else alert('Ошибка удаления');
+            showToast('Документ удалён', 'success');
+        } else { showToast('Ошибка удаления документа', 'danger'); }
     } catch (e) {
-        alert('Ошибка сети');
-        console.error(e);
+        showToast('Ошибка сети: ' + e.message, 'danger');
     }
+    if (btn) { btn.disabled = false; btn.innerHTML = '&times;'; }
 }
 
 (function() {
@@ -1136,13 +1140,15 @@ async function deleteDocument(docId) {
                     if (id) order.push(parseInt(id, 10));
                 }
                 if (order.length === 0) return;
+                showToast('Сохраняем порядок фото…', 'info', 2000);
                 fetch('/dashboard/ajax/images/reorder', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({ order: order })
                 }).then(function(r) { return r.json(); }).then(function(data) {
-                    if (data.status !== 'ok') alert('Не удалось сохранить порядок');
-                }).catch(function() { alert('Ошибка сети'); });
+                    if (data.status === 'ok') showToast('Порядок фото сохранён', 'success');
+                    else showToast('Не удалось сохранить порядок фото', 'danger');
+                }).catch(function(e) { showToast('Ошибка сети: ' + e.message, 'danger'); });
             }
         });
     }

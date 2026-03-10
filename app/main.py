@@ -1,8 +1,11 @@
+import logging
 import os
 import time
 from collections import defaultdict
 
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
@@ -28,7 +31,7 @@ def _login_url(request: Request) -> str:
         url = request.url.replace(path="/dashboard/login", query="")
         return str(url)
     except Exception:
-        pass
+        logger.warning("Failed to build login URL from request headers", exc_info=True)
     return "/dashboard/login"
 
 
@@ -89,6 +92,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
                     body_bytes = await request.body()
                     text = body_bytes.decode("utf-8", errors="ignore")
                 except Exception:
+                    logger.warning("Failed to read request body for CSRF check", exc_info=True)
                     text = ""
 
                 if "application/x-www-form-urlencoded" in content_type and text:
@@ -157,8 +161,46 @@ async def http_exception_redirect(request: Request, exc: HTTPException):
         return RedirectResponse(url=_login_url(request), status_code=302)
     if exc.status_code == 302 and "Location" in (exc.headers or {}):
         return RedirectResponse(url=exc.headers["Location"], status_code=302)
-    from fastapi.responses import JSONResponse
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept and not request.url.path.startswith("/dashboard/ajax"):
+        from fastapi.templating import Jinja2Templates
+        _templates = Jinja2Templates(directory="templates")
+        titles = {404: "Страница не найдена", 500: "Внутренняя ошибка сервера"}
+        details = {
+            404: "Запрашиваемая страница не существует или была удалена.",
+            500: "Произошла ошибка на сервере. Попробуйте позже.",
+        }
+        return _templates.TemplateResponse(
+            "error.html",
+            {
+                "request": request,
+                "status_code": exc.status_code,
+                "title": titles.get(exc.status_code, f"Ошибка {exc.status_code}"),
+                "detail": details.get(exc.status_code, exc.detail or ""),
+            },
+            status_code=exc.status_code,
+        )
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled server error: %s", exc)
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept:
+        from fastapi.templating import Jinja2Templates
+        _templates = Jinja2Templates(directory="templates")
+        return _templates.TemplateResponse(
+            "error.html",
+            {
+                "request": request,
+                "status_code": 500,
+                "title": "Внутренняя ошибка сервера",
+                "detail": "Произошла непредвиденная ошибка. Попробуйте позже.",
+            },
+            status_code=500,
+        )
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
 # --- HEALTH-CHECK для деплоя и оркестрации ---

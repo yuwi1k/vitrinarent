@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }} — Vitrina</title>
+  <link rel="shortcut icon" href="/static/images/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/vitrina-asset.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">Vitrina</a>
+      <nav class="nav" id="nav">
+        <a href="/" class="nav-link">Главная</a>
+        <a href="/search" class="nav-link">Каталог</a>
+        <a href="/map" class="nav-link">Карта</a>
+        <a href="/faq" class="nav-link">FAQ</a>
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+  <main class="error-page">
+    <div class="error-code">{{ status_code }}</div>
+    <div class="error-title">{{ title }}</div>
+    <div class="error-desc">{{ detail }}</div>
+    <div class="error-actions">
+      <a href="/" class="btn-pill btn-pill--primary">На главную</a>
+      <a href="/search" class="btn-pill btn-pill--outline">Каталог объектов</a>
+    </div>
+  </main>
+  <script src="/static/js/vitrina-asset.js"></script>
+</body>
+</html>

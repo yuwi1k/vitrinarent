@@ -3,8 +3,11 @@
 """
 import csv
 import io
+import logging
 
 from fastapi import APIRouter, Depends
+
+logger = logging.getLogger(__name__)
 from fastapi.responses import Response, JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -83,6 +86,7 @@ async def export_avito_feed_new_autoload(db: AsyncSession = Depends(get_db)):
             }
         )
     except Exception as exc:
+        logger.exception("Avito autoload upload failed")
         return JSONResponse(
             {
                 "ok": False,
@@ -102,27 +106,34 @@ async def avito_sync_autoload_statuses(db: AsyncSession = Depends(get_db)):
     try:
         payload = await client.get_last_completed_report_items()
     except Exception as exc:
+        logger.exception("Avito sync failed")
         return JSONResponse(
             {
                 "ok": False,
                 "error": str(exc),
             },
-            status_code=200,
+            status_code=500,
         )
 
     items = payload.get("items") or []
     updated = 0
+    skipped = 0
+    not_found = 0
     for item in items:
         ad_id = item.get("ad_id")
         if not ad_id:
+            skipped += 1
             continue
         try:
             prop_id = int(str(ad_id))
         except ValueError:
+            logger.warning("Avito sync: invalid ad_id=%s, skipping", ad_id)
+            skipped += 1
             continue
         result = await db.execute(select(Property).where(Property.id == prop_id))
         prop = result.scalar_one_or_none()
         if not prop:
+            not_found += 1
             continue
         data = getattr(prop, "avito_data", None) or {}
         if not isinstance(data, dict):
@@ -146,6 +157,8 @@ async def avito_sync_autoload_statuses(db: AsyncSession = Depends(get_db)):
             "ok": True,
             "updated": updated,
             "total_items": len(items),
+            "skipped": skipped,
+            "not_found": not_found,
         }
     )
 
@@ -177,6 +190,7 @@ async def cian_import_status():
         data = await client.get_last_order_info()
         return JSONResponse({"ok": True, "data": data})
     except Exception as exc:
+        logger.exception("CIAN import-status check failed")
         return JSONResponse(
             {"ok": False, "error": str(exc)},
             status_code=500,
@@ -194,6 +208,7 @@ async def cian_sync_offer_statuses(db: AsyncSession = Depends(get_db)):
         all_announcements = []
         page = 1
         page_size = 100
+        max_pages = 50
         while True:
             resp = await client.get_my_offers(page=page, page_size=page_size)
             result = (resp.get("result") or {}) if isinstance(resp.get("result"), dict) else {}
@@ -205,24 +220,36 @@ async def cian_sync_offer_statuses(db: AsyncSession = Depends(get_db)):
             if len(announcements) < page_size:
                 break
             page += 1
+            if page > max_pages:
+                logger.warning("CIAN sync: reached max_pages=%d limit, stopping pagination", max_pages)
+                break
+            import asyncio
+            await asyncio.sleep(0.12)
     except Exception as exc:
+        logger.exception("CIAN sync failed")
         return JSONResponse(
             {"ok": False, "error": str(exc)},
             status_code=500,
         )
 
     updated = 0
+    skipped = 0
+    not_found = 0
     for ann in all_announcements:
         external_id = ann.get("externalId")
         if external_id is None:
+            skipped += 1
             continue
         try:
             prop_id = int(str(external_id))
         except (ValueError, TypeError):
+            logger.warning("CIAN sync: invalid externalId=%s, skipping", external_id)
+            skipped += 1
             continue
         result = await db.execute(select(Property).where(Property.id == prop_id))
         prop = result.scalar_one_or_none()
         if not prop:
+            not_found += 1
             continue
         data = getattr(prop, "cian_data", None) or {}
         if not isinstance(data, dict):
@@ -242,6 +269,8 @@ async def cian_sync_offer_statuses(db: AsyncSession = Depends(get_db)):
             "ok": True,
             "updated": updated,
             "total_offers": len(all_announcements),
+            "skipped": skipped,
+            "not_found": not_found,
         }
     )
 

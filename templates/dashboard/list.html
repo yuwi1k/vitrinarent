@@ -299,7 +299,7 @@ document.getElementById('btn-bulk-delete').addEventListener('click', function() 
         if (cb && cb.checked) ids.push(cb.value);
     });
     if (ids.length === 0) {
-        alert('Выберите хотя бы один объект (корневой) для удаления.');
+        showToast('Выберите хотя бы один объект (корневой) для удаления.', 'warning');
         return;
     }
     window.location.href = '/dashboard/properties/bulk-delete-confirm?ids=' + ids.join(',');

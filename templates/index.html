@@ -13,9 +13,13 @@
   <meta property="og:title" content="Vitrina — Коммерческая недвижимость" />
   <meta property="og:description" content="Офисы, склады и торговые площади от собственника — подбор для агентов" />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ base_url }}{{ request.url.path }}" />
+  <meta property="og:image" content="{{ base_url }}/static/images/og-default.png" />
+  <meta property="og:locale" content="ru_RU" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Vitrina — Коммерческая недвижимость" />
   <meta name="twitter:description" content="Офисы, склады и торговые площади от собственника — подбор для агентов" />
+  <meta name="twitter:image" content="{{ base_url }}/static/images/og-default.png" />
   <meta name="yandex-verification" content="e6fcd66bd1186ee2" />
   <meta name="google-site-verification" content="oEtd5BxM5fAybSDNtTC5PJZCCKSnBITBUe5syl3J2WY" />
 
@@ -161,21 +165,20 @@
 
   <footer class="footer">
     <div class="container">
-      <div class="footer-grid">
-        <div class="footer-brand">
-          <div class="footer-logo">Vitrina</div>
-          <p class="footer-tagline">Каталог коммерческой недвижимости: офисы, склады, торговые площади от собственника</p>
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-logo">Vitrina</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-tagline">Коммерческая недвижимость</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-copy">&copy; {{ now().year }}</span>
         </div>
-        <div class="footer-nav-col">
-          <h3>Навигация</h3>
+        <nav class="footer-nav">
           <a href="/">Главная</a>
           <a href="/search">Каталог</a>
-          <a href="/map">Карта объектов</a>
+          <a href="/map">Карта</a>
           <a href="/faq">FAQ</a>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p class="footer-text">© {{ now().year }} vitrina.rent — сервис для агентов</p>
+        </nav>
       </div>
     </div>
   </footer>

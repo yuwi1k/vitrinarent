@@ -2,11 +2,14 @@
 CRUD объектов недвижимости: список, создание, редактирование, удаление, массовые действия.
 """
 import json
+import logging
 import os
 import shutil
 import uuid
 import types
 from typing import Optional, Any
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Request, Depends, HTTPException, Form, UploadFile, File
 from fastapi.responses import RedirectResponse

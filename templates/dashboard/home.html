@@ -90,6 +90,35 @@
     </div>
 </div>
 
+<div class="row row-deck row-cards mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Статус интеграций</h3>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-3">
+                    {% if avito_api_configured %}
+                    <span class="badge bg-green-lt fs-6 py-2 px-3">Авито API: настроен</span>
+                    {% else %}
+                    <span class="badge bg-red-lt fs-6 py-2 px-3">Авито API: не настроен — заполните AVITO_API_CLIENT_ID / SECRET в .env</span>
+                    {% endif %}
+                    {% if avito_autoload_configured %}
+                    <span class="badge bg-green-lt fs-6 py-2 px-3">Авито Autoload: настроен</span>
+                    {% else %}
+                    <span class="badge bg-yellow-lt fs-6 py-2 px-3">Авито Autoload: не настроен (AVITO_AUTOLOAD_UPLOAD_URL)</span>
+                    {% endif %}
+                    {% if cian_api_configured %}
+                    <span class="badge bg-green-lt fs-6 py-2 px-3">Циан API: настроен</span>
+                    {% else %}
+                    <span class="badge bg-red-lt fs-6 py-2 px-3">Циан API: не настроен — заполните CIAN_ACCESS_KEY в .env</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="card">

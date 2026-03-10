@@ -4,10 +4,17 @@
 Авторизация: Bearer <ACCESS KEY> (ключ запрашивается у import@cian.ru).
 Ограничения: не более ~10 запросов в секунду на метод, даты в Europe/Moscow.
 """
+import asyncio
+import logging
 import os
 from typing import Any, Dict, List, Optional
 
 import httpx
+
+logger = logging.getLogger(__name__)
+
+_MAX_RETRIES = 3
+_RETRY_BACKOFF_BASE = 1.5
 
 
 class CianApiClient:
@@ -30,37 +37,65 @@ class CianApiClient:
             return "Не задан CIAN_ACCESS_KEY в окружении."
         return None
 
+    async def _request_with_retry(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
+        """HTTP-запрос с retry и exponential backoff для 5xx/429/таймаутов."""
+        last_exc: Optional[Exception] = None
+        resp: Optional[httpx.Response] = None
+        for attempt in range(_MAX_RETRIES):
+            try:
+                async with httpx.AsyncClient(timeout=kwargs.pop("timeout", 30.0)) as client:
+                    resp = await getattr(client, method)(url, **kwargs)
+                if resp.status_code == 429:
+                    wait = _RETRY_BACKOFF_BASE ** attempt
+                    logger.warning("CIAN rate limited (429), retrying in %.1fs (attempt %d/%d)", wait, attempt + 1, _MAX_RETRIES)
+                    await asyncio.sleep(wait)
+                    continue
+                if resp.status_code >= 500:
+                    wait = _RETRY_BACKOFF_BASE ** attempt
+                    logger.warning("CIAN server error %d, retrying in %.1fs (attempt %d/%d)", resp.status_code, wait, attempt + 1, _MAX_RETRIES)
+                    await asyncio.sleep(wait)
+                    continue
+                return resp
+            except (httpx.TimeoutException, httpx.ConnectError) as exc:
+                last_exc = exc
+                wait = _RETRY_BACKOFF_BASE ** attempt
+                logger.warning("Network error calling CIAN %s: %s, retrying in %.1fs (attempt %d/%d)", url, exc, wait, attempt + 1, _MAX_RETRIES)
+                await asyncio.sleep(wait)
+        if last_exc:
+            raise last_exc
+        return resp  # type: ignore[return-value]
+
     async def get_last_order_info(self) -> Dict[str, Any]:
         """
         GET /v1/get-last-order-info
-        Состояние последнего отчёта по импорту: URL фида, дата проверки, проблемы и т.д.
         """
         err = self._validate_config()
         if err:
             raise RuntimeError(err)
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            r = await client.get(
-                f"{self.base_url}/v1/get-last-order-info",
-                headers=self._headers(),
-            )
-            r.raise_for_status()
-            return r.json()
+        r = await self._request_with_retry(
+            "get",
+            f"{self.base_url}/v1/get-last-order-info",
+            headers=self._headers(),
+            timeout=30.0,
+        )
+        r.raise_for_status()
+        return r.json()
 
     async def get_order(self) -> Dict[str, Any]:
         """
         GET /v1/get-order
-        Последний актуальный отчёт по импорту объявлений (детали по объектам).
         """
         err = self._validate_config()
         if err:
             raise RuntimeError(err)
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            r = await client.get(
-                f"{self.base_url}/v1/get-order",
-                headers=self._headers(),
-            )
-            r.raise_for_status()
-            return r.json()
+        r = await self._request_with_retry(
+            "get",
+            f"{self.base_url}/v1/get-order",
+            headers=self._headers(),
+            timeout=30.0,
+        )
+        r.raise_for_status()
+        return r.json()
 
     async def get_my_offers(
         self,
@@ -71,9 +106,6 @@ class CianApiClient:
     ) -> Dict[str, Any]:
         """
         GET /v2/get-my-offers
-        Список объявлений агентства с пагинацией.
-        statuses: например ["published", "inactive"]
-        source: "manual" | "upload"
         """
         err = self._validate_config()
         if err:
@@ -84,11 +116,12 @@ class CianApiClient:
                 params.setdefault("statuses", []).append(s)
         if source:
             params["source"] = source
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            r = await client.get(
-                f"{self.base_url}/v2/get-my-offers",
-                headers=self._headers(),
-                params=params,
-            )
-            r.raise_for_status()
-            return r.json()
+        r = await self._request_with_retry(
+            "get",
+            f"{self.base_url}/v2/get-my-offers",
+            headers=self._headers(),
+            params=params,
+            timeout=30.0,
+        )
+        r.raise_for_status()
+        return r.json()

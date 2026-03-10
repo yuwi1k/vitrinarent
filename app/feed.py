@@ -4,10 +4,13 @@
 - generate_avito_feed_full: полный фид для экспорта из дашборда (шаблоны Продам/Сдам).
 Контакты: из app.settings_store (файл data/settings.json) или .env.
 """
+import logging
 import os
 from typing import List, Tuple
 
 from lxml import etree
+
+logger = logging.getLogger(__name__)
 
 # Импорт после определения путей приложения
 def _get_avito_contacts() -> Tuple[str, str]:
@@ -16,7 +19,7 @@ def _get_avito_contacts() -> Tuple[str, str]:
         from app.settings_store import get_avito_manager_name, get_avito_contact_phone
         return get_avito_manager_name(), get_avito_contact_phone()
     except ImportError:
-        pass
+        logger.debug("settings_store not available for Avito feed, falling back to env vars")
     manager = os.getenv("AVITO_MANAGER_NAME", os.getenv("MANAGER_NAME", "Менеджер Vitrina")) or "Менеджер Vitrina"
     phone = os.getenv("AVITO_CONTACT_PHONE", os.getenv("CONTACT_PHONE", "+79990000000")) or "+79990000000"
     return manager.strip(), phone.strip()

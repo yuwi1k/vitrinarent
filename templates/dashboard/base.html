@@ -25,8 +25,8 @@
                             <a class="dropdown-item" href="/dashboard/export/avito" download="avito_feed.xml" title="Полный XML по шаблонам Продам/Сдам">Скачать фид Авито</a>
                             <a class="dropdown-item" href="/dashboard/export/avito-new" download="avito_feed_new.xml" title="Только объекты без AvitoId">Фид новых для Авито</a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="/dashboard/export/avito-autoload-new" title="Отправить через Autoload API">Отправить новых на Авито</a>
-                            <a class="dropdown-item" href="/dashboard/avito/sync" title="Подтянуть AvitoId из отчёта">Синхронизировать статусы Авито</a>
+                            <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/export/avito-autoload-new" data-success="Автозагрузка Авито запущена" title="Отправить через Autoload API">Отправить новых на Авито</button>
+                            <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/avito/sync" data-success="Статусы Авито синхронизированы: обновлено {value}" data-success-field="updated" title="Подтянуть AvitoId из отчёта">Синхронизировать статусы Авито</button>
                             <div class="dropdown-divider"></div>
                             <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/avito.xml" title="URL для настройки автозагрузки в ЛК Авито">Скопировать URL фида</button>
                             <div class="dropdown-divider"></div>
@@ -37,8 +37,8 @@
                         <a href="#" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Циан</a>
                         <div class="dropdown-menu dropdown-menu-end">
                             <a class="dropdown-item" href="/dashboard/export/cian" download="cian_feed.xml" title="XML для импорта в ЛК Циан">Скачать фид Циан</a>
-                            <a class="dropdown-item" href="/dashboard/cian/import-status" id="cian-import-status-btn" title="Состояние последней выгрузки">Статус импорта Циан</a>
-                            <a class="dropdown-item" href="/dashboard/cian/sync" title="Подтянуть CianOfferId и статус из API">Синхронизировать статусы Циан</a>
+                            <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/cian/import-status" data-success="Статус импорта Циан получен" title="Состояние последней выгрузки">Статус импорта Циан</button>
+                            <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/cian/sync" data-success="Статусы Циан синхронизированы: обновлено {value}" data-success-field="updated" title="Подтянуть CianOfferId и статус из API">Синхронизировать статусы Циан</button>
                             <div class="dropdown-divider"></div>
                             <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/cian.xml" title="URL фида для настройки в ЛК Циан">Скопировать URL фида</button>
                         </div>
@@ -82,29 +82,107 @@
             </div>
         </div>
     </div>
+    <div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index:11080"></div>
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
     <script>
+      /**
+       * showToast(message, type, delay)
+       * type: 'success' | 'danger' | 'warning' | 'info'
+       */
+      function showToast(message, type, delay) {
+        type = type || 'info';
+        delay = delay || 5000;
+        var icons = {
+          success: '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M5 12l5 5l10 -10"/></svg>',
+          danger:  '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M12 9v2m0 4v.01"/><path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.84 2.75"/></svg>',
+          warning: '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M12 9v2m0 4v.01"/><path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.84 2.75"/></svg>',
+          info:    '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>'
+        };
+        var bgClass = 'bg-' + type;
+        var container = document.getElementById('toast-container');
+        var wrapper = document.createElement('div');
+        wrapper.className = 'toast show align-items-center text-white border-0 mb-2 ' + bgClass;
+        wrapper.setAttribute('role', 'alert');
+        wrapper.innerHTML =
+          '<div class="d-flex">' +
+            '<div class="toast-body d-flex align-items-center">' + (icons[type] || '') +
+              '<span>' + message + '</span>' +
+            '</div>' +
+            '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>' +
+          '</div>';
+        container.appendChild(wrapper);
+        setTimeout(function () { wrapper.classList.remove('show'); setTimeout(function(){ wrapper.remove(); }, 300); }, delay);
+      }
+
+      window.addEventListener('unhandledrejection', function(e) {
+        showToast('Произошла ошибка: ' + (e.reason && e.reason.message ? e.reason.message : 'Неизвестная ошибка'), 'danger');
+      });
+      window.onerror = function(msg) {
+        showToast('Ошибка JS: ' + msg, 'danger');
+      };
+
+      /**
+       * Вспомогательная функция для AJAX-кнопок: показывает спиннер, делает fetch, показывает toast.
+       * btn — HTMLElement кнопки, url — URL, opts — {method, onSuccess(data), successMsg, errorMsg}
+       */
+      function fetchWithToast(btn, url, opts) {
+        opts = opts || {};
+        var method = opts.method || 'GET';
+        var origHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Загрузка…';
+        fetch(url, { method: method, headers: opts.headers || {} })
+          .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+          .then(function(res) {
+            btn.disabled = false;
+            btn.innerHTML = origHTML;
+            if (res.data.ok === false || !res.ok) {
+              showToast(res.data.error || opts.errorMsg || 'Ошибка запроса', 'danger');
+            } else {
+              var msg = opts.successMsg;
+              if (typeof opts.onSuccess === 'function') msg = opts.onSuccess(res.data) || msg;
+              showToast(msg || 'Готово', 'success');
+            }
+          })
+          .catch(function(e) {
+            btn.disabled = false;
+            btn.innerHTML = origHTML;
+            showToast('Ошибка сети: ' + e.message, 'danger');
+          });
+      }
+
       (function () {
         var base = window.location.origin;
         document.querySelectorAll('.copy-feed-url-btn').forEach(function (btn) {
           var path = btn.getAttribute('data-feed-path');
           if (!path) return;
           var url = path.indexOf('http') === 0 ? path : (base + path);
-          var originalText = btn.textContent;
           btn.addEventListener('click', function () {
             navigator.clipboard.writeText(url).then(function () {
-              btn.textContent = 'Скопировано';
-              btn.classList.add('text-success');
-              setTimeout(function () {
-                btn.textContent = originalText;
-                btn.classList.remove('text-success');
-              }, 2000);
+              showToast('URL фида скопирован в буфер обмена', 'success');
             }).catch(function () {
-              btn.textContent = 'Ошибка';
-              setTimeout(function () { btn.textContent = originalText; }, 1500);
+              showToast('Не удалось скопировать URL', 'danger');
             });
           });
         });
+
+        document.querySelectorAll('.ajax-action-btn').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var url = btn.getAttribute('data-url');
+            var successMsg = btn.getAttribute('data-success') || 'Готово';
+            var successField = btn.getAttribute('data-success-field');
+            fetchWithToast(btn, url, {
+              successMsg: successMsg,
+              onSuccess: function(data) {
+                if (successField && data[successField] !== undefined) {
+                  return successMsg.replace('{value}', data[successField]);
+                }
+              }
+            });
+          });
+        });
+
         var cianStatusBtn = document.getElementById('cian-import-status-btn');
         if (cianStatusBtn) {
           cianStatusBtn.setAttribute('target', '_blank');

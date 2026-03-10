@@ -1,6 +1,7 @@
 """
 Главная страница дашборда и список объектов.
 """
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Request, Depends
@@ -14,6 +15,18 @@ from app.dashboard.common import check_admin, templates
 from app.models import Property
 
 router = APIRouter()
+
+
+def _api_integration_status() -> dict:
+    """Проверяет наличие ключей API Авито и Циан в окружении."""
+    avito_ok = bool((os.getenv("AVITO_API_CLIENT_ID") or "").strip() and (os.getenv("AVITO_API_CLIENT_SECRET") or "").strip())
+    avito_upload = bool((os.getenv("AVITO_AUTOLOAD_UPLOAD_URL") or "").strip())
+    cian_ok = bool((os.getenv("CIAN_ACCESS_KEY") or "").strip())
+    return {
+        "avito_api_configured": avito_ok,
+        "avito_autoload_configured": avito_ok and avito_upload,
+        "cian_api_configured": cian_ok,
+    }
 
 
 @router.get("/", dependencies=[Depends(check_admin)])
@@ -52,6 +65,7 @@ async def dashboard_home(
             "sale_count": sale_count,
             "avito_published": avito_published,
             "avito_not_published": avito_not_published,
+            **_api_integration_status(),
         },
     )
 

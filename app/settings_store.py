@@ -4,7 +4,10 @@
 Используется в дашборде (редактирование) и в feed.py (чтение).
 """
 import json
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 _SETTINGS_FILE = os.path.join(_PROJECT_ROOT, "data", "settings.json")
@@ -27,7 +30,7 @@ def _read_settings() -> dict:
                 if isinstance(data, dict):
                     return {k: (v if v is not None else "") for k, v in data.items()}
         except (OSError, json.JSONDecodeError):
-            pass
+            logger.warning("Failed to read settings from %s, using defaults", _SETTINGS_FILE, exc_info=True)
     return {}
 
 
