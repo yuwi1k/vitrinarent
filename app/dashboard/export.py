@@ -286,7 +286,7 @@ async def export_properties_csv(db: AsyncSession = Depends(get_db)):
     properties = result.scalars().all()
     output = io.StringIO()
     writer = csv.writer(output, delimiter=";")
-    writer.writerow(["id", "title", "slug", "deal_type", "category", "price", "area", "address", "is_active", "show_on_main"])
+    writer.writerow(["id", "title", "slug", "deal_type", "category", "price", "area", "address", "is_active"])
     for p in properties:
         writer.writerow([
             p.id,
@@ -298,7 +298,6 @@ async def export_properties_csv(db: AsyncSession = Depends(get_db)):
             p.area or 0,
             (p.address or ""),
             "да" if p.is_active else "нет",
-            "да" if p.show_on_main else "нет",
         ])
     return Response(
         content=output.getvalue(),

@@ -58,9 +58,6 @@
                             <a class="nav-link {% if request.url.path.startswith('/dashboard/properties') %}active{% endif %}" href="/dashboard/properties">Объекты</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.url.path.startswith('/dashboard/folders') %}active{% endif %}" href="/dashboard/folders">Файлы</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link {% if request.url.path == '/dashboard/settings/password' %}active{% endif %}" href="/dashboard/settings/password">Сменить пароль</a>
                         </li>
                     </ul>

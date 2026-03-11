@@ -16,7 +16,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from app.config import PAGE_SIZE_PUBLIC, MAIN_PAGE_LIMIT
+from app.config import PAGE_SIZE_PUBLIC
 from app.database import get_db
 from app.models import Property
 from app.feed import generate_avito_feed
@@ -60,16 +60,6 @@ templates.env.filters["sanitize_html"] = _sanitize_html
 
 @router.get("/")
 async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
-    # Объекты для главной (лимит из конфига), порядок по main_page_order
-    stmt_main = (
-        select(Property)
-        .where(Property.is_active == True, Property.show_on_main == True)
-        .order_by(Property.main_page_order.is_(None), Property.main_page_order.asc(), Property.id.desc())
-        .limit(MAIN_PAGE_LIMIT)
-    )
-    result = await db.execute(stmt_main)
-    properties = result.scalars().all()
-
     stmt_count = select(func.count()).select_from(Property).where(Property.is_active == True)
     total_properties = (await db.execute(stmt_count)).scalar() or 0
     rent_count = (await db.execute(select(func.count()).select_from(Property).where(Property.is_active == True, Property.deal_type == "Аренда"))).scalar() or 0
@@ -89,7 +79,6 @@ async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
         {
             "request": request,
             "base_url": base_url,
-            "properties": properties,
             "total_properties": total_properties,
             "rent_count": rent_count,
             "sale_count": sale_count,
@@ -283,7 +272,7 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
     building = getattr(property, "parent", None) or property
     children_list = list(building.children or []) if hasattr(building, "children") else []
     building_nav_items = [(building.id, building.title or f"Объект #{building.id}", f"/property/{building.slug or building.id}")]
-    for c in sorted(children_list, key=lambda x: (getattr(x, "main_page_order") or 999, x.id)):
+    for c in sorted(children_list, key=lambda x: x.id):
         building_nav_items.append((c.id, c.title or f"Объект #{c.id}", f"/property/{c.slug or c.id}"))
 
     has_own_media = bool(getattr(property, "main_image", None) or (getattr(property, "images", None) and len(property.images) > 0))

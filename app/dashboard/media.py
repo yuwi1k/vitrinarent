@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dashboard.common import check_admin
-from app.models import Property, PropertyImage, PropertyDocument
+from app.models import PropertyImage, PropertyDocument
 
 router = APIRouter()
 
@@ -52,30 +52,6 @@ async def delete_image_ajax(
     if not img:
         return JSONResponse({"status": "error", "message": "Not found"}, status_code=404)
     await db.delete(img)
-    await db.commit()
-    return JSONResponse({"status": "ok"})
-
-
-@router.post("/ajax/main-page-order", dependencies=[Depends(check_admin)])
-async def reorder_main_page_ajax(
-    request: Request,
-    db: AsyncSession = Depends(get_db),
-):
-    try:
-        body = await request.json()
-        order = body.get("order")
-        if not order or not isinstance(order, list):
-            return JSONResponse({"status": "error", "message": "Expected { \"order\": [id1, id2, ...] }"}, status_code=400)
-        id_list = [int(x) for x in order if isinstance(x, (int, str)) and str(x).isdigit()]
-    except Exception:
-        return JSONResponse({"status": "error", "message": "Invalid JSON"}, status_code=400)
-    result = await db.execute(
-        select(Property).where(Property.id.in_(id_list), Property.show_on_main.is_(True))
-    )
-    props = {p.id: p for p in result.scalars().all()}
-    for idx, pid in enumerate(id_list):
-        if pid in props:
-            props[pid].main_page_order = idx + 1
     await db.commit()
     return JSONResponse({"status": "ok"})
 

@@ -67,6 +67,23 @@ window.CIAN_CATEGORIES = {
             });
             cianHidden.value = JSON.stringify(cianData);
         }
+
+        var gallery = document.getElementById('unified-gallery');
+        var orderInput = document.getElementById('gallery-order-input');
+        if (gallery && orderInput) {
+            var items = gallery.querySelectorAll('.gallery-item');
+            var order = [];
+            var newIdx = 0;
+            items.forEach(function(el) {
+                if (el.dataset.type === 'existing') {
+                    order.push('existing:' + el.dataset.imageId);
+                } else if (el.dataset.type === 'new') {
+                    order.push('new:' + newIdx);
+                    newIdx++;
+                }
+            });
+            orderInput.value = order.join(',');
+        }
     });
 
     function toggleAvitoByDealType() {

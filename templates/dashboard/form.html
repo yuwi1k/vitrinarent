@@ -188,51 +188,62 @@
         </div>
 
         <div class="tab-pane" id="pane-media" role="tabpanel">
-            {% if model and not is_copy and model.images %}
-            <div class="card mb-4">
-                <div class="card-header">Уже загруженные фото галереи <span class="text-muted small ms-2">— перетащите для смены порядка</span></div>
-                <div class="card-body">
-                    <div class="row row-cols-2 row-cols-md-4 g-3" id="existing-gallery">
-                        {% for img in model.images %}
-                        <div class="col text-center gallery-item" id="gallery-img-{{ img.id }}" data-image-id="{{ img.id }}">
-                            <span class="sort-handle d-inline-block mb-1 text-muted small cursor-grab" title="Перетащите для смены порядка" style="cursor:grab;">⋮⋮</span>
-                            <img src="{{ img.image_url if img.image_url and img.image_url.startswith('/') else '/' + (img.image_url or '') }}" alt="" class="img-thumbnail mb-2 w-100" style="height:120px;object-fit:cover;">
-                            <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="deleteImage({{ img.id }})">Удалить</button>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            {% if model and not is_copy and model.documents %}
-            <div class="card mb-4">
-                <div class="card-header">Прикреплённые документы</div>
-                <div class="list-group list-group-flush">
-                    {% for doc in model.documents %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center" id="doc-row-{{ doc.id }}">
-                        <a href="{{ doc.document_url if doc.document_url and doc.document_url.startswith('/') else '/' + (doc.document_url or '') }}" target="_blank" rel="noopener" class="me-2 text-truncate">{{ doc.title or 'Документ' }}</a>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteDocument({{ doc.id }})">Удалить</button>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
             <div class="card mb-3">
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Главное фото (превью)</label>
-                        <input type="file" name="main_image" id="input-main-image" class="form-control" accept="image/*">
-                        <div id="preview-main-image" class="mt-2 d-flex flex-wrap gap-2"></div>
+                    <label class="form-label">Главное фото (превью)</label>
+                    <input type="file" name="main_image" id="input-main-image" class="form-control" accept="image/*">
+                    <div id="preview-main-image" class="mt-2 d-flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex align-items-center">
+                    <span>Фото галереи</span>
+                    <span class="badge bg-secondary ms-2">Перетащите за ⋮⋮ для смены порядка</span>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-2 row-cols-md-4 g-3" id="unified-gallery">
+                        {% if model and not is_copy %}
+                        {% for img in model.images %}
+                        <div class="col text-center gallery-item" data-type="existing" data-image-id="{{ img.id }}">
+                            <span class="sort-handle d-inline-block mb-1 px-2 py-1 rounded bg-light border" style="cursor:grab;user-select:none;" title="Перетащите">⋮⋮</span>
+                            <img src="{{ img.image_url if img.image_url and img.image_url.startswith('/') else '/' + (img.image_url or '') }}" alt="" class="img-thumbnail mb-2 w-100" style="height:120px;object-fit:cover;">
+                            <button type="button" class="btn btn-sm btn-outline-danger w-100 btn-del-existing-img" data-id="{{ img.id }}">Удалить</button>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Доп. фото (несколько)</label>
-                        <input type="file" name="extra_images" id="input-extra-images" class="form-control" accept="image/*" multiple>
-                        <div id="preview-extra-images" class="mt-2 d-flex flex-wrap gap-2"></div>
+                    <div class="mt-3">
+                        <input type="file" name="extra_images" id="input-extra-images" class="d-none" accept="image/*" multiple>
+                        <input type="file" id="picker-extra-images" class="d-none" accept="image/*" multiple>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btn-add-images">+ Добавить фото</button>
+                        <span id="pending-images-count" class="ms-2 text-muted small"></span>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Документы (PDF, Word и т.д.)</label>
-                        <input type="file" name="extra_documents" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.odt,.ods,.odp" multiple>
+                    <input type="hidden" name="gallery_order" id="gallery-order-input" value="">
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex align-items-center">
+                    <span>Документы</span>
+                    <span class="badge bg-secondary ms-2">Перетащите за ⋮⋮ для смены порядка</span>
+                </div>
+                <div class="card-body">
+                    <div id="unified-documents" class="list-group mb-3">
+                        {% if model and not is_copy %}
+                        {% for doc in model.documents %}
+                        <div class="list-group-item d-flex align-items-center doc-item" data-type="existing" data-doc-id="{{ doc.id }}">
+                            <span class="sort-handle-doc me-2 px-2 py-1 rounded bg-light border" style="cursor:grab;user-select:none;">⋮⋮</span>
+                            <a href="{{ doc.document_url if doc.document_url and doc.document_url.startswith('/') else '/' + (doc.document_url or '') }}" target="_blank" rel="noopener" class="me-auto text-truncate">{{ doc.title or 'Документ' }}</a>
+                            <button type="button" class="btn btn-sm btn-outline-danger ms-2 btn-del-existing-doc" data-id="{{ doc.id }}">Удалить</button>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
                     </div>
+                    <input type="file" name="extra_documents" id="input-extra-documents" class="d-none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.odt,.ods,.odp" multiple>
+                    <input type="file" id="picker-extra-documents" class="d-none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.odt,.ods,.odp" multiple>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btn-add-docs">+ Добавить документы</button>
+                    <span id="pending-docs-count" class="ms-2 text-muted small"></span>
                 </div>
             </div>
         </div>
@@ -1039,14 +1050,6 @@
                         <input type="checkbox" name="is_active" class="form-check-input" id="is_active" value="1" {% if not model or model.is_active %}checked{% endif %}>
                         <label class="form-check-label" for="is_active">Активен (показывать на сайте)</label>
                     </div>
-                    <div class="form-check mb-3">
-                        <input type="checkbox" name="show_on_main" class="form-check-input" id="show_on_main" value="1" {% if model and model.show_on_main %}checked{% endif %}>
-                        <label class="form-check-label" for="show_on_main">Показывать на главной (1 из 3)</label>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Порядок на главной (1, 2 или 3)</label>
-                        <input type="number" name="main_page_order" class="form-control" value="{{ model.main_page_order or '' }}" min="1" max="3" placeholder="пусто">
-                    </div>
                 </div>
             </div>
         </div>
@@ -1142,137 +1145,327 @@
     else window.addEventListener('load', function() { if (typeof ymaps !== 'undefined') ymaps.ready(initMap); });
 })();
 
-async function deleteImage(imageId, btn) {
-    if (!confirm('Удалить фото?')) return;
-    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
-    try {
-        var r = await fetch('/dashboard/ajax/images/' + imageId, { method: 'DELETE', headers: csrfHeaders() });
-        var data = await r.json();
-        if (data.status === 'ok') {
-            var el = document.getElementById('gallery-img-' + imageId);
-            if (el) el.remove();
-            showToast('Фото удалено', 'success');
-        } else { showToast('Ошибка удаления фото', 'danger'); }
-    } catch (e) {
-        showToast('Ошибка сети: ' + e.message, 'danger');
-    }
-    if (btn) { btn.disabled = false; btn.innerHTML = '&times;'; }
-}
-
-async function deleteDocument(docId, btn) {
-    if (!confirm('Удалить документ?')) return;
-    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
-    try {
-        var r = await fetch('/dashboard/ajax/documents/' + docId, { method: 'DELETE', headers: csrfHeaders() });
-        var data = await r.json();
-        if (data.status === 'ok') {
-            var el = document.getElementById('doc-row-' + docId);
-            if (el) el.remove();
-            showToast('Документ удалён', 'success');
-        } else { showToast('Ошибка удаления документа', 'danger'); }
-    } catch (e) {
-        showToast('Ошибка сети: ' + e.message, 'danger');
-    }
-    if (btn) { btn.disabled = false; btn.innerHTML = '&times;'; }
-}
-
-(function() {
-    var gallery = document.getElementById('existing-gallery');
-    if (gallery && typeof Sortable !== 'undefined') {
-        new Sortable(gallery, {
-            animation: 150,
-            handle: '.sort-handle',
-            draggable: '.gallery-item',
-            onEnd: function() {
-                var items = gallery.querySelectorAll('.gallery-item');
-                var order = [];
-                for (var i = 0; i < items.length; i++) {
-                    var id = items[i].getAttribute('data-image-id');
-                    if (id) order.push(parseInt(id, 10));
-                }
-                if (order.length === 0) return;
-                showToast('Сохраняем порядок фото…', 'info', 2000);
-                fetch('/dashboard/ajax/images/reorder', {
-                    method: 'POST',
-                    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ order: order })
-                }).then(function(r) { return r.json(); }).then(function(data) {
-                    if (data.status === 'ok') showToast('Порядок фото сохранён', 'success');
-                    else showToast('Не удалось сохранить порядок фото', 'danger');
-                }).catch(function(e) { showToast('Ошибка сети: ' + e.message, 'danger'); });
+// Автоподстановка коммерческих полей во вкладку Авито
+(function syncCommerceToAvito() {
+    var floorInput = document.querySelector('input[name="floor_number"]');
+    var ceilingInput = document.querySelector('input[name="ceiling_height"]');
+    var powerInput = document.querySelector('input[name="power_kw"]');
+    var avitoFloor = document.querySelector('input[name="avito_Floor"]');
+    var avitoCeiling = document.querySelector('input[name="avito_CeilingHeight"]');
+    var avitoPower = document.querySelector('input[name="avito_PowerGridCapacity"]');
+    function bind(source, target, formatter) {
+        if (!source || !target) return;
+        if (typeof target.dataset.autoFrom === 'undefined') target.dataset.autoFrom = target.value || '';
+        source.addEventListener('input', function () {
+            var val = formatter ? formatter(source.value || '') : (source.value || '');
+            if (target.value === '' || target.value === target.dataset.autoFrom) {
+                target.value = val;
+                target.dataset.autoFrom = val;
             }
         });
     }
+    bind(floorInput, avitoFloor, function (v) { return v.trim(); });
+    bind(ceilingInput, avitoCeiling, function (v) { return v.replace(',', '.').trim(); });
+    bind(powerInput, avitoPower, function (v) { return v.replace(',', '.').trim(); });
+})();
 
-    // Автоподстановка коммерческих полей во вкладку Авито (этаж, высота потолков, мощность)
-    (function syncCommerceToAvito() {
-        var floorInput = document.querySelector('input[name="floor_number"]');
-        var ceilingInput = document.querySelector('input[name="ceiling_height"]');
-        var powerInput = document.querySelector('input[name="power_kw"]');
-        var avitoFloor = document.querySelector('input[name="avito_Floor"]');
-        var avitoCeiling = document.querySelector('input[name="avito_CeilingHeight"]');
-        var avitoPower = document.querySelector('input[name="avito_PowerGridCapacity"]');
-
-        function bind(source, target, formatter) {
-            if (!source || !target) return;
-            // Запоминаем исходное значение, чтобы различать авто- и ручной ввод
-            if (typeof target.dataset.autoFrom === 'undefined') {
-                target.dataset.autoFrom = target.value || '';
-            }
-            source.addEventListener('input', function () {
-                var raw = source.value || '';
-                var val = formatter ? formatter(raw) : raw;
-                // Если поле Авито пустое или до этого содержало только авто-подставленное значение — обновляем
-                if (target.value === '' || target.value === target.dataset.autoFrom) {
-                    target.value = val;
-                    target.dataset.autoFrom = val;
-                }
-            });
-        }
-
-        bind(floorInput, avitoFloor, function (v) { return v.trim(); });
-        bind(ceilingInput, avitoCeiling, function (v) { return v.replace(',', '.').trim(); });
-        bind(powerInput, avitoPower, function (v) { return v.replace(',', '.').trim(); });
-    })();
-
-    function previewImages(input, containerId) {
-        var container = document.getElementById(containerId);
+// --- Main image preview ---
+(function() {
+    var mainInput = document.getElementById('input-main-image');
+    if (!mainInput) return;
+    mainInput.addEventListener('change', function() {
+        var container = document.getElementById('preview-main-image');
         if (!container) return;
         container.innerHTML = '';
-        var files = input.files;
-        for (var i = 0; i < files.length; i++) {
-            var f = files[i];
-            if (!f.type || !f.type.startsWith('image/')) continue;
-            var reader = new FileReader();
-            reader.onload = (function(el) {
-                return function(e) {
+        for (var i = 0; i < mainInput.files.length; i++) {
+            (function(file) {
+                if (!file.type || !file.type.startsWith('image/')) return;
+                var reader = new FileReader();
+                reader.onload = function(e) {
                     var div = document.createElement('div');
                     div.className = 'border rounded p-1 bg-light';
                     var img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.alt = '';
-                    img.style.width = '80px';
-                    img.style.height = '80px';
-                    img.style.objectFit = 'cover';
+                    img.src = e.target.result; img.alt = '';
+                    img.style.cssText = 'width:80px;height:80px;object-fit:cover;';
                     div.appendChild(img);
                     container.appendChild(div);
                 };
-            })(f);
-            reader.readAsDataURL(f);
+                reader.readAsDataURL(file);
+            })(mainInput.files[i]);
+        }
+    });
+})();
+
+// --- Unified photo gallery (existing + new in one Sortable) ---
+(function() {
+    var gallery = document.getElementById('unified-gallery');
+    var picker = document.getElementById('picker-extra-images');
+    var realInput = document.getElementById('input-extra-images');
+    var btnAdd = document.getElementById('btn-add-images');
+    var countEl = document.getElementById('pending-images-count');
+    var orderInput = document.getElementById('gallery-order-input');
+    if (!gallery || !picker || !realInput || !btnAdd) return;
+
+    var fileIdCounter = 0;
+    var filesMap = {};
+    var sortableInstance = null;
+
+    btnAdd.addEventListener('click', function() { picker.click(); });
+
+    picker.addEventListener('change', function() {
+        for (var i = 0; i < picker.files.length; i++) {
+            var id = ++fileIdCounter;
+            filesMap[id] = picker.files[i];
+            appendNewImageCard(id, picker.files[i]);
+        }
+        picker.value = '';
+        syncAll();
+    });
+
+    function appendNewImageCard(id, file) {
+        var col = document.createElement('div');
+        col.className = 'col text-center gallery-item';
+        col.dataset.type = 'new';
+        col.dataset.fileId = String(id);
+
+        var handle = document.createElement('span');
+        handle.className = 'sort-handle d-inline-block mb-1 px-2 py-1 rounded bg-light border';
+        handle.style.cssText = 'cursor:grab;user-select:none;';
+        handle.textContent = '⋮⋮';
+        col.appendChild(handle);
+
+        var badge = document.createElement('span');
+        badge.className = 'badge bg-info d-block mb-1';
+        badge.textContent = 'Новое';
+        col.appendChild(badge);
+
+        var img = document.createElement('img');
+        img.className = 'img-thumbnail mb-2 w-100';
+        img.style.cssText = 'height:120px;object-fit:cover;';
+        img.alt = file.name;
+        var reader = new FileReader();
+        reader.onload = function(e) { img.src = e.target.result; };
+        reader.readAsDataURL(file);
+        col.appendChild(img);
+
+        var delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'btn btn-sm btn-outline-danger w-100';
+        delBtn.textContent = 'Убрать';
+        delBtn.addEventListener('click', function() {
+            delete filesMap[id];
+            col.remove();
+            syncAll();
+        });
+        col.appendChild(delBtn);
+
+        gallery.appendChild(col);
+    }
+
+    gallery.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-del-existing-img');
+        if (!btn) return;
+        e.preventDefault();
+        var imageId = btn.dataset.id;
+        if (!confirm('Удалить фото?')) return;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        fetch('/dashboard/ajax/images/' + imageId, { method: 'DELETE', headers: csrfHeaders() })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.status === 'ok') {
+                    var el = gallery.querySelector('[data-image-id="' + imageId + '"]');
+                    if (el) el.remove();
+                    syncAll();
+                    showToast('Фото удалено', 'success');
+                } else {
+                    showToast('Ошибка удаления фото', 'danger');
+                    btn.disabled = false; btn.textContent = 'Удалить';
+                }
+            })
+            .catch(function(err) {
+                showToast('Ошибка сети: ' + err.message, 'danger');
+                btn.disabled = false; btn.textContent = 'Удалить';
+            });
+    });
+
+    function syncAll() {
+        syncFilesToInput();
+        syncGalleryOrder();
+        updateCount();
+        initSortable();
+    }
+
+    function syncFilesToInput() {
+        var dt = new DataTransfer();
+        gallery.querySelectorAll('.gallery-item[data-type="new"]').forEach(function(el) {
+            var fid = parseInt(el.dataset.fileId);
+            if (filesMap[fid]) dt.items.add(filesMap[fid]);
+        });
+        realInput.files = dt.files;
+    }
+
+    function syncGalleryOrder() {
+        var items = gallery.querySelectorAll('.gallery-item');
+        var order = [];
+        var newIdx = 0;
+        items.forEach(function(el) {
+            if (el.dataset.type === 'existing') {
+                order.push('existing:' + el.dataset.imageId);
+            } else if (el.dataset.type === 'new') {
+                order.push('new:' + newIdx);
+                newIdx++;
+            }
+        });
+        if (orderInput) orderInput.value = order.join(',');
+    }
+
+    function updateCount() {
+        var n = Object.keys(filesMap).length;
+        if (countEl) countEl.textContent = n > 0 ? ('Новых: ' + n) : '';
+    }
+
+    function initSortable() {
+        if (sortableInstance) sortableInstance.destroy();
+        if (gallery.children.length > 1 && typeof Sortable !== 'undefined') {
+            sortableInstance = new Sortable(gallery, {
+                animation: 150,
+                handle: '.sort-handle',
+                draggable: '.gallery-item',
+                onEnd: function() { syncFilesToInput(); syncGalleryOrder(); }
+            });
         }
     }
-    var mainInput = document.getElementById('input-main-image');
-    var extraInput = document.getElementById('input-extra-images');
-    if (mainInput) {
-        mainInput.addEventListener('change', function() {
-            previewImages(mainInput, 'preview-main-image');
+
+    syncGalleryOrder();
+    initSortable();
+})();
+
+// --- Unified documents (existing + new) ---
+(function() {
+    var container = document.getElementById('unified-documents');
+    var picker = document.getElementById('picker-extra-documents');
+    var realInput = document.getElementById('input-extra-documents');
+    var btnAdd = document.getElementById('btn-add-docs');
+    var countEl = document.getElementById('pending-docs-count');
+    if (!container || !picker || !realInput || !btnAdd) return;
+
+    var fileIdCounter = 0;
+    var filesMap = {};
+    var sortableInstance = null;
+
+    btnAdd.addEventListener('click', function() { picker.click(); });
+
+    picker.addEventListener('change', function() {
+        for (var i = 0; i < picker.files.length; i++) {
+            var id = ++fileIdCounter;
+            filesMap[id] = picker.files[i];
+            appendNewDocRow(id, picker.files[i]);
+        }
+        picker.value = '';
+        syncAll();
+    });
+
+    function appendNewDocRow(id, file) {
+        var row = document.createElement('div');
+        row.className = 'list-group-item d-flex align-items-center doc-item';
+        row.dataset.type = 'new';
+        row.dataset.fileId = String(id);
+
+        var handle = document.createElement('span');
+        handle.className = 'sort-handle-doc me-2 px-2 py-1 rounded bg-light border';
+        handle.style.cssText = 'cursor:grab;user-select:none;';
+        handle.textContent = '⋮⋮';
+        row.appendChild(handle);
+
+        var badge = document.createElement('span');
+        badge.className = 'badge bg-info me-2';
+        badge.textContent = 'Новый';
+        row.appendChild(badge);
+
+        var name = document.createElement('span');
+        name.className = 'me-auto text-truncate';
+        name.textContent = file.name;
+        row.appendChild(name);
+
+        var size = document.createElement('span');
+        size.className = 'text-muted small me-3';
+        size.textContent = (file.size / 1024).toFixed(0) + ' КБ';
+        row.appendChild(size);
+
+        var delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'btn btn-sm btn-outline-danger';
+        delBtn.textContent = 'Убрать';
+        delBtn.addEventListener('click', function() {
+            delete filesMap[id];
+            row.remove();
+            syncAll();
         });
+        row.appendChild(delBtn);
+
+        container.appendChild(row);
     }
-    if (extraInput) {
-        extraInput.addEventListener('change', function() {
-            previewImages(extraInput, 'preview-extra-images');
+
+    container.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-del-existing-doc');
+        if (!btn) return;
+        e.preventDefault();
+        var docId = btn.dataset.id;
+        if (!confirm('Удалить документ?')) return;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        fetch('/dashboard/ajax/documents/' + docId, { method: 'DELETE', headers: csrfHeaders() })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.status === 'ok') {
+                    var el = container.querySelector('[data-doc-id="' + docId + '"]');
+                    if (el) el.remove();
+                    showToast('Документ удалён', 'success');
+                } else {
+                    showToast('Ошибка удаления документа', 'danger');
+                    btn.disabled = false; btn.textContent = 'Удалить';
+                }
+            })
+            .catch(function(err) {
+                showToast('Ошибка сети: ' + err.message, 'danger');
+                btn.disabled = false; btn.textContent = 'Удалить';
+            });
+    });
+
+    function syncAll() {
+        syncFilesToInput();
+        updateCount();
+        initSortable();
+    }
+
+    function syncFilesToInput() {
+        var dt = new DataTransfer();
+        container.querySelectorAll('.doc-item[data-type="new"]').forEach(function(el) {
+            var fid = parseInt(el.dataset.fileId);
+            if (filesMap[fid]) dt.items.add(filesMap[fid]);
         });
+        realInput.files = dt.files;
     }
+
+    function updateCount() {
+        var n = Object.keys(filesMap).length;
+        if (countEl) countEl.textContent = n > 0 ? ('Новых: ' + n) : '';
+    }
+
+    function initSortable() {
+        if (sortableInstance) sortableInstance.destroy();
+        if (container.children.length > 1 && typeof Sortable !== 'undefined') {
+            sortableInstance = new Sortable(container, {
+                animation: 150,
+                handle: '.sort-handle-doc',
+                draggable: '.doc-item',
+                onEnd: function() { syncFilesToInput(); }
+            });
+        }
+    }
+
+    initSortable();
 })();
 </script>
 {% endblock %}

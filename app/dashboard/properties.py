@@ -101,7 +101,6 @@ def _form_model_from_params(
         floor_number=kwargs.get("floor_number"),
         power_kw=kwargs.get("power_kw"),
         ceiling_height=kwargs.get("ceiling_height"),
-        main_page_order=kwargs.get("main_page_order"),
         avito_object_type=kwargs.get("avito_object_type"),
     )
 
@@ -127,7 +126,6 @@ async def _render_create_form_error(
     floor_number_val: Optional[int] = None,
     power_kw_val: Optional[float] = None,
     ceiling_height_val: Optional[float] = None,
-    main_page_order_val: Optional[int] = None,
     avito_type_val: Optional[str] = None,
 ):
     parents = await _get_parent_candidates(db)
@@ -138,7 +136,7 @@ async def _render_create_form_error(
         avito_data=avito_data_val, cian_data=cian_data_val,
         floors_total=floors_total_val, floor_number=floor_number_val,
         power_kw=power_kw_val, ceiling_height=ceiling_height_val,
-        main_page_order=main_page_order_val, avito_object_type=avito_type_val,
+        avito_object_type=avito_type_val,
     )
     return templates.TemplateResponse(
         "dashboard/form.html",
@@ -170,7 +168,7 @@ async def _render_edit_form_error(request: Request, db: AsyncSession, id: int, e
     building = getattr(model, "parent", None) or model
     children_list = list(getattr(building, "children", None) or [])
     building_nav_items = [(building.id, building.title or f"Объект #{building.id}", f"/dashboard/properties/edit/{building.id}")]
-    for c in sorted(children_list, key=lambda x: (getattr(x, "main_page_order") or 999, x.id)):
+    for c in sorted(children_list, key=lambda x: x.id):
         building_nav_items.append((c.id, c.title or f"Объект #{c.id}", f"/dashboard/properties/edit/{c.id}"))
     return templates.TemplateResponse(
         "dashboard/form.html",
@@ -254,8 +252,6 @@ async def create_property(
     latitude: Optional[str] = Form(None),
     longitude: Optional[str] = Form(None),
     is_active: Optional[str] = Form(None),
-    show_on_main: Optional[str] = Form(None),
-    main_page_order: Optional[int] = Form(None),
     parent_id: Optional[str] = Form(None),
     main_image: UploadFile = File(None),
     extra_images: list[UploadFile] = File([]),
@@ -282,14 +278,6 @@ async def create_property(
     slug_val = await _ensure_unique_slug(db, slug_val_input)
 
     is_active_val = is_active in ("1", "true", "on", True)
-    show_on_main_val = show_on_main in ("1", "true", "on", True)
-
-    main_page_order_val = None
-    if main_page_order is not None and str(main_page_order).strip() != "":
-        try:
-            main_page_order_val = int(main_page_order)
-        except (TypeError, ValueError):
-            main_page_order_val = None
 
     lat_val = float(latitude) if latitude and latitude.strip() else None
     lon_val = float(longitude) if longitude and longitude.strip() else None
@@ -359,11 +347,9 @@ async def create_property(
         floor_number=floor_number_val,
         power_kw=power_kw_val,
         ceiling_height=ceiling_height_val,
-        main_page_order=main_page_order_val,
         parent_id=parent_id_val,
         main_image=None,
         is_active=is_active_val,
-        show_on_main=show_on_main_val,
     )
     db.add(prop)
     await db.flush()
@@ -427,7 +413,7 @@ async def create_property(
         deal_type=deal_type, category=category, price=price, area=area, latitude=latitude, longitude=longitude,
         parent_id_val=parent_id_val, avito_data_val=avito_data_val, cian_data_val=cian_data_val,
         floors_total_val=floors_total_val, floor_number_val=floor_number_val, power_kw_val=power_kw_val,
-        ceiling_height_val=ceiling_height_val, main_page_order_val=main_page_order_val, avito_type_val=avito_type_val,
+        ceiling_height_val=ceiling_height_val, avito_type_val=avito_type_val,
     )
     if main_image and main_image.filename:
         err = _validate_upload_file(main_image, ALLOWED_IMAGE_EXTENSIONS, UPLOAD_MAX_FILE_SIZE)
@@ -504,7 +490,7 @@ async def edit_property_form(
     building = getattr(model, "parent", None) or model
     children_list = list(getattr(building, "children", None) or [])
     building_nav_items = [(building.id, building.title or f"Объект #{building.id}", f"/dashboard/properties/edit/{building.id}")]
-    for c in sorted(children_list, key=lambda x: (getattr(x, "main_page_order") or 999, x.id)):
+    for c in sorted(children_list, key=lambda x: x.id):
         building_nav_items.append((c.id, c.title or f"Объект #{c.id}", f"/dashboard/properties/edit/{c.id}"))
     return templates.TemplateResponse(
         "dashboard/form.html",
@@ -539,13 +525,12 @@ async def update_property(
     ceiling_height: Optional[str] = Form(None),
     latitude: Optional[str] = Form(None),
     longitude: Optional[str] = Form(None),
-    main_page_order: Optional[int] = Form(None),
     parent_id: Optional[str] = Form(None),
     main_image: UploadFile = File(None),
     extra_images: list[UploadFile] = File([]),
     extra_documents: list[UploadFile] = File([]),
+    gallery_order: Optional[str] = Form(None),
     is_active: Optional[str] = Form(None),
-    show_on_main: Optional[str] = Form(None),
     avito_data_json: Optional[str] = Form(None),
     cian_data_json: Optional[str] = Form(None),
 ):
@@ -565,14 +550,6 @@ async def update_property(
     slug_val = await _ensure_unique_slug(db, slug_val_input, exclude_id=id)
 
     is_active_val = is_active in ("1", "true", "on", True)
-    show_on_main_val = show_on_main in ("1", "true", "on", True)
-
-    main_page_order_val = None
-    if main_page_order is not None and str(main_page_order).strip() != "":
-        try:
-            main_page_order_val = int(main_page_order)
-        except (TypeError, ValueError):
-            main_page_order_val = None
 
     lat_val = float(latitude) if latitude and latitude.strip() else None
     lon_val = float(longitude) if longitude and longitude.strip() else None
@@ -643,8 +620,6 @@ async def update_property(
     prop.power_kw = power_kw_val
     prop.ceiling_height = ceiling_height_val
     prop.is_active = is_active_val
-    prop.show_on_main = show_on_main_val
-    prop.main_page_order = main_page_order_val
     prop.parent_id = parent_id_val
 
     street_slug = await _get_street_slug_for_property(db, prop)
@@ -665,9 +640,31 @@ async def update_property(
                 f.write(data)
         prop.main_image = normalize_image_url(dest)
 
-    next_order = 0
+    new_sort_orders: dict[int, int] = {}
+    if gallery_order and gallery_order.strip():
+        items = [x.strip() for x in gallery_order.split(",") if x.strip()]
+        for pos, item in enumerate(items):
+            parts = item.split(":")
+            if len(parts) == 2 and parts[0] == "existing":
+                try:
+                    img_id = int(parts[1])
+                    await db.execute(
+                        update(PropertyImage)
+                        .where(PropertyImage.id == img_id, PropertyImage.property_id == id)
+                        .values(sort_order=pos)
+                    )
+                except (ValueError, TypeError):
+                    pass
+            elif len(parts) == 2 and parts[0] == "new":
+                try:
+                    new_sort_orders[int(parts[1])] = pos
+                except (ValueError, TypeError):
+                    pass
+
     max_order_r = await db.execute(select(func.max(PropertyImage.sort_order)).where(PropertyImage.property_id == id))
-    next_order = (max_order_r.scalar() or 0) + 1
+    fallback_order = (max_order_r.scalar() or 0) + 1
+
+    valid_file_idx = 0
     for f in extra_images or []:
         if not f or not f.filename:
             continue
@@ -684,8 +681,10 @@ async def update_property(
             dest = os.path.join(images_dir, f"{uuid.uuid4()}{ext}")
             with open(dest, "wb") as out:
                 out.write(data)
-        img = PropertyImage(property_id=prop.id, image_url=normalize_image_url(dest), sort_order=next_order)
-        next_order += 1
+        sort_val = new_sort_orders.get(valid_file_idx, fallback_order)
+        fallback_order = max(fallback_order, sort_val + 1)
+        img = PropertyImage(property_id=prop.id, image_url=normalize_image_url(dest), sort_order=sort_val)
+        valid_file_idx += 1
         db.add(img)
 
     for f in extra_documents or []:
@@ -764,9 +763,8 @@ async def bulk_action(
             id_list.append(int(i))
         except (TypeError, ValueError):
             pass
-    if not id_list or action not in ("activate", "deactivate", "show_on_main", "hide_from_main", "delete"):
+    if not id_list or action not in ("activate", "deactivate", "delete"):
         return RedirectResponse(url="/dashboard/properties", status_code=303)
-    # Массовые действия только по корневым объектам (parent_id is None)
     base_ids = [i for i in id_list]
     base = update(Property).where(Property.id.in_(base_ids), Property.parent_id.is_(None))
     if action == "activate":
@@ -777,14 +775,6 @@ async def bulk_action(
         await db.execute(base.values(is_active=False))
         await db.commit()
         add_flash(request, f"Снято с публикации: {len(base_ids)}.", "success")
-    elif action == "show_on_main":
-        await db.execute(base.values(show_on_main=True))
-        await db.commit()
-        add_flash(request, f"Добавлено на главную: {len(base_ids)}.", "success")
-    elif action == "hide_from_main":
-        await db.execute(base.values(show_on_main=False))
-        await db.commit()
-        add_flash(request, f"Убрано с главной: {len(base_ids)}.", "success")
     elif action == "delete":
         # Удаляем выбранные объекты вместе с дочерними (эквивалент delete_children=1)
         for pid in base_ids:

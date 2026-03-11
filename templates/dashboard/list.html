@@ -86,8 +86,6 @@
                 <span class="text-muted small me-2">Массовые действия:</span>
                 <button type="submit" name="action" value="activate" class="btn btn-sm btn-outline-success">Опубликовать</button>
                 <button type="submit" name="action" value="deactivate" class="btn btn-sm btn-outline-warning">Снять с публикации</button>
-                <button type="submit" name="action" value="show_on_main" class="btn btn-sm btn-outline-primary">На главную</button>
-                <button type="submit" name="action" value="hide_from_main" class="btn btn-sm btn-outline-secondary">Убрать с главной</button>
                 <button type="button" class="btn btn-sm btn-outline-danger" id="btn-bulk-delete">
                     Удалить выбранные
                 </button>
@@ -140,9 +138,6 @@
                         <span class="badge bg-green text-white">Активен</span>
                         {% else %}
                         <span class="badge bg-red text-white">Скрыт</span>
-                        {% endif %}
-                        {% if parent.show_on_main %}
-                        <span class="badge bg-blue-lt">На главной</span>
                         {% endif %}
                         {% if parent.is_on_avito %}
                         <span class="badge bg-purple-lt">Avito</span>
