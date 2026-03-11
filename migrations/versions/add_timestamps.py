@@ -18,7 +18,7 @@ depends_on = None
 def upgrade():
     op.add_column("properties", sa.Column("created_at", sa.DateTime(timezone=True), nullable=True))
     op.add_column("properties", sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True))
-    op.execute("UPDATE properties SET created_at = NOW(), updated_at = NOW() WHERE created_at IS NULL")
+    op.execute(sa.text("UPDATE properties SET created_at = NOW(), updated_at = NOW() WHERE created_at IS NULL"))
 
 
 def downgrade():
