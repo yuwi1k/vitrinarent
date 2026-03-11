@@ -1,6 +1,9 @@
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from sqlalchemy import select, or_
 from app.models import Property
+
+
+BUILDING_PREVIEW_COUNT = 3
 
 
 def _parse_int(value: Optional[str]) -> Optional[int]:
@@ -21,6 +24,65 @@ def _parse_float(value: Optional[str]) -> Optional[float]:
         return None
 
 
+def group_properties_by_building(
+    properties: list,
+    has_active_filters: bool = False,
+) -> List[Dict[str, Any]]:
+    """Group a flat list of properties into building groups + standalones.
+
+    Returns list of dicts:
+      - group:      {"type": "building", "building": Property, "units": [...], "total_units": int}
+      - standalone: {"type": "standalone", "property": Property}
+    """
+    building_map: Dict[int, Dict[str, Any]] = {}
+    standalones: list = []
+
+    for prop in properties:
+        if prop.parent_id is not None:
+            bid = prop.parent_id
+            if bid not in building_map:
+                building_map[bid] = {"building": prop.parent, "units": []}
+            building_map[bid]["units"].append(prop)
+        else:
+            active_children = [c for c in (prop.children or []) if c.is_active]
+            if active_children:
+                if prop.id not in building_map:
+                    building_map[prop.id] = {"building": prop, "units": []}
+                else:
+                    building_map[prop.id]["building"] = prop
+            else:
+                standalones.append(prop)
+
+    groups: List[Dict[str, Any]] = []
+
+    for data in building_map.values():
+        building = data["building"]
+        matched = data["units"]
+        all_active = [c for c in (building.children or []) if c.is_active] if building else []
+
+        if not matched:
+            units = all_active
+        elif has_active_filters:
+            units = matched
+        else:
+            units = all_active
+
+        groups.append({
+            "type": "building",
+            "building": building,
+            "units": units,
+            "total_units": len(all_active),
+        })
+
+    for prop in standalones:
+        groups.append({
+            "type": "standalone",
+            "property": prop,
+        })
+
+    return groups
+
+
 def build_search_query(
     q: Optional[str] = None,
     deal_type: Optional[str] = None,
@@ -35,7 +97,7 @@ def build_search_query(
 
     stmt = select(Property).where(Property.is_active == True).options(
         selectinload(Property.children),
-        selectinload(Property.parent),
+        selectinload(Property.parent).selectinload(Property.children),
     )
 
     if object_type == "building":

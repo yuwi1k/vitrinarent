@@ -188,30 +188,47 @@
         </div>
 
         <div class="tab-pane" id="pane-media" role="tabpanel">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <label class="form-label">Главное фото (превью)</label>
-                    <input type="file" name="main_image" id="input-main-image" class="form-control" accept="image/*">
-                    <div id="preview-main-image" class="mt-2 d-flex flex-wrap gap-2"></div>
-                </div>
-            </div>
-
+            {% if model and model.images %}
             <div class="card mb-4">
-                <div class="card-header d-flex align-items-center">
-                    <span>Фото галереи</span>
-                    <span class="badge bg-secondary ms-2">Перетащите за ⋮⋮ для смены порядка</span>
+                <div class="card-header">
+                    {% if is_copy %}Фото исходного объекта <span class="text-muted small ms-2">(будут скопированы при сохранении)</span>{% else %}Уже загруженные фото галереи <span class="text-muted small ms-2">— перетащите для смены порядка</span>{% endif %}
                 </div>
                 <div class="card-body">
-                    <div class="row row-cols-2 row-cols-md-4 g-3" id="unified-gallery">
-                        {% if model and not is_copy %}
+                    <div class="row row-cols-2 row-cols-md-4 g-3" id="existing-gallery">
                         {% for img in model.images %}
-                        <div class="col text-center gallery-item" data-type="existing" data-image-id="{{ img.id }}">
-                            <span class="sort-handle d-inline-block mb-1 px-2 py-1 rounded bg-light border" style="cursor:grab;user-select:none;" title="Перетащите">⋮⋮</span>
+                        <div class="col text-center gallery-item" id="gallery-img-{{ img.id }}" data-image-id="{{ img.id }}">
+                            {% if not is_copy %}<span class="sort-handle d-inline-block mb-1 text-muted small cursor-grab" title="Перетащите для смены порядка" style="cursor:grab;">⋮⋮</span>{% endif %}
                             <img src="{{ img.image_url if img.image_url and img.image_url.startswith('/') else '/' + (img.image_url or '') }}" alt="" class="img-thumbnail mb-2 w-100" style="height:120px;object-fit:cover;">
-                            <button type="button" class="btn btn-sm btn-outline-danger w-100 btn-del-existing-img" data-id="{{ img.id }}">Удалить</button>
+                            {% if not is_copy %}<button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="deleteImage({{ img.id }})">Удалить</button>{% endif %}
                         </div>
                         {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if model and model.documents %}
+            <div class="card mb-4">
+                <div class="card-header">{% if is_copy %}Документы исходного объекта <span class="text-muted small ms-2">(будут скопированы при сохранении)</span>{% else %}Прикреплённые документы{% endif %}</div>
+                <div class="list-group list-group-flush">
+                    {% for doc in model.documents %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center" id="doc-row-{{ doc.id }}">
+                        <a href="{{ doc.document_url if doc.document_url and doc.document_url.startswith('/') else '/' + (doc.document_url or '') }}" target="_blank" rel="noopener" class="me-2 text-truncate">{{ doc.title or 'Документ' }}</a>
+                        {% if not is_copy %}<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteDocument({{ doc.id }})">Удалить</button>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Главное фото (превью)</label>
+                        {% if is_copy and model and model.main_image %}
+                        <p class="text-muted small mb-2">Главное фото исходного объекта будет скопировано, если не выбрать новый файл.</p>
+                        <img src="{{ model.main_image if (model.main_image or '')[:1] == '/' else '/' + (model.main_image or '') }}" alt="" class="img-thumbnail mb-2" style="max-height:120px;object-fit:cover;">
                         {% endif %}
+                        <input type="file" name="main_image" id="input-main-image" class="form-control" accept="image/*">
+                        <div id="preview-main-image" class="mt-2 d-flex flex-wrap gap-2"></div>
                     </div>
                     <div class="mt-3">
                         <input type="file" name="extra_images" id="input-extra-images" class="d-none" accept="image/*" multiple>

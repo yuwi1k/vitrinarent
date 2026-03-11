@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +8,7 @@
     <link rel="shortcut icon" href="/static/images/favicon.png" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
 </head>
+
 <body class="d-flex flex-column">
     <div class="page page-center">
         <div class="container container-tight py-4">
@@ -26,11 +28,13 @@
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
                         <div class="mb-3">
                             <label class="form-label" for="username">Логин</label>
-                            <input type="text" class="form-control" id="username" name="username" placeholder="admin" autocomplete="username" value="{{ username or '' }}" required>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="admin"
+                                autocomplete="username" value="{{ username or '' }}" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="password">Пароль</label>
-                            <input type="password" class="form-control" id="password" name="password" placeholder="Пароль" autocomplete="current-password" required>
+                            <input type="password" class="form-control" id="password" name="password"
+                                placeholder="Пароль" autocomplete="current-password" required>
                         </div>
                         <div class="form-footer">
                             <button type="submit" class="btn btn-primary w-100">Войти</button>
@@ -45,4 +49,5 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
 </body>
+
 </html>

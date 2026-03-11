@@ -221,7 +221,11 @@ async def copy_property_form(
     id: int,
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(Property).where(Property.id == id))
+    stmt = select(Property).options(
+        selectinload(Property.images),
+        selectinload(Property.documents),
+    ).where(Property.id == id)
+    result = await db.execute(stmt)
     source = result.scalars().one_or_none()
     if not source:
         raise HTTPException(status_code=404, detail="Объект не найден")

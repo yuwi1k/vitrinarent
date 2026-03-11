@@ -21,7 +21,7 @@ from app.database import get_db
 from app.models import Property
 from app.feed import generate_avito_feed
 from app.feed_cian import generate_cian_feed
-from app.services import build_search_query
+from app.services import build_search_query, group_properties_by_building, BUILDING_PREVIEW_COUNT
 from app.settings_store import get_public_contacts
 
 from datetime import datetime as _dt
@@ -119,16 +119,13 @@ async def search_page(
     object_type: Optional[str] = Query(None, description="building|unit"),
 ):
     stmt = build_search_query(q, deal_type, category, min_price, max_price, min_area, max_area, object_type)
-
-    count_stmt = select(func.count()).select_from(stmt.subquery())
-    total_items = (await db.execute(count_stmt)).scalar() or 0
-    total_pages = math.ceil(total_items / PAGE_SIZE_PUBLIC) if total_items > 0 else 1
-
     stmt_ordered = _search_order_by(stmt, sort)
 
-    # Все отфильтрованные объекты для карты (без пагинации)
-    result_map = await db.execute(stmt_ordered)
-    all_filtered = result_map.scalars().all()
+    result_all = await db.execute(stmt_ordered)
+    all_filtered = result_all.unique().scalars().all()
+
+    total_items = len(all_filtered)
+
     map_properties = [
         {
             "id": p.id,
@@ -145,21 +142,27 @@ async def search_page(
         if p.latitude is not None and p.longitude is not None
     ]
 
-    stmt_page = stmt_ordered.offset((page - 1) * PAGE_SIZE_PUBLIC).limit(PAGE_SIZE_PUBLIC)
-    result = await db.execute(stmt_page)
-    properties = result.scalars().all()
-    pages = list(range(1, total_pages + 1))
+    has_active_filters = bool(
+        (deal_type and deal_type != "Все")
+        or (category and category != "Все")
+        or q
+        or min_price
+        or max_price
+        or min_area
+        or max_area
+        or object_type
+    )
+
+    building_groups = group_properties_by_building(all_filtered, has_active_filters)
 
     return templates.TemplateResponse(
         "search.html",
         {
             "request": request,
             "base_url": _base_url(request),
-            "properties": properties,
-            "page": page,
-            "total_pages": total_pages,
+            "building_groups": building_groups,
             "total_items": total_items,
-            "pages": pages,
+            "preview_count": BUILDING_PREVIEW_COUNT,
             "map_properties": map_properties,
             "map_properties_json": json.dumps(map_properties),
             "yandex_maps_api_key": os.getenv("YANDEX_MAPS_API_KEY", ""),
@@ -172,6 +175,7 @@ async def search_page(
             "max_area": max_area,
             "sort": sort or "date_desc",
             "object_type": object_type or "",
+            "has_active_filters": has_active_filters,
             **get_public_contacts(),
         },
     )
