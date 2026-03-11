@@ -113,32 +113,45 @@ def build_search_query(
     if category and category != "Все":
         stmt = stmt.where(Property.category == category)
 
-    # Цена: введённое значение используется как центр диапазона ±30%
-    price_vals = []
+    # Цена: диапазон расширяется на ±30% от указанных границ
     min_price_val = _parse_int(min_price)
     max_price_val = _parse_int(max_price)
-    if min_price_val is not None:
-        price_vals.append(min_price_val)
-    if max_price_val is not None and max_price_val != min_price_val:
-        price_vals.append(max_price_val)
-    if price_vals:
-        center_price = sum(price_vals) / len(price_vals)
-        low_price = int(center_price * 0.7)
-        high_price = int(center_price * 1.3)
-        stmt = stmt.where(Property.price >= low_price, Property.price <= high_price)
+    if min_price_val is not None and max_price_val is not None:
+        # Оба значения: расширяем диапазон с обеих сторон
+        stmt = stmt.where(
+            Property.price >= int(min_price_val * 0.7),
+            Property.price <= int(max_price_val * 1.3),
+        )
+    elif min_price_val is not None:
+        # Только нижняя граница: ±30% от неё как единственного значения
+        stmt = stmt.where(
+            Property.price >= int(min_price_val * 0.7),
+            Property.price <= int(min_price_val * 1.3),
+        )
+    elif max_price_val is not None:
+        # Только верхняя граница: ±30% от неё как единственного значения
+        stmt = stmt.where(
+            Property.price >= int(max_price_val * 0.7),
+            Property.price <= int(max_price_val * 1.3),
+        )
 
-    # Площадь: введённое значение используется как центр диапазона ±30%
-    area_vals = []
+    # Площадь: диапазон расширяется на ±30% от указанных границ
     min_area_val = _parse_float(min_area)
     max_area_val = _parse_float(max_area)
-    if min_area_val is not None:
-        area_vals.append(min_area_val)
-    if max_area_val is not None and max_area_val != min_area_val:
-        area_vals.append(max_area_val)
-    if area_vals:
-        center_area = sum(area_vals) / len(area_vals)
-        low_area = center_area * 0.7
-        high_area = center_area * 1.3
-        stmt = stmt.where(Property.area >= low_area, Property.area <= high_area)
+    if min_area_val is not None and max_area_val is not None:
+        stmt = stmt.where(
+            Property.area >= min_area_val * 0.7,
+            Property.area <= max_area_val * 1.3,
+        )
+    elif min_area_val is not None:
+        stmt = stmt.where(
+            Property.area >= min_area_val * 0.7,
+            Property.area <= min_area_val * 1.3,
+        )
+    elif max_area_val is not None:
+        stmt = stmt.where(
+            Property.area >= max_area_val * 0.7,
+            Property.area <= max_area_val * 1.3,
+        )
 
     return stmt

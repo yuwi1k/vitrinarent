@@ -58,6 +58,34 @@ def _sanitize_html(value: Optional[str]) -> str:
 templates.env.filters["sanitize_html"] = _sanitize_html
 
 
+def _fmt_area(value) -> str:
+    """Format area: drop .0 for whole numbers, keep one decimal otherwise."""
+    if value is None:
+        return "—"
+    f = float(value)
+    if f == int(f):
+        return f"{int(f):,}".replace(",", " ")
+    return f"{f:,.1f}".replace(",", " ")
+
+
+templates.env.filters["fmt_area"] = _fmt_area
+
+_SHORT_CATEGORY = {
+    "Свободного назначения": "Свободное",
+    "Торговая площадь": "Торговое",
+    "Промышленное": "Промышленное",
+}
+
+
+def _short_category(value) -> str:
+    if not value:
+        return "—"
+    return _SHORT_CATEGORY.get(value, value)
+
+
+templates.env.filters["short_cat"] = _short_category
+
+
 @router.get("/")
 async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
     stmt_count = select(func.count()).select_from(Property).where(Property.is_active == True)
@@ -283,14 +311,12 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
     display_for_media = (getattr(property, "parent", None) if property.parent and not has_own_media else None) or property
 
     if getattr(property, "parent", None):
-        available_units = []
-        if building.is_active:
-            available_units.append(building)
-        for child in building.children or []:
-            if child.is_active and child.id != property.id:
-                available_units.append(child)
+        available_units = [
+            child for child in (building.children or [])
+            if child.is_active and child.id != property.id
+        ]
     else:
-        available_units = [child for child in (building.children or []) if child.is_active]
+        available_units = []
 
     site_url = _base_url(request)
     return templates.TemplateResponse(

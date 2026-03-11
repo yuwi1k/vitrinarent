@@ -246,48 +246,59 @@
                   </a>
                   <div class="building-group__info">
                     <div class="building-group__top">
-                      <span class="building-group__badge">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9l0 .01"/><path d="M9 12l0 .01"/><path d="M9 15l0 .01"/></svg>
-                        Здание
-                      </span>
                       {% if bld.deal_type == 'Аренда' %}<span class="building-group__deal building-group__deal--rent">Аренда</span>{% elif bld.deal_type == 'Продажа' %}<span class="building-group__deal building-group__deal--sale">Продажа</span>{% endif %}
                     </div>
                     <h3 class="building-group__title"><a href="/property/{{ bld.slug or bld.id }}">{{ bld.title or bld.address or 'Здание' }}</a></h3>
                     <p class="building-group__address">{{ bld.address or '' }}</p>
-                    {% if units %}
-                    {% set prices = units|map(attribute='price')|select('ne', None)|list %}
-                    {% set areas = units|map(attribute='area')|select('ne', None)|list %}
-                    <div class="building-group__stats">
-                      {% set n = units|length %}
-                      <span class="building-group__stat">{{ n }} {{ 'помещение' if n % 10 == 1 and n % 100 != 11 else 'помещения' if n % 10 in [2,3,4] and n % 100 not in [12,13,14] else 'помещений' }}</span>
-                      {% if areas %}
-                      <span class="building-group__stat">{{ "{:,.0f}".format(areas|min).replace(',', ' ') }}–{{ "{:,.0f}".format(areas|max).replace(',', ' ') }} м²</span>
+                    <div class="building-group__offer">
+                      <div class="building-group__price">{{ "{:,.0f}".format(bld.price).replace(',', ' ') }} ₽{% if bld.deal_type == 'Аренда' %}<span class="building-group__price-suffix">/мес</span>{% endif %}</div>
+                      {% if bld.area and bld.price and bld.area > 0 %}
+                      <span class="building-group__price-perm2">{{ "{:,.0f}".format(bld.price // bld.area).replace(',', ' ') }} ₽/м²</span>
                       {% endif %}
-                      {% if prices %}
-                      <span class="building-group__stat">от {{ "{:,.0f}".format(prices|min).replace(',', ' ') }} ₽</span>
+                      {% if bld.area %}
+                      <span class="building-group__stat">{{ bld.area|fmt_area }} м²</span>
                       {% endif %}
                     </div>
-                    {% endif %}
-                    <a href="/property/{{ bld.slug or bld.id }}" class="btn btn-outline btn-sm">О здании</a>
+                    <a href="/property/{{ bld.slug or bld.id }}" class="btn btn-outline btn-sm">Подробнее</a>
                   </div>
                 </div>
 
                 {% if visible %}
+                <div class="building-group__units-header">
+                  {% set n = units|length %}
+                  {% set prices = units|map(attribute='price')|select('ne', None)|list %}
+                  {% set areas = units|map(attribute='area')|select('ne', None)|list %}
+                  <svg class="building-group__units-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  {% set unit_deal_types = units|map(attribute='deal_type')|unique|list %}
+                  <span>Помещения в этом здании {% if unit_deal_types|length == 1 %}{{ 'в аренду' if unit_deal_types[0] == 'Аренда' else 'на продажу' }}{% endif %}</span>
+                  <span class="building-group__units-count">{{ n }} шт.</span>
+                  {% if areas %}
+                  <span class="building-group__units-meta">{% if areas|min == areas|max %}{{ areas|min|fmt_area }}{% else %}{{ areas|min|fmt_area }}–{{ areas|max|fmt_area }}{% endif %} м²</span>
+                  {% endif %}
+                  {% if prices %}
+                  <span class="building-group__units-meta">от {{ "{:,.0f}".format(prices|min).replace(',', ' ') }} ₽</span>
+                  {% endif %}
+                </div>
+                <div class="unit-row unit-row--head">
+                  <span>Назначение</span>
+                  <span>Площадь</span>
+                  <span>Цена</span>
+                  <span>Цена за м²</span>
+                  <span></span>
+                </div>
                 <div class="building-group__units">
                   {% for unit in visible %}
-                  <a class="unit-row" href="/property/{{ unit.slug or unit.id }}">
-                    <span class="unit-row__category">{{ unit.category or '—' }}</span>
-                    <span class="unit-row__area">{{ unit.area or '—' }} м²</span>
+                  <div class="unit-row">
+                    <span class="unit-row__category">{{ unit.category|short_cat }}</span>
+                    <span class="unit-row__area">{{ unit.area|fmt_area }} м²</span>
                     <span class="unit-row__price">{{ "{:,.0f}".format(unit.price).replace(',', ' ') }} ₽{% if unit.deal_type == 'Аренда' %}<small>/мес</small>{% endif %}</span>
                     {% if unit.area and unit.price and unit.area > 0 %}
                     <span class="unit-row__perm2">{{ "{:,.0f}".format(unit.price // unit.area).replace(',', ' ') }} ₽/м²</span>
                     {% else %}
                     <span class="unit-row__perm2"></span>
                     {% endif %}
-                    <span class="unit-row__arrow">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                    </span>
-                  </a>
+                    <a href="/property/{{ unit.slug or unit.id }}" class="btn btn-outline btn-sm unit-row__btn">Подробнее</a>
+                  </div>
                   {% endfor %}
                 </div>
                 {% endif %}
@@ -295,19 +306,17 @@
                 {% if hidden %}
                 <div class="building-group__units building-group__units--hidden" data-hidden-units>
                   {% for unit in hidden %}
-                  <a class="unit-row" href="/property/{{ unit.slug or unit.id }}">
-                    <span class="unit-row__category">{{ unit.category or '—' }}</span>
-                    <span class="unit-row__area">{{ unit.area or '—' }} м²</span>
+                  <div class="unit-row">
+                    <span class="unit-row__category">{{ unit.category|short_cat }}</span>
+                    <span class="unit-row__area">{{ unit.area|fmt_area }} м²</span>
                     <span class="unit-row__price">{{ "{:,.0f}".format(unit.price).replace(',', ' ') }} ₽{% if unit.deal_type == 'Аренда' %}<small>/мес</small>{% endif %}</span>
                     {% if unit.area and unit.price and unit.area > 0 %}
                     <span class="unit-row__perm2">{{ "{:,.0f}".format(unit.price // unit.area).replace(',', ' ') }} ₽/м²</span>
                     {% else %}
                     <span class="unit-row__perm2"></span>
                     {% endif %}
-                    <span class="unit-row__arrow">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                    </span>
-                  </a>
+                    <a href="/property/{{ unit.slug or unit.id }}" class="btn btn-outline btn-sm unit-row__btn">Подробнее</a>
+                  </div>
                   {% endfor %}
                 </div>
                 {% set hn = hidden|length %}
@@ -340,7 +349,7 @@
                     <h3 class="object-title">{{ property.title }}</h3>
                     <p class="object-address">{{ property.address or '—' }}</p>
                     <div class="object-metrics">
-                      <span class="metric">{{ property.area or '—' }} м²</span>
+                      <span class="metric">{{ property.area|fmt_area }} м²</span>
                     </div>
                     <a href="/property/{{ property.slug or property.id }}" class="btn btn-outline btn-block">Подробнее</a>
                   </div>

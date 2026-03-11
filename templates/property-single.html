@@ -123,7 +123,7 @@
 
           {% if property.parent %}
           <div class="prop-parent">
-            Помещение в <a href="/property/{{ property.parent.slug or property.parent.id }}">здании</a> · {{ property.parent.address }}
+            Помещение в здании: <a href="/property/{{ property.parent.slug or property.parent.id }}">{{ property.parent.title or property.parent.address or 'Перейти к зданию' }}</a>
           </div>
           {% endif %}
 
@@ -145,7 +145,7 @@
 
           {% if available_units %}
           <section class="prop-section">
-            <h2 class="prop-section__title">Доступные площади</h2>
+            <h2 class="prop-section__title">Помещения в этом здании</h2>
             <div class="prop-units">
               {% for child in available_units %}
               <a href="/property/{{ child.slug or child.id }}" class="prop-unit">
