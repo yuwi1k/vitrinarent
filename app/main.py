@@ -37,6 +37,15 @@ def _login_url(request: Request) -> str:
     return "/dashboard/login"
 
 
+class SiteDetectionMiddleware(BaseHTTPMiddleware):
+    """Sets request.state.site based on Host header."""
+    async def dispatch(self, request: Request, call_next):
+        from app.sites import get_site_by_host
+        host = request.headers.get("host", "localhost")
+        request.state.site = get_site_by_host(host)
+        return await call_next(request)
+
+
 class RequireDashboardAuthMiddleware(BaseHTTPMiddleware):
     """Редирект на /dashboard/login при заходе на /dashboard без авторизации (кроме /dashboard/login)."""
     async def dispatch(self, request: Request, call_next):
@@ -316,6 +325,7 @@ async def robots_txt(request: Request) -> PlainTextResponse:
 app.add_middleware(LoginRateLimitMiddleware)
 app.add_middleware(RequireDashboardAuthMiddleware)
 app.add_middleware(CSRFMiddleware)
+app.add_middleware(SiteDetectionMiddleware)
 _is_production = os.getenv("ENVIRONMENT", "").lower() == "production"
 app.add_middleware(
     SessionMiddleware,

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Объекты на карте — АО Диапазон</title>
+  <meta name="description" content="Коммерческая недвижимость на карте: офисы, склады, торговые площади от АО Диапазон." />
+  <link rel="shortcut icon" href="/static/diapazon/images/favicon.png" />
+  <link rel="canonical" href="{{ base_url }}/map" />
+  <meta property="og:title" content="Объекты на карте — АО Диапазон" />
+  <meta property="og:description" content="Коммерческая недвижимость на карте: офисы, склады, торговые площади от АО Диапазон." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ base_url }}/map" />
+  <meta property="og:image" content="{{ base_url }}/static/diapazon/images/og-default.png" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Объекты на карте — АО Диапазон" />
+  <meta name="twitter:description" content="Коммерческая недвижимость на карте: офисы, склады, торговые площади от АО Диапазон." />
+  <meta name="twitter:image" content="{{ base_url }}/static/diapazon/images/og-default.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
+  <link rel="stylesheet" href="{{ site_css }}" />
+</head>
+<body class="map-page">
+  <a href="#main-content" class="skip-link">Перейти к содержимому</a>
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">{{ site_logo }}</a>
+      <nav class="nav" id="nav">
+        {% for item in nav_items %}
+        <a href="{{ item.url }}" class="nav-link{% if item.id == 'map' %} active{% endif %}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="map-layout" id="main-content">
+    <aside class="map-sidebar" id="map-sidebar">
+      <div class="map-sidebar-header">
+        <h1 class="map-sidebar-title">На карте</h1>
+        <span class="map-sidebar-count" id="sidebar-count">{{ total_items }}</span>
+      </div>
+
+      <div class="map-deal-btns" id="map-deal-btns">
+        <button class="map-cat-btn active" data-deal="">Все сделки</button>
+        <button class="map-cat-btn" data-deal="Аренда">Аренда</button>
+        <button class="map-cat-btn" data-deal="Продажа">Продажа</button>
+      </div>
+
+      <div class="map-categories" id="map-categories">
+        <button class="map-cat-btn active" data-cat="">Все</button>
+        <button class="map-cat-btn" data-cat="Офис">Офисы</button>
+        <button class="map-cat-btn" data-cat="Торговая площадь">Магазины</button>
+        <button class="map-cat-btn" data-cat="Склад">Склады</button>
+        <button class="map-cat-btn" data-cat="Здание">Здания</button>
+        <button class="map-cat-btn" data-cat="Промышленное">Производство</button>
+        <button class="map-cat-btn" data-cat="ГАБ">ГАБ</button>
+        <button class="map-cat-btn" data-cat="Автосервис">Автосервисы</button>
+      </div>
+
+      <div class="map-sidebar-list" id="map-sidebar-list">
+        {% for p in map_properties %}
+        <div class="map-card" data-id="{{ p.id }}" data-lat="{{ p.latitude }}" data-lng="{{ p.longitude }}" data-cat="{{ p.category }}" data-deal="{{ p.deal_type }}" data-href="/property/{{ p.slug or p.id }}">
+          <div class="map-card-img">
+            {% if p.main_image %}
+            <img src="{{ p.main_image }}" alt="{{ p.title or p.address or 'Объект недвижимости' }}" loading="lazy" />
+            {% else %}
+            <div class="map-card-img-placeholder"></div>
+            {% endif %}
+            {% if p.category %}<span class="map-card-badge">{{ p.category }}</span>{% endif %}
+          </div>
+          <div class="map-card-info">
+            <div class="map-card-price">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽{% if p.deal_type == 'Аренда' %}<span>/мес</span>{% endif %}</div>
+            {% if p.area and p.price and p.area > 0 %}
+            <div class="map-card-price-per-m2">{{ "{:,.0f}".format(p.price // p.area).replace(',', ' ') }} ₽/м²{% if p.deal_type == 'Аренда' %} в мес{% endif %}</div>
+            {% endif %}
+            <div class="map-card-title">{{ p.title }}</div>
+            {% if p.area %}<div class="map-card-meta">{{ p.area }} м²</div>{% endif %}
+            <div class="map-card-address">{{ p.address }}</div>
+            <a href="/property/{{ p.slug or p.id }}" class="map-card-link">Подробнее →</a>
+          </div>
+        </div>
+        {% endfor %}
+
+        {% if not map_properties %}
+        <div class="map-sidebar-empty">Объектов с координатами не найдено</div>
+        {% endif %}
+      </div>
+    </aside>
+
+    <div class="map-canvas" id="map"></div>
+  </main>
+
+  <script src="/static/js/vitrina-asset.js"></script>
+  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU{% if yandex_maps_api_key %}&apikey={{ yandex_maps_api_key }}{% endif %}&load=package.full" async></script>
+  <script>
+  (function() {
+    var props = {{ map_properties_json | safe }};
+    if (!Array.isArray(props)) props = [];
+
+    var activeCategory = '';
+    var activeDeal = '';
+    var ymap, clusterer;
+    var allPlacemarks = [];
+    var pmById = {};
+    var sidebarList;
+
+    function shortPrice(n) {
+      if (n == null) return '—';
+      if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + 'М';
+      if (n >= 1000) return Math.round(n / 1000) + 'К';
+      return String(n);
+    }
+
+    function updateCount() {
+      var vis = document.querySelectorAll('.map-card:not([style*="display: none"])');
+      document.getElementById('sidebar-count').textContent = vis.length;
+    }
+
+    function matchFilters(c) {
+      var catOk = !activeCategory || c.dataset.cat === activeCategory;
+      var dealOk = !activeDeal || c.dataset.deal === activeDeal;
+      return catOk && dealOk;
+    }
+
+    function showAll() {
+      document.querySelectorAll('.map-card').forEach(function(c) {
+        c.style.display = matchFilters(c) ? '' : 'none';
+        c.classList.remove('active');
+      });
+      updateCount();
+    }
+
+    function showOnly(ids) {
+      var set = {};
+      ids.forEach(function(id) { set[id] = true; });
+      document.querySelectorAll('.map-card').forEach(function(c) {
+        var show = set[parseInt(c.dataset.id)];
+        c.style.display = show ? '' : 'none';
+        c.classList.remove('active');
+        if (show) c.classList.add('active');
+      });
+      updateCount();
+      if (sidebarList) sidebarList.scrollTop = 0;
+    }
+
+    function applyFilters() {
+      clusterer.removeAll();
+      var filtered = allPlacemarks.filter(function(pm) {
+        var catOk = !activeCategory || pm._cat === activeCategory;
+        var dealOk = !activeDeal || pm._deal === activeDeal;
+        return catOk && dealOk;
+      });
+      clusterer.add(filtered);
+      showAll();
+    }
+
+    function filterCat(cat) {
+      activeCategory = cat;
+      document.querySelectorAll('#map-categories .map-cat-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.cat === cat);
+      });
+      applyFilters();
+    }
+
+    function filterDeal(deal) {
+      activeDeal = deal;
+      document.querySelectorAll('#map-deal-btns .map-cat-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.deal === deal);
+      });
+      applyFilters();
+    }
+
+    function init() {
+      sidebarList = document.getElementById('map-sidebar-list');
+
+      ymap = new ymaps.Map('map', {
+        center: [55.751, 37.618],
+        zoom: 11,
+        controls: ['zoomControl']
+      }, {
+        suppressMapOpenBlock: true
+      });
+
+      ymap.behaviors.disable('scrollZoom');
+
+      clusterer = new ymaps.Clusterer({
+        preset: 'islands#invertedDarkBlueClusterIcons',
+        clusterDisableClickZoom: false,
+        clusterBalloonContentLayout: 'cluster#balloonCarousel',
+        groupByCoordinates: false
+      });
+
+      props.forEach(function(p) {
+        var slug = (p.slug && p.slug !== '') ? p.slug : p.id;
+        var label = shortPrice(p.price) + ' ₽';
+
+        var pm = new ymaps.Placemark([p.latitude, p.longitude], {
+          iconContent: label,
+          balloonContentHeader: '<b style="color:#1e293b;font-size:14px;">' + (p.title || '') + '</b>',
+          balloonContentBody:
+            (p.main_image ? '<img src="' + p.main_image + '" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-bottom:8px;">' : '') +
+            (p.address ? '<div style="color:#64748b;font-size:12px;margin-bottom:6px;">' + p.address + '</div>' : '') +
+            '<div style="color:#2563eb;font-weight:700;font-size:15px;">' + (p.price ? Number(p.price).toLocaleString('ru-RU') + ' ₽' : '') + '</div>',
+          balloonContentFooter: '<a href="/property/' + slug + '" style="color:#2563eb;font-size:13px;">Подробнее →</a>',
+          hintContent: (p.title || '') + ' — ' + label
+        }, {
+          preset: 'islands#darkBlueDotIconWithCaption',
+          iconCaptionMaxWidth: '100',
+          iconColor: '#2563eb'
+        });
+
+        pm._id = p.id;
+        pm._cat = p.category || '';
+        pm._deal = p.deal_type || '';
+        allPlacemarks.push(pm);
+        pmById[p.id] = pm;
+      });
+
+      clusterer.add(allPlacemarks);
+      ymap.geoObjects.add(clusterer);
+
+      clusterer.events.add('click', function(e) {
+        var target = e.get('target');
+        if (!target) return;
+
+        if (typeof target.getGeoObjects === 'function') {
+          var geos = target.getGeoObjects();
+          var ids = geos.map(function(g) { return g._id; }).filter(function(id) { return id !== undefined; });
+          if (ids.length) showOnly(ids);
+        }
+        else if (target._id !== undefined) {
+          showOnly([target._id]);
+        }
+      });
+
+      ymap.events.add('click', function() {
+        showAll();
+      });
+
+      document.querySelectorAll('#map-categories .map-cat-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          filterCat(btn.dataset.cat);
+        });
+      });
+
+      document.querySelectorAll('#map-deal-btns .map-cat-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          filterDeal(btn.dataset.deal);
+        });
+      });
+
+      document.querySelectorAll('.map-card').forEach(function(card) {
+        card.style.cursor = 'pointer';
+
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('.map-card-link')) return;
+
+          var id = parseInt(card.dataset.id);
+          var lat = parseFloat(card.dataset.lat);
+          var lng = parseFloat(card.dataset.lng);
+
+          document.querySelectorAll('.map-card').forEach(function(c) { c.classList.remove('active'); });
+          card.classList.add('active');
+
+          ymap.setCenter([lat, lng], 16, { duration: 300 });
+
+          var pm = pmById[id];
+          if (pm) setTimeout(function() { pm.balloon.open(); }, 350);
+        });
+      });
+    }
+
+    (function poll() {
+      if (typeof ymaps !== 'undefined') ymaps.ready(init);
+      else setTimeout(poll, 150);
+    })();
+  })();
+  </script>
+</body>
+</html>

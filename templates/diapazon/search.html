@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Каталог объектов — АО Диапазон</title>
+
+  <meta property="og:title" content="Каталог объектов — АО Диапазон" />
+  <meta property="og:description" content="Удобный поиск коммерческой недвижимости: офисы, склады, торговые площади" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ base_url }}{{ request.url.path }}" />
+  <meta property="og:image" content="{{ base_url }}/static/diapazon/images/og-default.png" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Каталог объектов — АО Диапазон" />
+  <meta name="twitter:description" content="Удобный поиск коммерческой недвижимости" />
+  <meta name="twitter:image" content="{{ base_url }}/static/diapazon/images/og-default.png" />
+
+  <meta name="description" content="Поиск коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа от АО Диапазон." />
+  <link rel="shortcut icon" href="/static/diapazon/images/favicon.png" />
+  <link rel="canonical" href="{{ base_url }}{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
+
+  <link rel="stylesheet" href="{{ site_css }}">
+
+  {% if building_groups %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Каталог коммерческой недвижимости — АО Диапазон",
+    "numberOfItems": {{ total_items }},
+    "itemListElement": [
+      {% set ns = namespace(pos=0, items=[]) %}
+      {% for group in building_groups %}
+        {% if group.type == 'building' %}
+          {% set ns.pos = ns.pos + 1 %}
+          {% set _ = ns.items.append('{"@type":"ListItem","position":' ~ ns.pos ~ ',"url":"' ~ base_url ~ '/property/' ~ (group.building.slug or group.building.id) ~ '","name":"' ~ (group.building.title or 'Здание')|replace('\\', '\\\\')|replace('"', '\\"') ~ '"}') %}
+          {% for unit in group.units %}
+            {% set ns.pos = ns.pos + 1 %}
+            {% set _ = ns.items.append('{"@type":"ListItem","position":' ~ ns.pos ~ ',"url":"' ~ base_url ~ '/property/' ~ (unit.slug or unit.id) ~ '","name":"' ~ (unit.title or 'Помещение')|replace('\\', '\\\\')|replace('"', '\\"') ~ '"}') %}
+          {% endfor %}
+        {% else %}
+          {% set ns.pos = ns.pos + 1 %}
+          {% set _ = ns.items.append('{"@type":"ListItem","position":' ~ ns.pos ~ ',"url":"' ~ base_url ~ '/property/' ~ (group.property.slug or group.property.id) ~ '","name":"' ~ (group.property.title or 'Объект')|replace('\\', '\\\\')|replace('"', '\\"') ~ '"}') %}
+        {% endif %}
+      {% endfor %}
+      {{ ns.items | join(',\n      ') }}
+    ]
+  }
+  </script>
+  {% endif %}
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Перейти к содержимому</a>
+
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">{{ site_logo }}</a>
+      <nav class="nav" id="nav">
+        {% for item in nav_items %}
+        <a href="{{ item.url }}" class="nav-link{% if item.id == 'search' %} active{% endif %}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="search-section">
+      <div class="container">
+        <div class="search-header">
+          <h1 class="page-title">Каталог</h1>
+          <span class="results-count">{{ total_items }} объектов</span>
+        </div>
+
+        <div class="search-container">
+          <!-- Sidebar Filters -->
+          <aside class="search-sidebar">
+            <div class="filter-card side-filter">
+              <form class="filter-form" action="/search" method="GET">
+                <input type="hidden" name="page" value="1" />
+
+                <div class="form-group">
+                  <label for="deal-type">Тип сделки</label>
+                  <select id="deal-type" name="deal_type">
+                    <option value="Все" {% if not deal_type or deal_type == 'Все' %}selected{% endif %}>Все</option>
+                    <option value="Аренда" {% if deal_type == 'Аренда' %}selected{% endif %}>Аренда</option>
+                    <option value="Продажа" {% if deal_type == 'Продажа' %}selected{% endif %}>Продажа</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="property-type">Тип помещения</label>
+                  <select id="property-type" name="category">
+                    <option value="Все" {% if not category or category == 'Все' %}selected{% endif %}>Все типы</option>
+                    <option value="Офис" {% if category == 'Офис' %}selected{% endif %}>Офис</option>
+                    <option value="Торговая площадь" {% if category == 'Торговая площадь' %}selected{% endif %}>Торговая площадь</option>
+                    <option value="Свободного назначения" {% if category == 'Свободного назначения' %}selected{% endif %}>Свободного назначения</option>
+                    <option value="Промышленное" {% if category == 'Промышленное' %}selected{% endif %}>Промышленное</option>
+                    <option value="Склад" {% if category == 'Склад' %}selected{% endif %}>Склад</option>
+                    <option value="Здание" {% if category == 'Здание' %}selected{% endif %}>Здание</option>
+                    <option value="ГАБ" {% if category == 'ГАБ' %}selected{% endif %}>ГАБ</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="object-type">Формат</label>
+                  <select id="object-type" name="object_type">
+                    <option value="" {% if not object_type %}selected{% endif %}>Все объекты</option>
+                    <option value="building" {% if object_type == 'building' %}selected{% endif %}>Здания целиком</option>
+                    <option value="unit" {% if object_type == 'unit' %}selected{% endif %}>Отдельные помещения</option>
+                  </select>
+                </div>
+
+                <div class="filter-extra-wrapper">
+                  <button type="button" class="btn-toggle-extra" id="btn-toggle-extra" aria-expanded="false">
+                    Дополнительно
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </button>
+
+                  <div class="filter-extra" id="filter-extra">
+                    <div class="form-group">
+                      <label for="search-input">Адрес или название</label>
+                      <input type="text" id="search-input" name="q" placeholder="Москва..." value="{{ q or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                      <label>Площадь (м²)</label>
+                      <div class="input-range">
+                        <input type="number" name="min_area" placeholder="От" min="0" value="{{ min_area or '' }}">
+                        <input type="number" name="max_area" placeholder="До" min="0" value="{{ max_area or '' }}">
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label>Цена (₽)</label>
+                      <div class="input-range">
+                        <input type="number" name="min_price" placeholder="От" min="0" value="{{ min_price or '' }}">
+                        <input type="number" name="max_price" placeholder="До" min="0" value="{{ max_price or '' }}">
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="sort">Сортировка</label>
+                      <select id="sort" name="sort">
+                        <option value="date_desc" {% if (sort or 'date_desc') == 'date_desc' %}selected{% endif %}>Сначала новые</option>
+                        <option value="date_asc" {% if sort == 'date_asc' %}selected{% endif %}>Сначала старые</option>
+                        <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Цена: по возрастанию</option>
+                        <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Цена: по убыванию</option>
+                        <option value="area_asc" {% if sort == 'area_asc' %}selected{% endif %}>Площадь: по возрастанию</option>
+                        <option value="area_desc" {% if sort == 'area_desc' %}selected{% endif %}>Площадь: по убыванию</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Найти</button>
+              </form>
+            </div>
+          </aside>
+
+          <!-- Results Grid -->
+          <div class="search-results">
+            {% set has_filters = (deal_type and deal_type != 'Все') or (category and category != 'Все') or q or min_price or max_price or min_area or max_area or object_type %}
+            {% if has_filters %}
+            <div class="active-filters">
+              {% set _ot = '&object_type=' ~ object_type if object_type else '' %}
+              {% if deal_type and deal_type != 'Все' %}
+              <a class="filter-chip" href="/search?deal_type=Все&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}{{ _ot }}">
+                {{ deal_type }}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </a>
+              {% endif %}
+              {% if category and category != 'Все' %}
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category=Все&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}{{ _ot }}">
+                {{ category }}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </a>
+              {% endif %}
+              {% if object_type %}
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}">
+                {% if object_type == 'building' %}Здания целиком{% elif object_type == 'unit' %}Отдельные помещения{% else %}{{ object_type }}{% endif %}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </a>
+              {% endif %}
+              {% if q %}
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}{{ _ot }}">
+                «{{ q }}»
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </a>
+              {% endif %}
+              {% if min_area or max_area %}
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_price={{ (min_price or '')|urlencode }}&max_price={{ (max_price or '')|urlencode }}&sort={{ sort }}{{ _ot }}">
+                Площадь: {{ min_area or '—' }}–{{ max_area or '∞' }} м²
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </a>
+              {% endif %}
+              {% if min_price or max_price %}
+              <a class="filter-chip" href="/search?deal_type={{ (deal_type or '')|urlencode }}&category={{ (category or '')|urlencode }}&q={{ (q or '')|urlencode }}&min_area={{ (min_area or '')|urlencode }}&max_area={{ (max_area or '')|urlencode }}&sort={{ sort }}{{ _ot }}">
+                Цена: {{ min_price or '—' }}–{{ max_price or '∞' }} ₽
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </a>
+              {% endif %}
+              <a class="filter-chip filter-chip--reset" href="/search">Сбросить всё</a>
+            </div>
+            {% endif %}
+
+            <!-- Map toggle -->
+            <div class="map-toggle-wrapper">
+              <button type="button" class="btn btn-outline btn-map-toggle" id="btn-map-toggle">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Показать объекты на карте
+              </button>
+            </div>
+            <div class="map-container" id="map-container" style="display:none;">
+              <div id="map" style="width:100%; height:450px; border-radius: var(--radius-lg);"></div>
+            </div>
+
+            {% if building_groups %}
+            <div class="search-results-list">
+              {% for group in building_groups %}
+
+              {% if group.type == 'building' %}
+              {# ── Building group ── #}
+              {% set bld = group.building %}
+              {% set units = group.units %}
+              {% set visible = units[:preview_count] %}
+              {% set hidden = units[preview_count:] %}
+              <div class="building-group">
+                <div class="building-group__header">
+                  <a class="building-group__image" href="/property/{{ bld.slug or bld.id }}">
+                    {% if bld.main_image %}
+                      <img src="{{ bld.main_image if bld.main_image.startswith('/') else '/' + bld.main_image }}" alt="{{ bld.title or bld.address or 'Объект недвижимости' }}" loading="lazy">
+                    {% else %}
+                      <img src="/static/images/hero_bg_2.png" alt="{{ bld.title or bld.address or 'Объект недвижимости' }}" loading="lazy">
+                    {% endif %}
+                  </a>
+                  <div class="building-group__info">
+                    <div class="building-group__top">
+                      {% if bld.deal_type == 'Аренда' %}<span class="building-group__deal building-group__deal--rent">Аренда</span>{% elif bld.deal_type == 'Продажа' %}<span class="building-group__deal building-group__deal--sale">Продажа</span>{% endif %}
+                    </div>
+                    <h3 class="building-group__title"><a href="/property/{{ bld.slug or bld.id }}">{{ bld.title or bld.address or 'Здание' }}</a></h3>
+                    <p class="building-group__address">{{ bld.address or '' }}</p>
+                    <div class="building-group__offer">
+                      <div class="building-group__price">{{ "{:,.0f}".format(bld.price).replace(',', ' ') }} ₽{% if bld.deal_type == 'Аренда' %}<span class="building-group__price-suffix">/мес</span>{% endif %}</div>
+                      {% if bld.area and bld.price and bld.area > 0 %}
+                      <span class="building-group__price-perm2">{{ "{:,.0f}".format(bld.price // bld.area).replace(',', ' ') }} ₽/м²</span>
+                      {% endif %}
+                      {% if bld.area %}
+                      <span class="building-group__stat">{{ bld.area|fmt_area }} м²</span>
+                      {% endif %}
+                    </div>
+                    <a href="/property/{{ bld.slug or bld.id }}" class="btn btn-outline btn-sm">Подробнее</a>
+                  </div>
+                </div>
+
+                {% if visible %}
+                <div class="building-group__units-header">
+                  {% set n = units|length %}
+                  {% set prices = units|map(attribute='price')|select('ne', None)|list %}
+                  {% set areas = units|map(attribute='area')|select('ne', None)|list %}
+                  <svg class="building-group__units-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  {% set unit_deal_types = units|map(attribute='deal_type')|unique|list %}
+                  <span>Помещения в этом здании {% if unit_deal_types|length == 1 %}{{ 'в аренду' if unit_deal_types[0] == 'Аренда' else 'на продажу' }}{% endif %}</span>
+                  <span class="building-group__units-count">{{ n }} шт.</span>
+                  {% if areas %}
+                  <span class="building-group__units-meta">{% if areas|min == areas|max %}{{ areas|min|fmt_area }}{% else %}{{ areas|min|fmt_area }}–{{ areas|max|fmt_area }}{% endif %} м²</span>
+                  {% endif %}
+                  {% if prices %}
+                  <span class="building-group__units-meta">от {{ "{:,.0f}".format(prices|min).replace(',', ' ') }} ₽</span>
+                  {% endif %}
+                </div>
+                <div class="unit-row unit-row--head">
+                  <span>Назначение</span>
+                  <span>Площадь</span>
+                  <span>Цена</span>
+                  <span>Цена за м²</span>
+                  <span></span>
+                </div>
+                <div class="building-group__units">
+                  {% for unit in visible %}
+                  <div class="unit-row">
+                    <span class="unit-row__category">{{ unit.category|short_cat }}</span>
+                    <span class="unit-row__area">{{ unit.area|fmt_area }} м²</span>
+                    <span class="unit-row__price">{{ "{:,.0f}".format(unit.price).replace(',', ' ') }} ₽{% if unit.deal_type == 'Аренда' %}<small>/мес</small>{% endif %}</span>
+                    {% if unit.area and unit.price and unit.area > 0 %}
+                    <span class="unit-row__perm2">{{ "{:,.0f}".format(unit.price // unit.area).replace(',', ' ') }} ₽/м²</span>
+                    {% else %}
+                    <span class="unit-row__perm2"></span>
+                    {% endif %}
+                    <a href="/property/{{ unit.slug or unit.id }}" class="btn btn-outline btn-sm unit-row__btn">Подробнее</a>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if hidden %}
+                <div class="building-group__units building-group__units--hidden" data-hidden-units>
+                  {% for unit in hidden %}
+                  <div class="unit-row">
+                    <span class="unit-row__category">{{ unit.category|short_cat }}</span>
+                    <span class="unit-row__area">{{ unit.area|fmt_area }} м²</span>
+                    <span class="unit-row__price">{{ "{:,.0f}".format(unit.price).replace(',', ' ') }} ₽{% if unit.deal_type == 'Аренда' %}<small>/мес</small>{% endif %}</span>
+                    {% if unit.area and unit.price and unit.area > 0 %}
+                    <span class="unit-row__perm2">{{ "{:,.0f}".format(unit.price // unit.area).replace(',', ' ') }} ₽/м²</span>
+                    {% else %}
+                    <span class="unit-row__perm2"></span>
+                    {% endif %}
+                    <a href="/property/{{ unit.slug or unit.id }}" class="btn btn-outline btn-sm unit-row__btn">Подробнее</a>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% set hn = hidden|length %}
+                <button type="button" class="building-group__expand" data-expand-units>
+                  <span data-expand-label>Ещё {{ hn }} {{ 'помещение' if hn % 10 == 1 and hn % 100 != 11 else 'помещения' if hn % 10 in [2,3,4] and hn % 100 not in [12,13,14] else 'помещений' }}</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                {% endif %}
+              </div>
+
+              {% else %}
+              {# ── Standalone property card ── #}
+              {% set property = group.property %}
+              <div class="standalone-card-wrap">
+                <article class="object-card">
+                  <a class="object-image" href="/property/{{ property.slug or property.id }}">
+                    {% if property.main_image %}
+                      <img src="{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" alt="{{ property.title or property.address or 'Объект недвижимости' }}" loading="lazy">
+                    {% else %}
+                      <img src="/static/images/hero_bg_2.png" alt="{{ property.title or property.address or 'Объект недвижимости' }}" loading="lazy">
+                    {% endif %}
+                    {% if property.category %}<span class="badge">{{ property.category }}</span>{% endif %}
+                    {% if property.deal_type == 'Аренда' %}<span class="badge-deal badge-deal--rent">Аренда</span>{% elif property.deal_type == 'Продажа' %}<span class="badge-deal badge-deal--sale">Продажа</span>{% endif %}
+                  </a>
+                  <div class="object-content">
+                    <div class="object-price">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽{% if property.deal_type == 'Аренда' %}/мес{% endif %}</div>
+                    {% if property.area and property.price and property.area > 0 %}
+                    <div class="object-price-per-m2">{{ "{:,.0f}".format(property.price // property.area).replace(',', ' ') }} ₽/м²{% if property.deal_type == 'Аренда' %} в мес{% endif %}</div>
+                    {% endif %}
+                    <h3 class="object-title">{{ property.title }}</h3>
+                    <p class="object-address">{{ property.address or '—' }}</p>
+                    <div class="object-metrics">
+                      <span class="metric">{{ property.area|fmt_area }} м²</span>
+                    </div>
+                    <a href="/property/{{ property.slug or property.id }}" class="btn btn-outline btn-block">Подробнее</a>
+                  </div>
+                </article>
+              </div>
+              {% endif %}
+
+              {% endfor %}
+            </div>
+
+            {% else %}
+            <div style="text-align:center; padding: 3rem 0; color: var(--color-text-secondary);">
+              <p style="font-size:1.125rem; margin-bottom:0.5rem;">Ничего не найдено</p>
+              <p style="font-size:0.875rem; color: var(--color-text-tertiary);">Попробуйте изменить параметры поиска</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-logo">{{ site_logo }}</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-tagline">Коммерческая недвижимость</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-copy">&copy; {{ now().year }}</span>
+        </div>
+        <div class="footer-contacts">
+          {% if site_contacts.phone %}<a href="tel:{{ site_contacts.phone }}">{{ site_contacts.phone }}</a>{% endif %}
+          {% if site_contacts.email %}<a href="mailto:{{ site_contacts.email }}">{{ site_contacts.email }}</a>{% endif %}
+        </div>
+        <nav class="footer-nav">
+          {% for item in nav_items %}
+          <a href="{{ item.url }}">{{ item.label }}</a>
+          {% endfor %}
+        </nav>
+      </div>
+      <div class="footer-company">{{ site_name }}</div>
+    </div>
+  </footer>
+
+  <script src="/static/js/vitrina-asset.js"></script>
+  <script>
+  (function() {
+    document.querySelectorAll('[data-expand-units]').forEach(function(btn) {
+      btn.setAttribute('aria-expanded', 'false');
+      btn.addEventListener('click', function() {
+        var group = btn.closest('.building-group');
+        var hidden = group.querySelector('[data-hidden-units]');
+        if (!hidden) return;
+        var expanded = btn.getAttribute('aria-expanded') === 'true';
+        hidden.style.display = expanded ? 'none' : 'block';
+        btn.setAttribute('aria-expanded', String(!expanded));
+        var label = btn.querySelector('[data-expand-label]');
+        if (label) {
+          if (!label.dataset.originalText) label.dataset.originalText = label.textContent;
+          label.textContent = expanded ? label.dataset.originalText : 'Свернуть';
+        }
+      });
+    });
+  })();
+  (function() {
+    var mapBtn = document.getElementById('btn-map-toggle');
+    var mapContainer = document.getElementById('map-container');
+    if (!mapBtn || !mapContainer) return;
+
+    var mapLoaded = false;
+    var mapProperties = {{ (map_properties_json | default('[]')) | safe }};
+    if (!Array.isArray(mapProperties)) mapProperties = [];
+
+    function esc(s) {
+      if (s == null || s === '') return '';
+      var d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function initMap() {
+      if (typeof ymaps === 'undefined') return;
+      var map = new ymaps.Map('map', { center: [55.7558, 37.6173], zoom: 10, controls: ['zoomControl'] }, { suppressMapOpenBlock: true });
+      map.behaviors.disable('scrollZoom');
+      for (var i = 0; i < mapProperties.length; i++) {
+        var p = mapProperties[i];
+        if (p.latitude == null || p.longitude == null) continue;
+        var slugOrId = (p.slug != null && p.slug !== '') ? p.slug : p.id;
+        var body = '<div style="font-family:Inter,sans-serif;padding:8px;">' +
+          (p.category ? '<div style="font-size:10px;color:#64748b;text-transform:uppercase;font-weight:600;margin-bottom:4px;">' + esc(p.category) + '</div>' : '') +
+          '<div style="font-weight:700;color:#1e293b;margin-bottom:4px;font-size:14px;">' + esc(p.title || 'Объект #' + p.id) + '</div>' +
+          '<div style="color:#5a6c7d;font-weight:600;font-size:13px;margin-bottom:8px;">' + (p.price != null ? Number(p.price).toLocaleString('ru-RU') + ' ₽' : '') + '</div>' +
+          '<a href="/property/' + esc(String(slugOrId)) + '" style="display:inline-block;background:#5a6c7d;color:#fff;text-decoration:none;padding:6px 12px;border-radius:6px;font-size:12px;">Подробнее</a></div>';
+        map.geoObjects.add(new ymaps.Placemark([p.latitude, p.longitude], { balloonContent: body }, { preset: 'islands#redDotIcon' }));
+      }
+      if (map.geoObjects.getLength() > 0) {
+        try { var b = map.geoObjects.getBounds(); if (b) map.setBounds(b, { checkZoomRange: true, zoomMargin: 50 }); } catch(e) {}
+      }
+    }
+
+    mapBtn.addEventListener('click', function() {
+      var isHidden = mapContainer.style.display === 'none';
+      mapContainer.style.display = isHidden ? 'block' : 'none';
+      mapBtn.innerHTML = isHidden
+        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Скрыть карту'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Показать на карте';
+
+      if (isHidden && !mapLoaded) {
+        mapLoaded = true;
+        var script = document.createElement('script');
+        script.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU{% if yandex_maps_api_key %}&apikey={{ yandex_maps_api_key }}{% endif %}';
+        script.onload = function() { ymaps.ready(initMap); };
+        document.head.appendChild(script);
+      }
+    });
+  })();
+  </script>
+</body>
+</html>

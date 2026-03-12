@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>О компании — АО Диапазон</title>
+  <meta name="description" content="АО «Диапазон» — аренда и продажа коммерческой недвижимости: офисы, склады, торговые площади." />
+  <link rel="shortcut icon" href="/static/diapazon/images/favicon.png" />
+  <link rel="canonical" href="{{ base_url }}{{ request.url.path }}" />
+  <meta property="og:title" content="О компании — АО Диапазон" />
+  <meta property="og:description" content="АО «Диапазон» — аренда и продажа коммерческой недвижимости." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ base_url }}{{ request.url.path }}" />
+  <meta property="og:image" content="{{ base_url }}/static/diapazon/images/og-default.png" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="О компании — АО Диапазон" />
+  <meta name="twitter:description" content="АО «Диапазон» — аренда и продажа коммерческой недвижимости." />
+  <meta name="twitter:image" content="{{ base_url }}/static/diapazon/images/og-default.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
+
+  <link rel="stylesheet" href="{{ site_css }}" />
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Перейти к содержимому</a>
+
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">{{ site_logo }}</a>
+      <nav class="nav" id="nav">
+        {% for item in nav_items %}
+        <a href="{{ item.url }}" class="nav-link{% if item.id == 'about' %} active{% endif %}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="page-hero">
+      <div class="container">
+        <h1 class="page-hero__title">О компании</h1>
+        <p class="page-hero__sub">АО «Диапазон» — коммерческая недвижимость</p>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="container">
+        <div class="about-content">
+          <h2>АО «Диапазон»</h2>
+          <p>Мы занимаемся арендой и продажей коммерческой недвижимости: офисы, склады, торговые площади, здания и производственные помещения.</p>
+          <p>Наша команда поможет подобрать оптимальный вариант для вашего бизнеса и обеспечит полное юридическое сопровождение сделки.</p>
+          <p>Содержание этой страницы будет дополнено.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-logo">{{ site_logo }}</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-tagline">Коммерческая недвижимость</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-copy">&copy; {{ now().year }}</span>
+        </div>
+        <div class="footer-contacts">
+          {% if site_contacts.phone %}<a href="tel:{{ site_contacts.phone }}">{{ site_contacts.phone }}</a>{% endif %}
+          {% if site_contacts.email %}<a href="mailto:{{ site_contacts.email }}">{{ site_contacts.email }}</a>{% endif %}
+        </div>
+        <nav class="footer-nav">
+          {% for item in nav_items %}
+          <a href="{{ item.url }}">{{ item.label }}</a>
+          {% endfor %}
+        </nav>
+      </div>
+      <div class="footer-company">{{ site_name }}</div>
+    </div>
+  </footer>
+
+  <script src="/static/js/vitrina-asset.js"></script>
+</body>
+</html>

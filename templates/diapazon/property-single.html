@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ property.title }} — АО Диапазон</title>
+  <link rel="shortcut icon" href="/static/diapazon/images/favicon.png" />
+
+  <meta name="description" content="{{ (property.description or property.title or 'Объект недвижимости')[:160] }}" />
+  <link rel="canonical" href="{{ site_url }}/property/{{ property.slug or property.id }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{{ property.title }} — АО Диапазон" />
+  <meta property="og:description" content="{{ (property.description or property.title or 'Коммерческая недвижимость')[:200] }}" />
+  <meta property="og:url" content="{{ site_url }}/property/{{ property.slug or property.id }}" />
+  {% set _og_img = display_for_media.main_image if display_for_media and display_for_media.main_image else property.main_image %}
+  {% if _og_img %}
+  <meta property="og:image" content="{{ site_url }}{{ _og_img if _og_img.startswith('/') else '/' + _og_img }}" />
+  {% else %}
+  <meta property="og:image" content="{{ site_url }}/static/diapazon/images/og-default.png" />
+  {% endif %}
+  <meta property="og:locale" content="ru_RU" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{{ property.title }} — АО Диапазон" />
+  <meta name="twitter:description" content="{{ (property.description or property.title or 'Коммерческая недвижимость')[:200] }}" />
+  {% if _og_img %}
+  <meta name="twitter:image" content="{{ site_url }}{{ _og_img if _og_img.startswith('/') else '/' + _og_img }}" />
+  {% else %}
+  <meta name="twitter:image" content="{{ site_url }}/static/diapazon/images/og-default.png" />
+  {% endif %}
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    "name": "{{ (property.title or 'Объект')|replace('\\', '\\\\')|replace('"', '\\"') }}",
+    "description": "{{ ((property.description or property.title or 'Объект недвижимости')[:500])|replace('\\', '\\\\')|replace('"', '\\"')|replace('\n', ' ') }}",
+    "url": "{{ site_url }}/property/{{ property.slug or property.id }}",
+    {% if _og_img %}
+    "image": "{{ site_url }}{{ _og_img if _og_img.startswith('/') else '/' + _og_img }}",
+    {% endif %}
+    "offers": {
+      "@type": "Offer",
+      "price": "{{ property.price or 0 }}",
+      "priceCurrency": "RUB",
+      "availability": "https://schema.org/InStock"
+    }
+    {% if property.address %},
+    "address": { "@type": "PostalAddress", "addressLocality": "{{ (property.address or '')|replace('\\', '\\\\')|replace('"', '\\"') }}" }
+    {% endif %}
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
+  <link rel="stylesheet" href="{{ site_css }}" />
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Перейти к содержимому</a>
+
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">{{ site_logo }}</a>
+      <nav class="nav" id="nav">
+        {% for item in nav_items %}
+        <a href="{{ item.url }}" class="nav-link{% if item.id == 'search' %} active{% endif %}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main-content">
+
+    {% set main_img = (display_for_media.main_image if (display_for_media.main_image and display_for_media.main_image.startswith('/')) else ('/' + (display_for_media.main_image or ''))) if display_for_media.main_image else '/static/images/hero_bg_2.png' %}
+    {% set all_images = [main_img] %}
+    {% for img in display_for_media.images %}
+      {% set _ = all_images.append(img.image_url if (img.image_url and img.image_url.startswith('/')) else ('/' + (img.image_url or ''))) %}
+    {% endfor %}
+
+    <div class="container">
+      <nav class="prop-crumbs">
+        <a href="/">Главная</a><span>/</span><a href="/search">Каталог</a><span>/</span><span>{{ property.title }}</span>
+      </nav>
+
+      <div class="prop-grid">
+
+        <!-- Left column -->
+        <div class="prop-content">
+
+          <div class="prop-gallery" id="gallery" style="cursor:zoom-in;">
+            <img src="{{ all_images[0] }}" alt="{{ property.title or property.address or 'Объект недвижимости' }}" id="gallery-img" />
+            {% if all_images|length > 1 %}
+            <span class="prop-gallery__counter" id="gallery-counter">1 / {{ all_images|length }}</span>
+            <button class="prop-gallery__nav prop-gallery__nav--prev" id="gallery-prev" aria-label="Назад">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button class="prop-gallery__nav prop-gallery__nav--next" id="gallery-next" aria-label="Вперёд">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="prop-gallery__dots" id="gallery-dots">
+              {% for img in all_images %}
+              <button class="prop-gallery__dot{% if loop.first %} active{% endif %}" data-idx="{{ loop.index0 }}" aria-label="Фото {{ loop.index }}"></button>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="prop-header">
+            {% if property.category %}
+            <span class="prop-badge">{{ property.category }}</span>
+            {% endif %}
+            <h1 class="prop-title">{{ property.title }}</h1>
+            {% if property.address %}
+            <p class="prop-address">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ property.address }}
+            </p>
+            {% endif %}
+          </div>
+
+          {% if property.parent %}
+          <div class="prop-parent">
+            Помещение в здании: <a href="/property/{{ property.parent.slug or property.parent.id }}">{{ property.parent.title or property.parent.address or 'Перейти к зданию' }}</a>
+          </div>
+          {% endif %}
+
+          <!-- Price card (mobile) -->
+          <div class="prop-price-mobile">
+            <div class="prop-price__amount">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
+            <div class="prop-price__note">{% if property.deal_type == 'Аренда' %}в месяц · аренда{% else %}продажа{% endif %}</div>
+            {% if property.area and property.price and property.area > 0 %}
+            <div class="prop-price__per-m2">{{ "{:,.0f}".format(property.price // property.area).replace(',', ' ') }} ₽/м²{% if property.deal_type == 'Аренда' %} в мес{% endif %}</div>
+            {% endif %}
+          </div>
+
+          {% if property.description %}
+          <section class="prop-section">
+            <h2 class="prop-section__title">Описание</h2>
+            <div class="prop-section__text">{{ (property.description | sanitize_html) }}</div>
+          </section>
+          {% endif %}
+
+          {% if available_units %}
+          <section class="prop-section">
+            <h2 class="prop-section__title">Помещения в этом здании</h2>
+            <div class="prop-units">
+              {% for child in available_units %}
+              <a href="/property/{{ child.slug or child.id }}" class="prop-unit">
+                <div>
+                  <div class="prop-unit__name">{{ child.title or ('Помещение #' ~ child.id) }}</div>
+                  <div class="prop-unit__meta">{{ child.area }} м² · {{ "{:,.0f}".format(child.price).replace(',', ' ') }} ₽</div>
+                </div>
+                <span class="prop-unit__link">→</span>
+              </a>
+              {% endfor %}
+            </div>
+          </section>
+          {% endif %}
+
+          {% if property.documents %}
+          <section class="prop-section">
+            <h2 class="prop-section__title">Документы</h2>
+            <div class="prop-docs">
+              {% for document in property.documents %}
+              <a href="{{ document.document_url }}" target="_blank" rel="noopener noreferrer" class="prop-doc">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span>{{ document.title }}</span>
+              </a>
+              {% endfor %}
+            </div>
+          </section>
+          {% endif %}
+        </div>
+
+        <!-- Right column (sticky sidebar) -->
+        <aside class="prop-sidebar">
+          <div class="prop-price-card">
+            <div class="prop-price__amount">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽</div>
+            <div class="prop-price__note">{% if property.deal_type == 'Аренда' %}в месяц · аренда{% else %}продажа{% endif %}</div>
+            {% if property.area and property.price and property.area > 0 %}
+            <div class="prop-price__per-m2">{{ "{:,.0f}".format(property.price // property.area).replace(',', ' ') }} ₽/м²{% if property.deal_type == 'Аренда' %} в мес{% endif %}</div>
+            {% endif %}
+            <div class="prop-price__divider"></div>
+
+            <table class="prop-specs">
+              <tr><td>Тип сделки</td><td>{{ property.deal_type }}</td></tr>
+              <tr><td>Категория</td><td>{{ property.category }}</td></tr>
+              <tr><td>Площадь</td><td>{{ property.area }} м²</td></tr>
+              {% if property.floor_number is not none or property.floors_total is not none %}
+              <tr>
+                <td>Этаж</td>
+                <td>{% if property.floor_number is not none %}{{ property.floor_number }}{% else %}—{% endif %} / {% if property.floors_total is not none %}{{ property.floors_total }}{% else %}—{% endif %}</td>
+              </tr>
+              {% endif %}
+            </table>
+
+            {% set avito = property.avito_data or {} %}
+            {% set has_extra_specs = (property.ceiling_height is not none) or (property.power_kw is not none) or avito.get('BuildingType') or avito.get('Decoration') or avito.get('Layout') or avito.get('ParkingType') %}
+            {% if has_extra_specs %}
+            <div class="prop-specs-extra-wrap" id="prop-specs-extra-wrap">
+              <button type="button" class="prop-specs-toggle" id="prop-specs-toggle" aria-expanded="false">
+                Все характеристики
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="prop-specs-extra" id="prop-specs-extra">
+                <table class="prop-specs">
+                  {% if property.ceiling_height is not none %}
+                  <tr><td>Потолки</td><td>{{ '%.2f'|format(property.ceiling_height) }} м</td></tr>
+                  {% endif %}
+                  {% if property.power_kw is not none %}
+                  <tr><td>Мощность</td><td>{{ '%.1f'|format(property.power_kw) }} кВт</td></tr>
+                  {% endif %}
+                  {% if avito.get('BuildingType') %}
+                  <tr><td>Тип здания</td><td>{{ avito.get('BuildingType') }}</td></tr>
+                  {% endif %}
+                  {% if avito.get('Decoration') %}
+                  <tr><td>Отделка</td><td>{{ avito.get('Decoration') }}</td></tr>
+                  {% endif %}
+                  {% if avito.get('Layout') %}
+                  <tr><td>Планировка</td><td>{{ avito.get('Layout') }}</td></tr>
+                  {% endif %}
+                  {% if avito.get('ParkingType') %}
+                  <tr><td>Парковка</td><td>{{ avito.get('ParkingType') }}</td></tr>
+                  {% endif %}
+                </table>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if property.address %}
+            <div class="prop-price__divider"></div>
+            <div class="prop-specs-address">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ property.address }}
+            </div>
+            {% endif %}
+          </div>
+
+          {% if property.latitude and property.longitude %}
+          <div class="prop-map">
+            <iframe
+              src="https://yandex.ru/map-widget/v1/?ll={{ property.longitude }},{{ property.latitude }}&z=16&pt={{ property.longitude }},{{ property.latitude }},pm2blm&scroll=false"
+              title="Карта: {{ property.address or property.title }}"
+              allowfullscreen="true"
+              loading="lazy">
+            </iframe>
+          </div>
+          {% endif %}
+
+          <div class="prop-contact-card">
+            <div class="prop-contact-card__title">Связаться с нами</div>
+            {% if site_contacts.phone %}
+            <div class="prop-contact-card__item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <a href="tel:{{ site_contacts.phone }}">{{ site_contacts.phone }}</a>
+            </div>
+            {% endif %}
+            {% if site_contacts.email %}
+            <div class="prop-contact-card__item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <a href="mailto:{{ site_contacts.email }}">{{ site_contacts.email }}</a>
+            </div>
+            {% endif %}
+            {% if site_contacts.address %}
+            <div class="prop-contact-card__item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>{{ site_contacts.address }}</span>
+            </div>
+            {% endif %}
+            {% if site_contacts.phone %}
+            <a href="tel:{{ site_contacts.phone }}" class="btn-contact btn-contact--phone">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              Позвонить
+            </a>
+            {% endif %}
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-logo">{{ site_logo }}</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-tagline">Коммерческая недвижимость</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-copy">&copy; {{ now().year }}</span>
+        </div>
+        <div class="footer-contacts">
+          {% if site_contacts.phone %}<a href="tel:{{ site_contacts.phone }}">{{ site_contacts.phone }}</a>{% endif %}
+          {% if site_contacts.email %}<a href="mailto:{{ site_contacts.email }}">{{ site_contacts.email }}</a>{% endif %}
+        </div>
+        <nav class="footer-nav">
+          {% for item in nav_items %}
+          <a href="{{ item.url }}">{{ item.label }}</a>
+          {% endfor %}
+        </nav>
+      </div>
+      <div class="footer-company">{{ site_name }}</div>
+    </div>
+  </footer>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-label="Просмотр фото">
+    <button class="lightbox__close" id="lightbox-close" aria-label="Закрыть">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+    <button class="lightbox__nav lightbox__nav--prev" id="lightbox-prev" aria-label="Предыдущее фото">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <img src="" alt="" id="lightbox-img" />
+    <button class="lightbox__nav lightbox__nav--next" id="lightbox-next" aria-label="Следующее фото">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+    <div class="lightbox__counter" id="lightbox-counter"></div>
+  </div>
+
+  <script src="/static/js/vitrina-asset.js"></script>
+  <script>
+  (function() {
+    var images = {{ all_images | tojson }};
+    var idx = 0;
+    var img = document.getElementById('gallery-img');
+    var counter = document.getElementById('gallery-counter');
+    var dots = document.querySelectorAll('.prop-gallery__dot');
+
+    function show(i) {
+      idx = (i + images.length) % images.length;
+      img.src = images[idx];
+      if (counter) counter.textContent = (idx + 1) + ' / ' + images.length;
+      dots.forEach(function(d, j) { d.classList.toggle('active', j === idx); });
+    }
+
+    {% if all_images|length > 1 %}
+    document.getElementById('gallery-prev').addEventListener('click', function(e) { e.stopPropagation(); show(idx - 1); });
+    document.getElementById('gallery-next').addEventListener('click', function(e) { e.stopPropagation(); show(idx + 1); });
+    dots.forEach(function(d) {
+      d.addEventListener('click', function(e) { e.stopPropagation(); show(parseInt(d.dataset.idx)); });
+    });
+
+    var startX = 0;
+    var gallery = document.getElementById('gallery');
+    gallery.addEventListener('touchstart', function(e) { startX = e.touches[0].clientX; }, {passive:true});
+    gallery.addEventListener('touchend', function(e) {
+      var dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) > 40) show(dx < 0 ? idx + 1 : idx - 1);
+    });
+    {% endif %}
+
+    /* Lightbox */
+    var lb = document.getElementById('lightbox');
+    var lbImg = document.getElementById('lightbox-img');
+    var lbCounter = document.getElementById('lightbox-counter');
+    var lbIdx = 0;
+
+    var propTitle = {{ (property.title or 'Фото объекта') | tojson }};
+
+    function lbShow(i) {
+      lbIdx = (i + images.length) % images.length;
+      lbImg.src = images[lbIdx];
+      lbImg.alt = propTitle + ' — фото ' + (lbIdx + 1);
+      lbCounter.textContent = (lbIdx + 1) + ' / ' + images.length;
+    }
+
+    function openLightbox() {
+      lbShow(idx);
+      lb.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      lb.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('gallery').addEventListener('click', function(e) {
+      if (e.target.closest('.prop-gallery__nav') || e.target.closest('.prop-gallery__dot')) return;
+      openLightbox();
+    });
+
+    document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+    lb.addEventListener('click', function(e) {
+      if (e.target === lb) closeLightbox();
+    });
+    document.getElementById('lightbox-prev').addEventListener('click', function(e) { e.stopPropagation(); lbShow(lbIdx - 1); });
+    document.getElementById('lightbox-next').addEventListener('click', function(e) { e.stopPropagation(); lbShow(lbIdx + 1); });
+
+    document.addEventListener('keydown', function(e) {
+      if (!lb.classList.contains('active')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') lbShow(lbIdx - 1);
+      if (e.key === 'ArrowRight') lbShow(lbIdx + 1);
+    });
+
+    /* Specs toggle */
+    var specsToggle = document.getElementById('prop-specs-toggle');
+    var specsWrap = document.getElementById('prop-specs-extra-wrap');
+    var specsExtra = document.getElementById('prop-specs-extra');
+    if (specsToggle && specsWrap && specsExtra) {
+      specsToggle.addEventListener('click', function() {
+        var wasOpen = specsWrap.classList.contains('open');
+        if (wasOpen) {
+          specsExtra.style.maxHeight = specsExtra.scrollHeight + 'px';
+          specsExtra.offsetHeight;
+          specsExtra.style.maxHeight = '0px';
+          specsWrap.classList.remove('open');
+          specsToggle.setAttribute('aria-expanded', 'false');
+        } else {
+          specsWrap.classList.add('open');
+          specsExtra.style.maxHeight = specsExtra.scrollHeight + 'px';
+          specsExtra.addEventListener('transitionend', function handler() {
+            if (specsWrap.classList.contains('open')) {
+              specsExtra.style.maxHeight = 'none';
+            }
+            specsExtra.removeEventListener('transitionend', handler);
+          });
+          specsToggle.setAttribute('aria-expanded', 'true');
+        }
+      });
+    }
+  })();
+  </script>
+</body>
+</html>

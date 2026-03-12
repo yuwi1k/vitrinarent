@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Часто задаваемые вопросы об аренде и покупке коммерческой недвижимости от АО Диапазон." />
+  <link rel="canonical" href="{{ base_url }}{{ request.url.path }}" />
+  <title>Часто задаваемые вопросы — АО Диапазон</title>
+  <link rel="shortcut icon" href="/static/diapazon/images/favicon.png" />
+  <meta property="og:title" content="Часто задаваемые вопросы — АО Диапазон" />
+  <meta property="og:description" content="Ответы на популярные вопросы об аренде и покупке коммерческой недвижимости от АО Диапазон." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ base_url }}{{ request.url.path }}" />
+  <meta property="og:image" content="{{ base_url }}/static/diapazon/images/og-default.png" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Часто задаваемые вопросы — АО Диапазон" />
+  <meta name="twitter:description" content="Ответы на популярные вопросы об аренде и покупке недвижимости от АО Диапазон." />
+  <meta name="twitter:image" content="{{ base_url }}/static/diapazon/images/og-default.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
+
+  <link rel="stylesheet" href="{{ site_css }}" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Как арендовать помещение?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Выберите объект в каталоге, свяжитесь с нами по телефону или email. Менеджер организует просмотр и подготовит договор." }
+      },
+      {
+        "@type": "Question",
+        "name": "Какие документы нужны для аренды?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Для юридического лица: реквизиты компании, устав, приказ о назначении директора. Для ИП: паспорт, свидетельство ОГРНИП." }
+      },
+      {
+        "@type": "Question",
+        "name": "Можно ли посмотреть помещение?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Да, мы организуем просмотр в удобное для вас время. Свяжитесь с менеджером для записи." }
+      },
+      {
+        "@type": "Question",
+        "name": "Как проходит сделка купли-продажи?",
+        "acceptedAnswer": { "@type": "Answer", "text": "После выбора объекта наши юристы готовят полный пакет документов. Сделка проходит через банковский аккредитив или нотариальный депозит." }
+      },
+      {
+        "@type": "Question",
+        "name": "Возможна ли рассрочка?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Да, обсуждаем индивидуальные условия рассрочки. Свяжитесь с менеджером для уточнения." }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Перейти к содержимому</a>
+
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">{{ site_logo }}</a>
+      <nav class="nav" id="nav">
+        {% for item in nav_items %}
+        <a href="{{ item.url }}" class="nav-link{% if item.id == 'faq' %} active{% endif %}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <h1 class="page-hero__title">Часто задаваемые вопросы</h1>
+      <p class="page-hero__sub">Ответы на популярные вопросы об аренде и покупке недвижимости</p>
+    </div>
+  </section>
+
+  <main id="main-content" class="faq-section" tabindex="-1">
+    <div class="container" style="max-width:800px;">
+
+      <div class="faq-group">
+        <div class="faq-group__header">
+          <span class="faq-group__icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </span>
+          <h2 class="faq-group__title">Аренда</h2>
+        </div>
+
+        <div class="faq-item open">
+          <button class="faq-question" aria-expanded="true">
+            <span>Как арендовать помещение?</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer__inner">
+              Выберите объект в каталоге, свяжитесь с нами по телефону или email. Менеджер организует просмотр и подготовит договор.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span>Какие документы нужны для аренды?</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer__inner">
+              Для юридического лица: реквизиты компании, устав, приказ о назначении директора. Для ИП: паспорт, свидетельство ОГРНИП.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span>Можно ли посмотреть помещение?</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer__inner">
+              Да, мы организуем просмотр в удобное для вас время. Свяжитесь с менеджером для записи.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-group">
+        <div class="faq-group__header">
+          <span class="faq-group__icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          </span>
+          <h2 class="faq-group__title">Покупка</h2>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span>Как проходит сделка купли-продажи?</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer__inner">
+              После выбора объекта наши юристы готовят полный пакет документов. Сделка проходит через банковский аккредитив или нотариальный депозит.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span>Возможна ли рассрочка?</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer__inner">
+              Да, обсуждаем индивидуальные условия рассрочки. Свяжитесь с менеджером для уточнения.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-logo">{{ site_logo }}</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-tagline">Коммерческая недвижимость</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-copy">&copy; {{ now().year }}</span>
+        </div>
+        <div class="footer-contacts">
+          {% if site_contacts.phone %}<a href="tel:{{ site_contacts.phone }}">{{ site_contacts.phone }}</a>{% endif %}
+          {% if site_contacts.email %}<a href="mailto:{{ site_contacts.email }}">{{ site_contacts.email }}</a>{% endif %}
+        </div>
+        <nav class="footer-nav">
+          {% for item in nav_items %}
+          <a href="{{ item.url }}">{{ item.label }}</a>
+          {% endfor %}
+        </nav>
+      </div>
+      <div class="footer-company">{{ site_name }}</div>
+    </div>
+  </footer>
+
+  <script src="/static/js/vitrina-asset.js"></script>
+</body>
+</html>

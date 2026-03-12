@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Контакты — АО Диапазон</title>
+  <meta name="description" content="Контактная информация АО «Диапазон» — аренда и продажа коммерческой недвижимости." />
+  <link rel="shortcut icon" href="/static/diapazon/images/favicon.png" />
+  <link rel="canonical" href="{{ base_url }}{{ request.url.path }}" />
+  <meta property="og:title" content="Контакты — АО Диапазон" />
+  <meta property="og:description" content="Свяжитесь с АО «Диапазон» — аренда и продажа коммерческой недвижимости." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ base_url }}{{ request.url.path }}" />
+  <meta property="og:image" content="{{ base_url }}/static/diapazon/images/og-default.png" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Контакты — АО Диапазон" />
+  <meta name="twitter:description" content="Свяжитесь с АО «Диапазон» — аренда и продажа коммерческой недвижимости." />
+  <meta name="twitter:image" content="{{ base_url }}/static/diapazon/images/og-default.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
+
+  <link rel="stylesheet" href="{{ site_css }}" />
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Перейти к содержимому</a>
+
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">{{ site_logo }}</a>
+      <nav class="nav" id="nav">
+        {% for item in nav_items %}
+        <a href="{{ item.url }}" class="nav-link{% if item.id == 'contacts' %} active{% endif %}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="page-hero">
+      <div class="container">
+        <h1 class="page-hero__title">Контакты</h1>
+        <p class="page-hero__sub">Свяжитесь с нами</p>
+      </div>
+    </section>
+
+    <section class="contacts-section">
+      <div class="container">
+        <div class="contacts-grid">
+          <div class="contact-card">
+            <div class="contact-card__icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div class="contact-card__title">Телефон</div>
+            <div class="contact-card__value"><a href="tel:{{ site_contacts.phone }}">{{ site_contacts.phone }}</a></div>
+          </div>
+          <div class="contact-card">
+            <div class="contact-card__icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </div>
+            <div class="contact-card__title">Email</div>
+            <div class="contact-card__value"><a href="mailto:{{ site_contacts.email }}">{{ site_contacts.email }}</a></div>
+          </div>
+          <div class="contact-card">
+            <div class="contact-card__icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div class="contact-card__title">Адрес</div>
+            <div class="contact-card__value">{{ site_contacts.address }}</div>
+          </div>
+          <div class="contact-card">
+            <div class="contact-card__icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="contact-card__title">Режим работы</div>
+            <div class="contact-card__value">Пн–Пт: 9:00–18:00</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-logo">{{ site_logo }}</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-tagline">Коммерческая недвижимость</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-copy">&copy; {{ now().year }}</span>
+        </div>
+        <div class="footer-contacts">
+          {% if site_contacts.phone %}<a href="tel:{{ site_contacts.phone }}">{{ site_contacts.phone }}</a>{% endif %}
+          {% if site_contacts.email %}<a href="mailto:{{ site_contacts.email }}">{{ site_contacts.email }}</a>{% endif %}
+        </div>
+        <nav class="footer-nav">
+          {% for item in nav_items %}
+          <a href="{{ item.url }}">{{ item.label }}</a>
+          {% endfor %}
+        </nav>
+      </div>
+      <div class="footer-company">{{ site_name }}</div>
+    </div>
+  </footer>
+
+  <script src="/static/js/vitrina-asset.js"></script>
+</body>
+</html>

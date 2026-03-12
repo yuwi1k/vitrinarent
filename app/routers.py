@@ -25,12 +25,36 @@ from app.feed_cian import generate_cian_feed
 from app.feed_jcat import generate_jcat_feed
 from app.services import build_search_query, group_properties_by_building, BUILDING_PREVIEW_COUNT
 from app.settings_store import get_public_contacts
+from app.sites import SITES
 
 from datetime import datetime as _dt
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 templates.env.globals["now"] = _dt.now
+
+
+def _tpl(request: Request, name: str) -> str:
+    """Return site-specific template path."""
+    site = getattr(request.state, "site", None)
+    if site and site.template_prefix:
+        return f"{site.template_prefix}{name}"
+    return name
+
+
+def _site_ctx(request: Request) -> dict:
+    """Common site context for all templates."""
+    site = getattr(request.state, "site", None) or SITES["vitrina"]
+    return {
+        "site": site,
+        "site_name": site.name,
+        "site_title_suffix": site.title_suffix,
+        "site_logo": site.logo_text,
+        "site_css": site.css_file,
+        "site_contacts": site.contacts,
+        "show_contacts": site.show_contacts,
+        "nav_items": site.nav_items,
+    }
 
 
 def _base_url(request: Request) -> str:
@@ -105,7 +129,7 @@ async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
 
     base_url = _base_url(request)
     return templates.TemplateResponse(
-        "index.html",
+        _tpl(request, "index.html"),
         {
             "request": request,
             "base_url": base_url,
@@ -114,6 +138,7 @@ async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
             "sale_count": sale_count,
             "cat_counts": cat_counts,
             **get_public_contacts(),
+            **_site_ctx(request),
         },
     )
 
@@ -186,7 +211,7 @@ async def search_page(
     building_groups = group_properties_by_building(all_filtered, has_active_filters)
 
     return templates.TemplateResponse(
-        "search.html",
+        _tpl(request, "search.html"),
         {
             "request": request,
             "base_url": _base_url(request),
@@ -207,6 +232,7 @@ async def search_page(
             "object_type": object_type or "",
             "has_active_filters": has_active_filters,
             **get_public_contacts(),
+            **_site_ctx(request),
         },
     )
 
@@ -246,7 +272,7 @@ async def map_page(
     ]
 
     return templates.TemplateResponse(
-        "map.html",
+        _tpl(request, "map.html"),
         {
             "request": request,
             "base_url": _base_url(request),
@@ -262,13 +288,43 @@ async def map_page(
             "min_area": min_area,
             "max_area": max_area,
             **get_public_contacts(),
+            **_site_ctx(request),
         },
     )
 
 
 @router.get("/faq")
 async def faq_page(request: Request):
-    return templates.TemplateResponse("faq.html", {"request": request, "base_url": _base_url(request), **get_public_contacts()})
+    return templates.TemplateResponse(
+        _tpl(request, "faq.html"),
+        {"request": request, "base_url": _base_url(request), **get_public_contacts(), **_site_ctx(request)},
+    )
+
+
+@router.get("/about")
+async def about_page(request: Request):
+    tpl_name = _tpl(request, "about.html")
+    try:
+        templates.get_template(tpl_name)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Page not found")
+    return templates.TemplateResponse(
+        tpl_name,
+        {"request": request, "base_url": _base_url(request), **get_public_contacts(), **_site_ctx(request)},
+    )
+
+
+@router.get("/contacts")
+async def contacts_page(request: Request):
+    tpl_name = _tpl(request, "contacts.html")
+    try:
+        templates.get_template(tpl_name)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Page not found")
+    return templates.TemplateResponse(
+        tpl_name,
+        {"request": request, "base_url": _base_url(request), **get_public_contacts(), **_site_ctx(request)},
+    )
 
 
 @router.get("/property/{slug}")
@@ -324,7 +380,7 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
 
     site_url = _base_url(request)
     return templates.TemplateResponse(
-        "property-single.html",
+        _tpl(request, "property-single.html"),
         {
             "request": request,
             "property": property,
@@ -333,6 +389,7 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
             "display_for_media": display_for_media,
             "site_url": site_url,
             **get_public_contacts(),
+            **_site_ctx(request),
         },
     )
 
