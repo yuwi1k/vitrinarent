@@ -240,12 +240,12 @@ def generate_cian_feed(properties: list) -> bytes:
         if condition_raw in CIAN_CONDITION_TYPES:
             condition = condition_raw
         else:
-            deco = (cian_data.get("Decoration") or "").strip()
+            deco = (cian_data.get("Decoration") or "").strip() or (getattr(prop, "decoration", None) or "").strip()
             condition = CIAN_CONDITION_TYPE_MAP.get(deco) or "office"
         etree.SubElement(obj, "ConditionType").text = condition
 
         # Layout: из формы (русский или enum) или по умолчанию cabinet
-        layout_raw = (cian_data.get("Layout") or "").strip()
+        layout_raw = (cian_data.get("Layout") or "").strip() or (getattr(prop, "layout_type", None) or "").strip()
         layout = (
             CIAN_LAYOUT_MAP.get(layout_raw)
             or CIAN_LAYOUT_MAP.get(layout_raw.capitalize() if layout_raw else "")
@@ -279,7 +279,7 @@ def generate_cian_feed(properties: list) -> bytes:
         if input_type_raw and input_type_raw in CIAN_INPUT_TYPE_MAP:
             input_type = input_type_raw
         else:
-            entrance = (cian_data.get("Entrance") or "").strip()
+            entrance = (cian_data.get("Entrance") or "").strip() or (getattr(prop, "entrance_type", None) or "").strip()
             input_type = CIAN_INPUT_TYPE_MAP.get(entrance) or "commonFromStreet"
         etree.SubElement(obj, "InputType").text = input_type
 
@@ -299,7 +299,9 @@ def generate_cian_feed(properties: list) -> bytes:
         else:
             etree.SubElement(building, "FloorsCount").text = "1"
         etree.SubElement(building, "TotalArea").text = str(area_val)
-        etree.SubElement(building, "HeatingType").text = "central"
+        heating_raw = (getattr(prop, "heating_type", None) or "").strip()
+        heating_map = {"Центральное": "central", "Автономное": "autonomous", "Нет": "none"}
+        etree.SubElement(building, "HeatingType").text = heating_map.get(heating_raw, "central")
         ceiling_val = cian_data.get("CeilingHeight")
         if ceiling_val is not None and str(ceiling_val).strip():
             try:
@@ -308,11 +310,11 @@ def generate_cian_feed(properties: list) -> bytes:
                 logger.warning("CIAN feed: invalid CeilingHeight for property %s: %s", prop.id, ceiling_val)
         elif getattr(prop, "ceiling_height", None) is not None:
             etree.SubElement(building, "CeilingHeight").text = str(prop.ceiling_height)
-        bld_type_raw = (cian_data.get("BuildingType") or "").strip()
+        bld_type_raw = (cian_data.get("BuildingType") or "").strip() or (getattr(prop, "building_type", None) or "").strip()
         bld_type = CIAN_BUILDING_TYPE_MAP.get(bld_type_raw) or "other"
         etree.SubElement(building, "Type").text = bld_type
         etree.SubElement(building, "StatusType").text = "operational"
-        parking_raw = (cian_data.get("ParkingType") or "").strip()
+        parking_raw = (cian_data.get("ParkingType") or "").strip() or (getattr(prop, "parking_type", None) or "").strip()
         parking_type = CIAN_PARKING_TYPE_MAP.get(parking_raw)
         if parking_type:
             parking_el = etree.SubElement(building, "Parking")
@@ -348,7 +350,7 @@ def generate_cian_feed(properties: list) -> bytes:
             etree.SubElement(bargain, "PaymentPeriod").text = payment_period
             lease_type = (cian_data.get("LeaseType") or "direct").strip() or "direct"
             if lease_type not in ("direct", "sublease"):
-                rental = (cian_data.get("RentalType") or "").strip().lower()
+                rental = (cian_data.get("RentalType") or "").strip().lower() or (getattr(prop, "rental_type", None) or "").strip().lower()
                 lease_type = "sublease" if "суб" in rental or rental == "sublease" else "direct"
             etree.SubElement(bargain, "LeaseType").text = lease_type
 

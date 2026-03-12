@@ -1,0 +1,142 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Сообщения{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none mb-3">
+  <div class="row align-items-center">
+    <div class="col-auto">
+      <h2 class="page-title">Сообщения</h2>
+    </div>
+  </div>
+</div>
+
+<ul class="nav nav-tabs mb-3" role="tablist">
+  <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-avito" role="tab">Авито</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-cian" role="tab">Циан</a></li>
+</ul>
+
+<div class="tab-content">
+  <div class="tab-pane active" id="tab-avito" role="tabpanel">
+    {% if avito_error %}
+    <div class="alert alert-danger">Ошибка Авито API: {{ avito_error }}</div>
+    {% elif avito_chats %}
+    <div class="row">
+      <div class="col-md-5">
+        <div class="list-group" id="avito-chats-list" style="max-height:600px;overflow-y:auto;">
+          {% for chat in avito_chats %}
+          <a href="#" class="list-group-item list-group-item-action avito-chat-item" data-chat-id="{{ chat.id }}">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1">{{ chat.users[0].name if chat.users else 'Чат #' ~ chat.id }}</h6>
+              <small class="text-muted chat-ts" data-ts="{{ chat.updated | default('') }}"></small>
+            </div>
+            {% if chat.context and chat.context.value and chat.context.value.title %}
+            <p class="mb-1 small fw-semibold text-truncate" style="color:#206bc4;">{{ chat.context.value.title }}</p>
+            {% endif %}
+            <p class="mb-0 text-muted small text-truncate">{{ chat.last_message.content.text if chat.last_message and chat.last_message.content else "—" }}</p>
+            {% if chat.unread_count %}
+            <span class="badge bg-primary rounded-pill">{{ chat.unread_count }}</span>
+            {% endif %}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-md-7">
+        <div class="card" id="avito-chat-detail" style="display:none;">
+          <div class="card-header"><strong id="avito-chat-title">Чат</strong></div>
+          <div class="card-body" id="avito-messages-container" style="max-height:400px;overflow-y:auto;"></div>
+          <div class="card-footer">
+            <form id="avito-send-form" class="d-flex gap-2">
+              <input type="text" class="form-control" id="avito-msg-input" placeholder="Написать сообщение..." required>
+              <button type="submit" class="btn btn-primary">Отправить</button>
+            </form>
+          </div>
+        </div>
+        <div id="avito-chat-placeholder" class="text-center text-muted py-5">Выберите чат для просмотра</div>
+      </div>
+    </div>
+    {% else %}
+    <div class="card"><div class="card-body text-center text-muted py-4">Нет чатов Авито</div></div>
+    {% endif %}
+  </div>
+
+  <div class="tab-pane" id="tab-cian" role="tabpanel">
+    <div class="card"><div class="card-body text-center text-muted py-4">
+      <p>API сообщений Циан недоступен в текущей версии.</p>
+      <p class="small">Для работы с сообщениями используйте <a href="https://www.cian.ru/cabinet/" target="_blank">личный кабинет Циан</a>.</p>
+    </div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block tail %}
+<script>
+(function () {
+  function formatTs(ts) {
+    if (!ts) return '';
+    var d = new Date(typeof ts === 'number' ? ts * 1000 : ts);
+    if (isNaN(d.getTime())) return String(ts);
+    return d.toLocaleString('ru-RU', {
+      timeZone: 'Europe/Moscow',
+      day: '2-digit', month: '2-digit',
+      hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  document.querySelectorAll('.chat-ts').forEach(function (el) {
+    var ts = el.getAttribute('data-ts');
+    if (ts) el.textContent = formatTs(Number(ts) || ts);
+  });
+
+  var currentChatId = null;
+  document.querySelectorAll('.avito-chat-item').forEach(function (item) {
+    item.addEventListener('click', function (e) {
+      e.preventDefault();
+      currentChatId = item.getAttribute('data-chat-id');
+      document.getElementById('avito-chat-placeholder').style.display = 'none';
+      document.getElementById('avito-chat-detail').style.display = 'block';
+      var userName = item.querySelector('h6').textContent;
+      var adTitle = item.querySelector('.fw-semibold');
+      document.getElementById('avito-chat-title').textContent = userName + (adTitle ? ' — ' + adTitle.textContent : '');
+      document.querySelectorAll('.avito-chat-item').forEach(function (el) { el.classList.remove('active'); });
+      item.classList.add('active');
+      loadMessages(currentChatId);
+    });
+  });
+
+  function loadMessages(chatId) {
+    var container = document.getElementById('avito-messages-container');
+    container.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>';
+    fetch('/dashboard/messages/avito/' + chatId, { headers: csrfHeaders() })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) { container.innerHTML = '<div class="text-danger">Ошибка: ' + (data.error || 'unknown') + '</div>'; return; }
+        var html = '';
+        (data.messages || []).slice().reverse().forEach(function (msg) {
+          var align = msg.direction === 'out' ? 'text-end' : 'text-start';
+          var bg = msg.direction === 'out' ? 'bg-primary text-white' : 'bg-light';
+          html += '<div class="mb-2 ' + align + '"><span class="d-inline-block px-3 py-2 rounded ' + bg + '">' + (msg.content && msg.content.text || '—') + '</span><br><small class="text-muted">' + formatTs(msg.created) + '</small></div>';
+        });
+        container.innerHTML = html || '<div class="text-muted text-center py-3">Нет сообщений</div>';
+        container.scrollTop = container.scrollHeight;
+      })
+      .catch(function (err) { container.innerHTML = '<div class="text-danger">Ошибка загрузки</div>'; });
+  }
+
+  var sendForm = document.getElementById('avito-send-form');
+  if (sendForm) sendForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!currentChatId) return;
+    var input = document.getElementById('avito-msg-input');
+    var text = input.value.trim();
+    if (!text) return;
+    var body = new URLSearchParams(); body.append('text', text);
+    fetch('/dashboard/messages/avito/' + currentChatId + '/send', {
+      method: 'POST', headers: csrfHeaders({'Content-Type': 'application/x-www-form-urlencoded'}), body: body.toString(),
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.ok) { input.value = ''; loadMessages(currentChatId); }
+      else { alert('Ошибка: ' + (data.error || 'unknown')); }
+    }).catch(function () { alert('Ошибка отправки'); });
+  });
+})();
+</script>
+{% endblock %}

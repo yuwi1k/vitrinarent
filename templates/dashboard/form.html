@@ -185,6 +185,130 @@
                     </div>
                 </div>
             </div>
+            <div class="card mb-3">
+                <div class="card-header"><h3 class="card-title mb-0">Характеристики помещения</h3><p class="text-muted small mb-0">Единые поля для Авито и Циан — заполняются один раз.</p></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Тип здания</label>
+                                <select name="building_type" class="form-select">
+                                    <option value="">— не указано —</option>
+                                    <option value="Бизнес-центр" {% if model and (model.building_type or '') == 'Бизнес-центр' %}selected{% endif %}>Бизнес-центр</option>
+                                    <option value="Торговый центр" {% if model and (model.building_type or '') == 'Торговый центр' %}selected{% endif %}>Торговый центр</option>
+                                    <option value="Административное здание" {% if model and (model.building_type or '') == 'Административное здание' %}selected{% endif %}>Административное здание</option>
+                                    <option value="Жилой дом" {% if model and (model.building_type or '') == 'Жилой дом' %}selected{% endif %}>Жилой дом</option>
+                                    <option value="Другой" {% if model and (model.building_type or '') == 'Другой' %}selected{% endif %}>Другой</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Класс здания</label>
+                                <select name="building_class" class="form-select">
+                                    <option value="">— не указано —</option>
+                                    <option value="A" {% if model and (model.building_class or '') == 'A' %}selected{% endif %}>A</option>
+                                    <option value="B" {% if model and (model.building_class or '') == 'B' %}selected{% endif %}>B</option>
+                                    <option value="C" {% if model and (model.building_class or '') == 'C' %}selected{% endif %}>C</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Отделка</label>
+                                <select name="decoration" class="form-select">
+                                    <option value="">— не указано —</option>
+                                    <option value="Без отделки" {% if model and (model.decoration or '') == 'Без отделки' %}selected{% endif %}>Без отделки</option>
+                                    <option value="Чистовая" {% if model and (model.decoration or '') == 'Чистовая' %}selected{% endif %}>Чистовая</option>
+                                    <option value="Офисная" {% if model and (model.decoration or '') == 'Офисная' %}selected{% endif %}>Офисная</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Вход</label>
+                                <select name="entrance_type" class="form-select">
+                                    <option value="">— не указано —</option>
+                                    <option value="С улицы" {% if model and (model.entrance_type or '') == 'С улицы' %}selected{% endif %}>С улицы</option>
+                                    <option value="Со двора" {% if model and (model.entrance_type or '') == 'Со двора' %}selected{% endif %}>Со двора</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Планировка</label>
+                                <select name="layout_type" class="form-select">
+                                    <option value="">— не указано —</option>
+                                    <option value="Кабинетная" {% if model and (model.layout_type or '') == 'Кабинетная' %}selected{% endif %}>Кабинетная</option>
+                                    <option value="Открытая" {% if model and (model.layout_type or '') == 'Открытая' %}selected{% endif %}>Открытая</option>
+                                    <option value="Смешанная" {% if model and (model.layout_type or '') == 'Смешанная' %}selected{% endif %}>Смешанная</option>
+                                    <option value="Коридорная" {% if model and (model.layout_type or '') == 'Коридорная' %}selected{% endif %}>Коридорная</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Отопление</label>
+                                <select name="heating_type" class="form-select">
+                                    <option value="">— не указано —</option>
+                                    <option value="Нет" {% if model and (model.heating_type or '') == 'Нет' %}selected{% endif %}>Нет</option>
+                                    <option value="Центральное" {% if model and (model.heating_type or '') == 'Центральное' %}selected{% endif %}>Центральное</option>
+                                    <option value="Автономное" {% if model and (model.heating_type or '') == 'Автономное' %}selected{% endif %}>Автономное</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Тип парковки</label>
+                                <select name="parking_type" class="form-select">
+                                    <option value="">— не указано —</option>
+                                    <option value="Нет" {% if model and (model.parking_type or '') == 'Нет' %}selected{% endif %}>Нет</option>
+                                    <option value="На улице" {% if model and (model.parking_type or '') == 'На улице' %}selected{% endif %}>На улице</option>
+                                    <option value="В здании" {% if model and (model.parking_type or '') == 'В здании' %}selected{% endif %}>В здании</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Парковочных мест</label>
+                                <input type="number" name="parking_spaces" class="form-control" value="{{ model.parking_spaces if model and model.parking_spaces is not none else '' }}" min="0" placeholder="Напр. 10">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Удалённость от дороги</label>
+                                <select name="distance_from_road" class="form-select">
+                                    <option value="">— не указано —</option>
+                                    <option value="Первая линия" {% if model and (model.distance_from_road or '') == 'Первая линия' %}selected{% endif %}>Первая линия</option>
+                                    <option value="Вторая линия и дальше" {% if model and (model.distance_from_road or '') == 'Вторая линия и дальше' %}selected{% endif %}>Вторая линия и дальше</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Право собственности</label>
+                                <select name="property_rights" class="form-select">
+                                    <option value="">— не указано —</option>
+                                    <option value="Собственник" {% if model and (model.property_rights or '') == 'Собственник' %}selected{% endif %}>Собственник</option>
+                                    <option value="Посредник" {% if model and (model.property_rights or '') == 'Посредник' %}selected{% endif %}>Посредник</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Тип аренды</label>
+                                <select name="rental_type" class="form-select">
+                                    <option value="">— не указано —</option>
+                                    <option value="Прямая" {% if model and (model.rental_type or '') == 'Прямая' %}selected{% endif %}>Прямая</option>
+                                    <option value="Субаренда" {% if model and (model.rental_type or '') == 'Субаренда' %}selected{% endif %}>Субаренда</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="tab-pane" id="pane-media" role="tabpanel">
@@ -271,96 +395,12 @@
             {% set deal_rent = (model and (model.deal_type or '') == 'Аренда') %}
             {% set deal_sale = (model and (model.deal_type or '') == 'Продажа') %}
             <input type="hidden" name="avito_data_json" id="avito_data_json" value="">
-            <p class="text-muted small mb-3">Параметры Авито «Коммерческая недвижимость». Поля зависят от типа сделки (Аренда = Сдам, Продажа = Продам). Id, Title, Price, Address, Description, Images — из вкладок выше.</p>
+            <div class="alert alert-info mb-3"><strong>Тип здания, отделка, парковка, вход, планировка, отопление, право собственности, тип аренды</strong> — заполняются на вкладке «Коммерция» и автоматически подставляются в фид Авито. Ниже — только Avito-специфичные параметры и override.</div>
 
-            <h5 class="mt-4 mb-2 text-success"><span class="badge bg-success me-2">Обязательные</span></h5>
-            <div class="card border-success mb-4">
-                <div class="card-header bg-success bg-opacity-10"><strong>Обязательные к заполнению</strong></div>
+            <div class="card border-secondary mb-4">
+                <div class="card-header"><strong>Avito-специфичные обязательные поля</strong></div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Право собственности (PropertyRights)</label>
-                                <select class="form-select avito-field" name="avito_PropertyRights" data-key="PropertyRights">
-                                    <option value="">— выберите —</option>
-                                    <option value="Собственник" {% if avito.get('PropertyRights') == 'Собственник' %}selected{% endif %}>Собственник</option>
-                                    <option value="Посредник" {% if avito.get('PropertyRights') == 'Посредник' %}selected{% endif %}>Посредник</option>
-                                </select>
-                                <small class="text-muted">Обязательно для Продам; для Сдам — необязательно.</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Тип здания (BuildingType)</label>
-                                <select class="form-select avito-field" name="avito_BuildingType" data-key="BuildingType">
-                                    <option value="">— выберите —</option>
-                                    <option value="Бизнес-центр" {% if avito.get('BuildingType') == 'Бизнес-центр' %}selected{% endif %}>Бизнес-центр</option>
-                                    <option value="Торговый центр" {% if avito.get('BuildingType') == 'Торговый центр' %}selected{% endif %}>Торговый центр</option>
-                                    <option value="Административное здание" {% if avito.get('BuildingType') == 'Административное здание' %}selected{% endif %}>Административное здание</option>
-                                    <option value="Жилой дом" {% if avito.get('BuildingType') == 'Жилой дом' %}selected{% endif %}>Жилой дом</option>
-                                    <option value="Другой" {% if avito.get('BuildingType') == 'Другой' %}selected{% endif %}>Другой</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Вход (Entrance)</label>
-                                <select class="form-select avito-field" name="avito_Entrance" data-key="Entrance">
-                                    <option value="">— выберите —</option>
-                                    <option value="С улицы" {% if avito.get('Entrance') == 'С улицы' %}selected{% endif %}>С улицы</option>
-                                    <option value="Со двора" {% if avito.get('Entrance') == 'Со двора' %}selected{% endif %}>Со двора</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Этаж (Floor)</label>
-                                {% set floor_default = '' %}
-                                {% if not avito.get('Floor') and model and model.floor_number is not none %}
-                                    {% set floor_default = model.floor_number %}
-                                {% endif %}
-                                <input type="text" class="form-control avito-field" name="avito_Floor" data-key="Floor" value="{{ avito.get('Floor', floor_default) }}" placeholder="1">
-                                <small class="text-muted">Для вида «Здание» не применяется.</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Отделка (Decoration)</label>
-                                <select class="form-select avito-field" name="avito_Decoration" data-key="Decoration">
-                                    <option value="">— выберите —</option>
-                                    <option value="Без отделки" {% if avito.get('Decoration') == 'Без отделки' %}selected{% endif %}>Без отделки</option>
-                                    <option value="Чистовая" {% if avito.get('Decoration') == 'Чистовая' %}selected{% endif %}>Чистовая</option>
-                                    <option value="Офисная" {% if avito.get('Decoration') == 'Офисная' %}selected{% endif %}>Офисная</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Тип парковки (ParkingType)</label>
-                                <select class="form-select avito-field" name="avito_ParkingType" data-key="ParkingType">
-                                    <option value="">— выберите —</option>
-                                    <option value="Нет" {% if avito.get('ParkingType') == 'Нет' %}selected{% endif %}>Нет</option>
-                                    <option value="На улице" {% if avito.get('ParkingType') == 'На улице' %}selected{% endif %}>На улице</option>
-                                    <option value="В здании" {% if avito.get('ParkingType') == 'В здании' %}selected{% endif %}>В здании</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Планировка (Layout) — для офиса</label>
-                                <input type="text" class="form-control avito-field" name="avito_Layout" data-key="Layout" value="{{ avito.get('Layout', '') }}" placeholder="Кабинетная|Открытая">
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4" id="avito-required-rent" style="display:{% if deal_sale %}none{% else %}block{% endif %};">
-                            <div class="mb-3">
-                                <label class="form-label">Тип аренды (RentalType) — только для «Сдам»</label>
-                                <select class="form-select avito-field" name="avito_RentalType" data-key="RentalType">
-                                    <option value="">— по умолчанию Прямая —</option>
-                                    <option value="Прямая" {% if avito.get('RentalType') == 'Прямая' %}selected{% endif %}>Прямая</option>
-                                    <option value="Субаренда" {% if avito.get('RentalType') == 'Субаренда' %}selected{% endif %}>Субаренда</option>
-                                </select>
-                            </div>
-                        </div>
                         <div class="col-md-6 col-lg-4" id="avito-required-sale" style="display:{% if deal_rent %}none{% else %}block{% endif %};">
                             <div class="mb-3">
                                 <label class="form-label">Тип сделки (TransactionType) — только для «Продам»</label>
@@ -481,20 +521,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card mb-3">
-                        <div class="card-header"><strong>Планировка и площадь (общее)</strong></div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label">Высота потолков, м (CeilingHeight)</label>
-                                {% set ceiling_default = '' %}
-                                {% if not avito.get('CeilingHeight') and model and model.ceiling_height is not none %}
-                                    {% set ceiling_default = '%.2f'|format(model.ceiling_height) %}
-                                {% endif %}
-                                <input type="text" class="form-control avito-field" name="avito_CeilingHeight" data-key="CeilingHeight" value="{{ avito.get('CeilingHeight', ceiling_default) }}" placeholder="2.5">
-                                <small class="text-muted">Десятичное число, до 100 м.</small>
-                            </div>
-                        </div>
-                    </div>
                     <div id="avito-block-sale" style="display:{% if deal_rent %}none{% else %}block{% endif %};">
                     <div class="card mb-3">
                         <div class="card-header"><strong>Только для «Продам»: помещение сдано</strong></div>
@@ -586,28 +612,10 @@
                         <div class="card-header"><strong>Отделка и коммуникации</strong></div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label class="form-label">Мощность электросети, кВт (PowerGridCapacity)</label>
-                                {% set power_default = '' %}
-                                {% if not avito.get('PowerGridCapacity') and model and model.power_kw is not none %}
-                                    {% set power_default = '%.1f'|format(model.power_kw) %}
-                                {% endif %}
-                                <input type="text" class="form-control avito-field" name="avito_PowerGridCapacity" data-key="PowerGridCapacity" value="{{ avito.get('PowerGridCapacity', power_default) }}" placeholder="12">
-                                <small class="text-muted">Целое число.</small>
-                            </div>
-                            <div class="mb-3">
                                 <label class="form-label">Электросеть дополнительно (PowerGridAdditionally)</label>
                                 <select class="form-select avito-field" name="avito_PowerGridAdditionally" data-key="PowerGridAdditionally">
                                     <option value="">— не указано —</option>
                                     <option value="Возможно увеличение мощности" {% if avito.get('PowerGridAdditionally') == 'Возможно увеличение мощности' %}selected{% endif %}>Возможно увеличение мощности</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Отопление (Heating)</label>
-                                <select class="form-select avito-field" name="avito_Heating" data-key="Heating">
-                                    <option value="">— не указано —</option>
-                                    <option value="Нет" {% if avito.get('Heating') == 'Нет' %}selected{% endif %}>Нет</option>
-                                    <option value="Центральное" {% if avito.get('Heating') == 'Центральное' %}selected{% endif %}>Центральное</option>
-                                    <option value="Автономное" {% if avito.get('Heating') == 'Автономное' %}selected{% endif %}>Автономное</option>
                                 </select>
                             </div>
                         </div>
@@ -615,39 +623,12 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card mb-3">
-                        <div class="card-header"><strong>О здании</strong></div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label">Класс здания (BuildingClass)</label>
-                                <select class="form-select avito-field" name="avito_BuildingClass" data-key="BuildingClass">
-                                    <option value="">— не указано —</option>
-                                    <option value="A" {% if avito.get('BuildingClass') == 'A' %}selected{% endif %}>A</option>
-                                    <option value="B" {% if avito.get('BuildingClass') == 'B' %}selected{% endif %}>B</option>
-                                    <option value="C" {% if avito.get('BuildingClass') == 'C' %}selected{% endif %}>C</option>
-                                </select>
-                                <small class="text-muted">Для офиса/склада при типах Бизнес-центр, Торговый центр, Другой.</small>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Удалённость от дороги (DistanceFromRoad)</label>
-                                <select class="form-select avito-field" name="avito_DistanceFromRoad" data-key="DistanceFromRoad">
-                                    <option value="">— не указано —</option>
-                                    <option value="Первая линия" {% if avito.get('DistanceFromRoad') == 'Первая линия' %}selected{% endif %}>Первая линия</option>
-                                    <option value="Вторая линия и дальше" {% if avito.get('DistanceFromRoad') == 'Вторая линия и дальше' %}selected{% endif %}>Вторая линия и дальше</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card mb-3">
                         <div class="card-header"><strong>Парковка (доп.)</strong></div>
                         <div class="card-body">
                             <div class="mb-3">
                                 <label class="form-label">Парковка дополнительно (ParkingAdditionally)</label>
                                 <input type="text" class="form-control avito-field" name="avito_ParkingAdditionally" data-key="ParkingAdditionally" value="{{ avito.get('ParkingAdditionally', '') }}" placeholder="Бесплатная | Подходит для грузового транспорта">
                                 <small class="text-muted">Одно или несколько через «|»: Бесплатная, Подходит для грузового транспорта.</small>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Количество мест (ParkingSpaces)</label>
-                                <input type="number" class="form-control avito-field" name="avito_ParkingSpaces" data-key="ParkingSpaces" value="{{ avito.get('ParkingSpaces', '') }}" min="0" max="10000" placeholder="10">
                             </div>
                         </div>
                     </div>
@@ -799,6 +780,7 @@
             {% set deal_rent_cian = (model and (model.deal_type or '') == 'Аренда') %}
             {% set deal_sale_cian = (model and (model.deal_type or '') == 'Продажа') %}
             <input type="hidden" name="cian_data_json" id="cian_data_json" value="">
+            <div class="alert alert-info mb-3"><strong>Тип здания, отделка, парковка, вход, планировка, этаж, этажность, высота потолков</strong> — заполняются на вкладке «Коммерция» и автоматически подставляются в фид Циан. Ниже — только Циан-специфичные параметры и override.</div>
             <p class="text-muted small mb-3">Параметры для фида Циан (коммерческая недвижимость). Title, Price, Address, Description, Images — из вкладок выше. Id в фиде = ID объекта в системе.</p>
 
             <h5 class="mt-2 mb-2 text-secondary"><span class="badge bg-secondary me-2">Категория Циан</span></h5>
@@ -889,30 +871,6 @@
                     <div class="row">
                         <div class="col-md-6 col-lg-4">
                             <div class="mb-3">
-                                <label class="form-label">Тип здания (BuildingType)</label>
-                                <select class="form-select cian-field" name="cian_BuildingType" data-key="BuildingType">
-                                    <option value="">— не указано —</option>
-                                    <option value="Бизнес-центр" {% if cian.get('BuildingType') == 'Бизнес-центр' %}selected{% endif %}>Бизнес-центр</option>
-                                    <option value="Торговый центр" {% if cian.get('BuildingType') == 'Торговый центр' %}selected{% endif %}>Торговый центр</option>
-                                    <option value="Административное здание" {% if cian.get('BuildingType') == 'Административное здание' %}selected{% endif %}>Административное здание</option>
-                                    <option value="Жилой дом" {% if cian.get('BuildingType') == 'Жилой дом' %}selected{% endif %}>Жилой дом</option>
-                                    <option value="Другой" {% if cian.get('BuildingType') == 'Другой' %}selected{% endif %}>Другой</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Отделка (Decoration)</label>
-                                <select class="form-select cian-field" name="cian_Decoration" data-key="Decoration">
-                                    <option value="">— не указано —</option>
-                                    <option value="Без отделки" {% if cian.get('Decoration') == 'Без отделки' %}selected{% endif %}>Без отделки</option>
-                                    <option value="Чистовая" {% if cian.get('Decoration') == 'Чистовая' %}selected{% endif %}>Чистовая</option>
-                                    <option value="Офисная" {% if cian.get('Decoration') == 'Офисная' %}selected{% endif %}>Офисная</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
                                 <label class="form-label">Состояние (ConditionType) — для фида Циан</label>
                                 <select class="form-select cian-field" name="cian_ConditionType" data-key="ConditionType">
                                     <option value="">— по умолчанию из Отделки —</option>
@@ -927,48 +885,6 @@
                         </div>
                         <div class="col-md-6 col-lg-4">
                             <div class="mb-3">
-                                <label class="form-label">Этаж (Floor)</label>
-                                {% set cian_floor_default = cian.get('Floor', model.floor_number if model and model.floor_number is not none else '') %}
-                                <input type="text" class="form-control cian-field" name="cian_Floor" data-key="Floor" value="{{ cian_floor_default }}" placeholder="1">
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Этажность (FloorsTotal)</label>
-                                {% set cian_floors_default = cian.get('FloorsTotal', model.floors_total if model and model.floors_total is not none else '') %}
-                                <input type="text" class="form-control cian-field" name="cian_FloorsTotal" data-key="FloorsTotal" value="{{ cian_floors_default }}" placeholder="10">
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Высота потолков, м (CeilingHeight)</label>
-                                {% set cian_ceiling_default = cian.get('CeilingHeight', model.ceiling_height if model and model.ceiling_height is not none else '') %}
-                                <input type="text" class="form-control cian-field" name="cian_CeilingHeight" data-key="CeilingHeight" value="{{ cian_ceiling_default }}" placeholder="2.7">
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Парковка (ParkingType)</label>
-                                <select class="form-select cian-field" name="cian_ParkingType" data-key="ParkingType">
-                                    <option value="">— не указано —</option>
-                                    <option value="Нет" {% if cian.get('ParkingType') == 'Нет' %}selected{% endif %}>Нет</option>
-                                    <option value="На улице" {% if cian.get('ParkingType') == 'На улице' %}selected{% endif %}>На улице</option>
-                                    <option value="В здании" {% if cian.get('ParkingType') == 'В здании' %}selected{% endif %}>В здании</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Вход (Entrance)</label>
-                                <select class="form-select cian-field" name="cian_Entrance" data-key="Entrance">
-                                    <option value="">— не указано —</option>
-                                    <option value="С улицы" {% if cian.get('Entrance') == 'С улицы' %}selected{% endif %}>С улицы</option>
-                                    <option value="Со двора" {% if cian.get('Entrance') == 'Со двора' %}selected{% endif %}>Со двора</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
                                 <label class="form-label">Тип входа (InputType) — для фида Циан</label>
                                 <select class="form-select cian-field" name="cian_InputType" data-key="InputType">
                                     <option value="">— по умолчанию из Входа —</option>
@@ -976,28 +892,6 @@
                                     <option value="commonFromYard" {% if cian.get('InputType') == 'commonFromYard' %}selected{% endif %}>Общий со двора</option>
                                     <option value="separateFromStreet" {% if cian.get('InputType') == 'separateFromStreet' %}selected{% endif %}>Отдельный с улицы</option>
                                     <option value="separateFromYard" {% if cian.get('InputType') == 'separateFromYard' %}selected{% endif %}>Отдельный со двора</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="mb-3">
-                                <label class="form-label">Планировка (Layout)</label>
-                                <select class="form-select cian-field" name="cian_Layout" data-key="Layout">
-                                    <option value="">— не указано (кабинетная) —</option>
-                                    <option value="Кабинетная" {% if cian.get('Layout') == 'Кабинетная' %}selected{% endif %}>Кабинетная</option>
-                                    <option value="Открытая" {% if cian.get('Layout') == 'Открытая' %}selected{% endif %}>Открытая (openSpace)</option>
-                                    <option value="Смешанная" {% if cian.get('Layout') == 'Смешанная' %}selected{% endif %}>Смешанная</option>
-                                    <option value="Коридорная" {% if cian.get('Layout') == 'Коридорная' %}selected{% endif %}>Коридорная</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4" id="cian-rent-type" style="display:{% if deal_sale_cian %}none{% else %}block{% endif %};">
-                            <div class="mb-3">
-                                <label class="form-label">Тип аренды (RentalType)</label>
-                                <select class="form-select cian-field" name="cian_RentalType" data-key="RentalType">
-                                    <option value="">— не указано —</option>
-                                    <option value="Прямая" {% if cian.get('RentalType') == 'Прямая' %}selected{% endif %}>Прямая</option>
-                                    <option value="Субаренда" {% if cian.get('RentalType') == 'Субаренда' %}selected{% endif %}>Субаренда</option>
                                 </select>
                             </div>
                         </div>
@@ -1162,29 +1056,40 @@
     else window.addEventListener('load', function() { if (typeof ymaps !== 'undefined') ymaps.ready(initMap); });
 })();
 
-// Автоподстановка коммерческих полей во вкладку Авито
-(function syncCommerceToAvito() {
-    var floorInput = document.querySelector('input[name="floor_number"]');
-    var ceilingInput = document.querySelector('input[name="ceiling_height"]');
-    var powerInput = document.querySelector('input[name="power_kw"]');
-    var avitoFloor = document.querySelector('input[name="avito_Floor"]');
-    var avitoCeiling = document.querySelector('input[name="avito_CeilingHeight"]');
-    var avitoPower = document.querySelector('input[name="avito_PowerGridCapacity"]');
-    function bind(source, target, formatter) {
-        if (!source || !target) return;
-        if (typeof target.dataset.autoFrom === 'undefined') target.dataset.autoFrom = target.value || '';
-        source.addEventListener('input', function () {
-            var val = formatter ? formatter(source.value || '') : (source.value || '');
-            if (target.value === '' || target.value === target.dataset.autoFrom) {
-                target.value = val;
-                target.dataset.autoFrom = val;
-            }
-        });
-    }
-    bind(floorInput, avitoFloor, function (v) { return v.trim(); });
-    bind(ceilingInput, avitoCeiling, function (v) { return v.replace(',', '.').trim(); });
-    bind(powerInput, avitoPower, function (v) { return v.replace(',', '.').trim(); });
+(function() {
+    var parentSel = document.querySelector('select[name="parent_id"]');
+    var frm = document.querySelector('form[action*="/dashboard/properties"]');
+    if (!parentSel || !frm) return;
+    parentSel.addEventListener('change', function() {
+        var pid = parentSel.value;
+        if (!pid) return;
+        fetch('/dashboard/properties/api/parent-data/' + pid)
+            .then(function(r) { return r.json(); })
+            .then(function(json) {
+                if (!json.ok) return;
+                var d = json.data;
+                var fields = ['address','latitude','longitude','floors_total','building_type',
+                    'building_class','decoration','parking_type','entrance_type','layout_type',
+                    'heating_type','property_rights','rental_type','parking_spaces','distance_from_road'];
+                var filled = 0;
+                fields.forEach(function(name) {
+                    var val = d[name];
+                    if (val === null || val === undefined || val === '') return;
+                    var el = frm.querySelector('[name="' + name + '"]');
+                    if (!el) return;
+                    var cur = (el.value || '').trim();
+                    if (cur && cur !== '0') return;
+                    el.value = String(val);
+                    filled++;
+                });
+                if (filled > 0 && typeof showToast === 'function') {
+                    showToast('Поля заполнены от родительского объекта (' + filled + ')', 'success');
+                }
+            })
+            .catch(function() {});
+    });
 })();
+
 
 // --- Main image preview ---
 (function() {

@@ -19,10 +19,12 @@
   <meta name="twitter:image" content="{{ base_url }}/static/images/og-default.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
   <link rel="stylesheet" href="/static/css/vitrina-asset.css" />
 </head>
 <body class="map-page">
+  <a href="#main-content" class="skip-link">Перейти к содержимому</a>
   <header class="header">
     <div class="container header-container">
       <a href="/" class="logo">Vitrina</a>
@@ -38,7 +40,7 @@
     </div>
   </header>
 
-  <main class="map-layout">
+  <main class="map-layout" id="main-content">
     <aside class="map-sidebar" id="map-sidebar">
       <div class="map-sidebar-header">
         <h1 class="map-sidebar-title">На карте</h1>
@@ -67,7 +69,7 @@
         <div class="map-card" data-id="{{ p.id }}" data-lat="{{ p.latitude }}" data-lng="{{ p.longitude }}" data-cat="{{ p.category }}" data-deal="{{ p.deal_type }}" data-href="/property/{{ p.slug or p.id }}">
           <div class="map-card-img">
             {% if p.main_image %}
-            <img src="{{ p.main_image }}" alt="{{ p.title }}" loading="lazy" />
+            <img src="{{ p.main_image }}" alt="{{ p.title or p.address or 'Объект недвижимости' }}" loading="lazy" />
             {% else %}
             <div class="map-card-img-placeholder"></div>
             {% endif %}

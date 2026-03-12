@@ -97,6 +97,35 @@ class CianApiClient:
         r.raise_for_status()
         return r.json()
 
+    async def get_order_report(self) -> Dict[str, Any]:
+        """GET /v1/get-order — feed import report with errors."""
+        err = self._validate_config()
+        if err:
+            raise RuntimeError(err)
+        r = await self._request_with_retry(
+            "get", f"{self.base_url}/v1/get-order",
+            headers=self._headers(), timeout=30.0,
+        )
+        r.raise_for_status()
+        return r.json()
+
+    async def get_messages(self, offer_id: int = None, date_from: str = None) -> Dict[str, Any]:
+        """GET /v1/get-messages — inbox messages."""
+        err = self._validate_config()
+        if err:
+            raise RuntimeError(err)
+        params = {}
+        if offer_id:
+            params["offerId"] = offer_id
+        if date_from:
+            params["dateFrom"] = date_from
+        r = await self._request_with_retry(
+            "get", f"{self.base_url}/v1/get-messages",
+            headers=self._headers(), params=params, timeout=30.0,
+        )
+        r.raise_for_status()
+        return r.json()
+
     async def get_my_offers(
         self,
         page: int = 1,

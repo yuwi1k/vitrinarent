@@ -5,8 +5,9 @@ import asyncio
 import csv
 import io
 import logging
+import os
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Request, Depends
 
 logger = logging.getLogger(__name__)
 from fastapi.responses import Response, JSONResponse
@@ -15,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.dashboard.common import check_admin
+from app.dashboard.common import check_admin, templates
 from app.models import Property
 from app.feed import generate_avito_feed_full
 from app.feed_cian import generate_cian_feed
@@ -275,21 +276,28 @@ async def cian_sync_offer_statuses(db: AsyncSession = Depends(get_db)):
     )
 
 
+@router.get("/cian/register-feed", dependencies=[Depends(check_admin)])
+async def cian_register_feed_info(request: Request):
+    site_url = os.getenv("SITE_URL", "http://127.0.0.1:8000").rstrip("/")
+    feed_url = f"{site_url}/cian.xml"
+    return templates.TemplateResponse("dashboard/cian_register_feed.html", {
+        "request": request,
+        "feed_url": feed_url,
+    })
+
+
 @router.get("/export/csv", dependencies=[Depends(check_admin)])
 async def export_properties_csv(db: AsyncSession = Depends(get_db)):
-    stmt = (
-        select(Property)
-        .where(Property.parent_id.is_(None))
-        .order_by(Property.id.asc())
-    )
+    stmt = select(Property).order_by(Property.parent_id.asc().nullsfirst(), Property.id.asc())
     result = await db.execute(stmt)
     properties = result.scalars().all()
     output = io.StringIO()
     writer = csv.writer(output, delimiter=";")
-    writer.writerow(["id", "title", "slug", "deal_type", "category", "price", "area", "address", "is_active"])
+    writer.writerow(["id", "parent_id", "title", "slug", "deal_type", "category", "price", "area", "address", "is_active"])
     for p in properties:
         writer.writerow([
             p.id,
+            p.parent_id or "",
             (p.title or ""),
             (p.slug or ""),
             (p.deal_type or ""),

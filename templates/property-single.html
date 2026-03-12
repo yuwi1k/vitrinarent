@@ -12,8 +12,9 @@
   <meta property="og:title" content="{{ property.title }} — Vitrina" />
   <meta property="og:description" content="{{ (property.description or property.title or 'Коммерческая недвижимость')[:200] }}" />
   <meta property="og:url" content="{{ site_url }}/property/{{ property.slug or property.id }}" />
-  {% if property.main_image %}
-  <meta property="og:image" content="{{ site_url }}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" />
+  {% set _og_img = display_for_media.main_image if display_for_media and display_for_media.main_image else property.main_image %}
+  {% if _og_img %}
+  <meta property="og:image" content="{{ site_url }}{{ _og_img if _og_img.startswith('/') else '/' + _og_img }}" />
   {% else %}
   <meta property="og:image" content="{{ site_url }}/static/images/og-default.png" />
   {% endif %}
@@ -21,8 +22,8 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="{{ property.title }} — Vitrina" />
   <meta name="twitter:description" content="{{ (property.description or property.title or 'Коммерческая недвижимость')[:200] }}" />
-  {% if property.main_image %}
-  <meta name="twitter:image" content="{{ site_url }}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" />
+  {% if _og_img %}
+  <meta name="twitter:image" content="{{ site_url }}{{ _og_img if _og_img.startswith('/') else '/' + _og_img }}" />
   {% else %}
   <meta name="twitter:image" content="{{ site_url }}/static/images/og-default.png" />
   {% endif %}
@@ -34,8 +35,8 @@
     "name": "{{ (property.title or 'Объект')|replace('\\', '\\\\')|replace('"', '\\"') }}",
     "description": "{{ ((property.description or property.title or 'Объект недвижимости')[:500])|replace('\\', '\\\\')|replace('"', '\\"')|replace('\n', ' ') }}",
     "url": "{{ site_url }}/property/{{ property.slug or property.id }}",
-    {% if property.main_image %}
-    "image": "{{ site_url }}{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}",
+    {% if _og_img %}
+    "image": "{{ site_url }}{{ _og_img if _og_img.startswith('/') else '/' + _og_img }}",
     {% endif %}
     "offers": {
       "@type": "Offer",
@@ -51,7 +52,8 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
   <link rel="stylesheet" href="/static/css/vitrina-asset.css" />
 </head>
 <body>
@@ -91,7 +93,7 @@
         <div class="prop-content">
 
           <div class="prop-gallery" id="gallery" style="cursor:zoom-in;">
-            <img src="{{ all_images[0] }}" alt="{{ property.title }}" id="gallery-img" />
+            <img src="{{ all_images[0] }}" alt="{{ property.title or property.address or 'Объект недвижимости' }}" id="gallery-img" />
             {% if all_images|length > 1 %}
             <span class="prop-gallery__counter" id="gallery-counter">1 / {{ all_images|length }}</span>
             <button class="prop-gallery__nav prop-gallery__nav--prev" id="gallery-prev" aria-label="Назад">

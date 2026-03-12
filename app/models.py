@@ -43,10 +43,26 @@ class Property(Base):
     longitude = Column(Float, nullable=True)
 
     # Базовые характеристики здания/помещения
-    floors_total = Column(Integer, nullable=True)      # общее количество этажей в здании
-    floor_number = Column(Integer, nullable=True)      # этаж, на котором находится помещение
-    power_kw = Column(Float, nullable=True)            # доступная мощность, кВт
-    ceiling_height = Column(Float, nullable=True)      # высота потолков, м
+    floors_total = Column(Integer, nullable=True)
+    floor_number = Column(Integer, nullable=True)
+    power_kw = Column(Float, nullable=True)
+    ceiling_height = Column(Float, nullable=True)
+
+    # Единые поля для всех площадок (Avito + CIAN)
+    building_type = Column(String, nullable=True)       # "Бизнес-центр", "Торговый центр", ...
+    building_class = Column(String, nullable=True)      # "A", "B", "C"
+    decoration = Column(String, nullable=True)          # "Без отделки", "Чистовая", "Офисная"
+    parking_type = Column(String, nullable=True)        # "Нет", "На улице", "В здании"
+    entrance_type = Column(String, nullable=True)       # "С улицы", "Со двора"
+    layout_type = Column(String, nullable=True)         # "Кабинетная", "Открытая", "Смешанная", "Коридорная"
+    heating_type = Column(String, nullable=True)        # "Нет", "Центральное", "Автономное"
+    property_rights = Column(String, nullable=True)     # "Собственник", "Посредник"
+    rental_type = Column(String, nullable=True)         # "Прямая", "Субаренда"
+    parking_spaces = Column(Integer, nullable=True)
+    distance_from_road = Column(String, nullable=True)  # "Первая линия", "Вторая линия и дальше"
+
+    # Статистика с площадок (заполняется scheduler)
+    stats_data = Column(JSON, nullable=True)
 
     created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=True)
     updated_at = Column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow, nullable=True)

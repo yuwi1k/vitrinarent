@@ -87,7 +87,7 @@ def generate_avito_feed_full(properties: List) -> bytes:
         object_type = (getattr(prop, "avito_object_type", None) or "").strip()
         if not object_type:
             object_type = AVITO_OBJECT_TYPE_MAP.get((getattr(prop, "category", None) or "").strip(), AVITO_OBJECT_TYPE_DEFAULT)
-        deco = _avito("Decoration") or ("Офисная" if object_type == "Офисное помещение" else "Без отделки")
+        deco = _avito("Decoration") or (getattr(prop, "decoration", None) or "").strip() or ("Офисная" if object_type == "Офисное помещение" else "Без отделки")
 
         def _add(key: str, value: str, cdata: bool = False) -> None:
             if not value:
@@ -147,13 +147,16 @@ def generate_avito_feed_full(properties: List) -> bytes:
             _add("AdditionalObjectTypes", _avito("AdditionalObjectTypes"))
             _add("VideoFileURL", _avito("VideoFileURL"), cdata=True)
             _add("EgrnExtractionLink", _avito("EgrnExtractionLink"), cdata=True)
-            etree.SubElement(ad, "PropertyRights").text = _avito("PropertyRights", "Собственник")
+            _pr = _avito("PropertyRights") or (getattr(prop, "property_rights", None) or "").strip() or "Собственник"
+            etree.SubElement(ad, "PropertyRights").text = _pr
             _add("PremisesType", _avito("PremisesType"))
-            etree.SubElement(ad, "Entrance").text = _avito("Entrance", "С улицы")
+            _ent = _avito("Entrance") or (getattr(prop, "entrance_type", None) or "").strip() or "С улицы"
+            etree.SubElement(ad, "Entrance").text = _ent
             _add("EntranceAdditionally", _avito("EntranceAdditionally"))
-            etree.SubElement(ad, "Floor").text = _avito("Floor", "1")
+            _fl = _avito("Floor") or (str(int(prop.floor_number)) if getattr(prop, "floor_number", None) is not None else "") or "1"
+            etree.SubElement(ad, "Floor").text = _fl
             _add("FloorAdditionally", _avito("FloorAdditionally"))
-            _add("Layout", _avito("Layout"))
+            _add("Layout", _avito("Layout") or (getattr(prop, "layout_type", None) or "").strip())
             etree.SubElement(ad, "Square").text = str(float(prop.area) if prop.area is not None else 0)
             _add("PlaceIsRented", _avito("PlaceIsRented"))
             _add("RenterName", _avito("RenterName"))
@@ -161,18 +164,20 @@ def generate_avito_feed_full(properties: List) -> bytes:
             _add("RentContractExpireDate", _avito("RentContractExpireDate"))
             _add("PaymentIndexation", _avito("PaymentIndexation"))
             _add("PercentOfTrade", _avito("PercentOfTrade"))
-            _add("CeilingHeight", _avito("CeilingHeight"))
+            _add("CeilingHeight", _avito("CeilingHeight") or (str(prop.ceiling_height) if getattr(prop, "ceiling_height", None) is not None else ""))
             etree.SubElement(ad, "Decoration").text = deco
-            _add("PowerGridCapacity", _avito("PowerGridCapacity"))
+            _add("PowerGridCapacity", _avito("PowerGridCapacity") or (str(prop.power_kw) if getattr(prop, "power_kw", None) is not None else ""))
             _add("PowerGridAdditionally", _avito("PowerGridAdditionally"))
-            _add("Heating", _avito("Heating"))
+            _add("Heating", _avito("Heating") or (getattr(prop, "heating_type", None) or "").strip())
             _add("ReadinessStatus", _avito("ReadinessStatus"))
-            etree.SubElement(ad, "BuildingType").text = _avito("BuildingType", "Другой")
-            _add("BuildingClass", _avito("BuildingClass"))
-            _add("DistanceFromRoad", _avito("DistanceFromRoad"))
-            etree.SubElement(ad, "ParkingType").text = _avito("ParkingType", "На улице")
+            _bt = _avito("BuildingType") or (getattr(prop, "building_type", None) or "").strip() or "Другой"
+            etree.SubElement(ad, "BuildingType").text = _bt
+            _add("BuildingClass", _avito("BuildingClass") or (getattr(prop, "building_class", None) or "").strip())
+            _add("DistanceFromRoad", _avito("DistanceFromRoad") or (getattr(prop, "distance_from_road", None) or "").strip())
+            _pt = _avito("ParkingType") or (getattr(prop, "parking_type", None) or "").strip() or "На улице"
+            etree.SubElement(ad, "ParkingType").text = _pt
             _add("ParkingAdditionally", _avito("ParkingAdditionally"))
-            _add("ParkingSpaces", _avito("ParkingSpaces"))
+            _add("ParkingSpaces", _avito("ParkingSpaces") or (str(prop.parking_spaces) if getattr(prop, "parking_spaces", None) is not None else ""))
             etree.SubElement(ad, "TransactionType").text = _avito("TransactionType", "Продажа")
             _add("PriceType", _avito("PriceType"))
             _add("SaleOptions", _avito("SaleOptions"))
@@ -184,31 +189,35 @@ def generate_avito_feed_full(properties: List) -> bytes:
             _add("AdditionalObjectTypes", _avito("AdditionalObjectTypes"))
             _add("VideoFileURL", _avito("VideoFileURL"), cdata=True)
             _add("EgrnExtractionLink", _avito("EgrnExtractionLink"), cdata=True)
-            _add("PropertyRights", _avito("PropertyRights"))
+            _add("PropertyRights", _avito("PropertyRights") or (getattr(prop, "property_rights", None) or "").strip())
             _add("PremisesType", _avito("PremisesType"))
-            etree.SubElement(ad, "Entrance").text = _avito("Entrance", "С улицы")
+            _ent = _avito("Entrance") or (getattr(prop, "entrance_type", None) or "").strip() or "С улицы"
+            etree.SubElement(ad, "Entrance").text = _ent
             _add("EntranceAdditionally", _avito("EntranceAdditionally"))
-            etree.SubElement(ad, "Floor").text = _avito("Floor", "1")
+            _fl = _avito("Floor") or (str(int(prop.floor_number)) if getattr(prop, "floor_number", None) is not None else "") or "1"
+            etree.SubElement(ad, "Floor").text = _fl
             _add("FloorAdditionally", _avito("FloorAdditionally"))
-            _add("Layout", _avito("Layout"))
+            _add("Layout", _avito("Layout") or (getattr(prop, "layout_type", None) or "").strip())
             etree.SubElement(ad, "Square").text = str(float(prop.area) if prop.area is not None else 0)
             _add("SquareAdditionally", _avito("SquareAdditionally"))
-            _add("CeilingHeight", _avito("CeilingHeight"))
+            _add("CeilingHeight", _avito("CeilingHeight") or (str(prop.ceiling_height) if getattr(prop, "ceiling_height", None) is not None else ""))
             etree.SubElement(ad, "Decoration").text = deco
-            _add("PowerGridCapacity", _avito("PowerGridCapacity"))
+            _add("PowerGridCapacity", _avito("PowerGridCapacity") or (str(prop.power_kw) if getattr(prop, "power_kw", None) is not None else ""))
             _add("PowerGridAdditionally", _avito("PowerGridAdditionally"))
             _add("NumTax", _avito("NumTax"))
             _add("GuaranteeLetter", _avito("GuaranteeLetter"))
             _add("LandlinePhone", _avito("LandlinePhone"))
             _add("MailService", _avito("MailService"))
             _add("Secretary", _avito("Secretary"))
-            _add("Heating", _avito("Heating"))
-            etree.SubElement(ad, "BuildingType").text = _avito("BuildingType", "Другой")
-            _add("BuildingClass", _avito("BuildingClass"))
-            _add("DistanceFromRoad", _avito("DistanceFromRoad"))
-            etree.SubElement(ad, "ParkingType").text = _avito("ParkingType", "На улице")
+            _add("Heating", _avito("Heating") or (getattr(prop, "heating_type", None) or "").strip())
+            _bt = _avito("BuildingType") or (getattr(prop, "building_type", None) or "").strip() or "Другой"
+            etree.SubElement(ad, "BuildingType").text = _bt
+            _add("BuildingClass", _avito("BuildingClass") or (getattr(prop, "building_class", None) or "").strip())
+            _add("DistanceFromRoad", _avito("DistanceFromRoad") or (getattr(prop, "distance_from_road", None) or "").strip())
+            _pt = _avito("ParkingType") or (getattr(prop, "parking_type", None) or "").strip() or "На улице"
+            etree.SubElement(ad, "ParkingType").text = _pt
             _add("ParkingAdditionally", _avito("ParkingAdditionally"))
-            _add("ParkingSpaces", _avito("ParkingSpaces"))
+            _add("ParkingSpaces", _avito("ParkingSpaces") or (str(prop.parking_spaces) if getattr(prop, "parking_spaces", None) is not None else ""))
             _add("PlacesAmount", _avito("PlacesAmount"))
             _add("WeekendWork", _avito("WeekendWork"))
             _add("Working24Hours", _avito("Working24Hours"))
@@ -223,7 +232,8 @@ def generate_avito_feed_full(properties: List) -> bytes:
             _add("FoodAndDrinks", _avito("FoodAndDrinks"))
             _add("AvailableService", _avito("AvailableService"))
             _add("AdditionalFacilities", _avito("AdditionalFacilities"))
-            etree.SubElement(ad, "RentalType").text = _avito("RentalType", "Прямая")
+            _rt = _avito("RentalType") or (getattr(prop, "rental_type", None) or "").strip() or "Прямая"
+            etree.SubElement(ad, "RentalType").text = _rt
             _add("RentalHolidays", _avito("RentalHolidays"))
             _add("RentalMinimumPeriod", _avito("RentalMinimumPeriod"))
             _add("LeasePriceOptions", _avito("LeasePriceOptions"))

@@ -48,7 +48,45 @@ window.CIAN_CATEGORIES = {
     var hidden = document.getElementById('avito_data_json');
     if (!form || !hidden) return;
 
-    form.addEventListener('submit', function() {
+    var _skipValidation = false;
+
+    form.addEventListener('submit', function(e) {
+        if (!_skipValidation) {
+            var warnFields = [
+                { name: 'building_type', label: 'Тип здания' },
+                { name: 'decoration', label: 'Отделка' },
+                { name: 'entrance_type', label: 'Вход' },
+                { name: 'parking_type', label: 'Парковка' }
+            ];
+            var missing = [];
+            warnFields.forEach(function(f) {
+                var el = form.querySelector('select[name="' + f.name + '"]');
+                if (el && !el.value) missing.push(f.label);
+            });
+            if (missing.length) {
+                e.preventDefault();
+                var old = document.getElementById('validation-warning');
+                if (old) old.remove();
+                var alert = document.createElement('div');
+                alert.id = 'validation-warning';
+                alert.className = 'alert alert-warning alert-dismissible fade show mb-3';
+                alert.innerHTML =
+                    'Рекомендуется заполнить: <strong>' + missing.join(', ') +
+                    '</strong> — для корректной выгрузки на Авито и Циан.' +
+                    '<div class="mt-2">' +
+                    '<button type="button" class="btn btn-sm btn-warning me-2" id="btn-save-anyway">Всё равно сохранить</button>' +
+                    '<button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="alert">Отмена</button>' +
+                    '</div>';
+                form.parentNode.insertBefore(alert, form);
+                alert.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                document.getElementById('btn-save-anyway').addEventListener('click', function() {
+                    _skipValidation = true;
+                    form.requestSubmit();
+                });
+                return;
+            }
+        }
+
         var data = {};
         form.querySelectorAll('.avito-field').forEach(function(el) {
             var key = el.getAttribute('data-key');

@@ -122,6 +122,77 @@ class AvitoAutoloadClient:
 
         return {"status_code": status, "response": payload}
 
+    async def get_user_id(self) -> str:
+        """GET /core/v1/accounts/self — get current user_id."""
+        token = await self._get_access_token()
+        headers = {"Authorization": f"Bearer {token}"}
+        resp = await self._request_with_retry("get", f"{self.base_url}/core/v1/accounts/self", headers=headers, timeout=30.0)
+        resp.raise_for_status()
+        data = resp.json()
+        return str(data.get("id", ""))
+
+    async def get_items_stats(self, user_id: str, item_ids: list[int]) -> Dict[str, Any]:
+        """GET /core/v1/accounts/{user_id}/items/stats/ — statistics for items."""
+        token = await self._get_access_token(scope="stats:read")
+        headers = {"Authorization": f"Bearer {token}"}
+        params = {"itemIds": ",".join(str(i) for i in item_ids)}
+        resp = await self._request_with_retry(
+            "get",
+            f"{self.base_url}/core/v1/accounts/{user_id}/items/stats/",
+            headers=headers, params=params, timeout=30.0,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    async def get_autoload_item_info(self, user_id: str, ad_id: int) -> Dict[str, Any]:
+        """GET /autoload/v1/accounts/{user_id}/items/{ad_id}/ — item autoload details and errors."""
+        token = await self._get_access_token(scope="autoload:reports")
+        headers = {"Authorization": f"Bearer {token}"}
+        resp = await self._request_with_retry(
+            "get",
+            f"{self.base_url}/autoload/v1/accounts/{user_id}/items/{ad_id}/",
+            headers=headers, timeout=30.0,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    async def get_chats(self, user_id: str, unread_only: bool = False) -> Dict[str, Any]:
+        """GET /messenger/v2/accounts/{user_id}/chats — list chats."""
+        token = await self._get_access_token(scope="messenger:read")
+        headers = {"Authorization": f"Bearer {token}"}
+        params = {}
+        if unread_only:
+            params["unread_only"] = "true"
+        resp = await self._request_with_retry(
+            "get", f"{self.base_url}/messenger/v2/accounts/{user_id}/chats",
+            headers=headers, params=params, timeout=30.0,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    async def get_chat_messages(self, user_id: str, chat_id: str) -> Dict[str, Any]:
+        """GET /messenger/v3/accounts/{user_id}/chats/{chat_id}/messages/"""
+        token = await self._get_access_token(scope="messenger:read")
+        headers = {"Authorization": f"Bearer {token}"}
+        resp = await self._request_with_retry(
+            "get", f"{self.base_url}/messenger/v3/accounts/{user_id}/chats/{chat_id}/messages/",
+            headers=headers, timeout=30.0,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    async def send_chat_message(self, user_id: str, chat_id: str, text: str) -> Dict[str, Any]:
+        """POST /messenger/v1/accounts/{user_id}/chats/{chat_id}/messages"""
+        token = await self._get_access_token(scope="messenger:write")
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        body = {"message": {"text": text}, "type": "text"}
+        resp = await self._request_with_retry(
+            "post", f"{self.base_url}/messenger/v1/accounts/{user_id}/chats/{chat_id}/messages",
+            headers=headers, json=body, timeout=30.0,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
     def _auth_error_detail(self, response: httpx.Response) -> str:
         """Текст ошибки с телом ответа для отладки 401/403."""
         try:
@@ -130,6 +201,29 @@ class AvitoAutoloadClient:
         except Exception:
             logger.warning("Could not parse Avito error response as JSON", exc_info=True)
             return f"HTTP {response.status_code}: {response.text[:500]}"
+
+    async def apply_vas(self, user_id: str, item_id: int, vas_slug: str) -> Dict[str, Any]:
+        """PUT /core/v1/accounts/{user_id}/items/{item_id}/vas — apply VAS package."""
+        token = await self._get_access_token(scope="items:apply_vas")
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        body = {"vas": {"slug": vas_slug}}
+        resp = await self._request_with_retry(
+            "put", f"{self.base_url}/core/v1/accounts/{user_id}/items/{item_id}/vas",
+            headers=headers, json=body, timeout=30.0,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    async def get_vas_packages(self, user_id: str, item_id: int) -> Dict[str, Any]:
+        """GET /core/v1/accounts/{user_id}/items/{item_id}/vas — current VAS on item."""
+        token = await self._get_access_token(scope="items:apply_vas")
+        headers = {"Authorization": f"Bearer {token}"}
+        resp = await self._request_with_retry(
+            "get", f"{self.base_url}/core/v1/accounts/{user_id}/items/{item_id}/vas",
+            headers=headers, timeout=30.0,
+        )
+        resp.raise_for_status()
+        return resp.json()
 
     async def get_last_completed_report_items(self) -> Dict[str, Any]:
         """

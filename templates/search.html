@@ -22,7 +22,8 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
 
   <link rel="stylesheet" href="/static/css/vitrina-asset.css">
 
@@ -239,9 +240,9 @@
                 <div class="building-group__header">
                   <a class="building-group__image" href="/property/{{ bld.slug or bld.id }}">
                     {% if bld.main_image %}
-                      <img src="{{ bld.main_image if bld.main_image.startswith('/') else '/' + bld.main_image }}" alt="{{ bld.title }}" loading="lazy">
+                      <img src="{{ bld.main_image if bld.main_image.startswith('/') else '/' + bld.main_image }}" alt="{{ bld.title or bld.address or 'Объект недвижимости' }}" loading="lazy">
                     {% else %}
-                      <img src="/static/images/hero_bg_2.png" alt="{{ bld.title }}" loading="lazy">
+                      <img src="/static/images/hero_bg_2.png" alt="{{ bld.title or bld.address or 'Объект недвижимости' }}" loading="lazy">
                     {% endif %}
                   </a>
                   <div class="building-group__info">
@@ -334,9 +335,9 @@
                 <article class="object-card">
                   <a class="object-image" href="/property/{{ property.slug or property.id }}">
                     {% if property.main_image %}
-                      <img src="{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" alt="{{ property.title }}" loading="lazy">
+                      <img src="{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" alt="{{ property.title or property.address or 'Объект недвижимости' }}" loading="lazy">
                     {% else %}
-                      <img src="/static/images/hero_bg_2.png" alt="{{ property.title }}" loading="lazy">
+                      <img src="/static/images/hero_bg_2.png" alt="{{ property.title or property.address or 'Объект недвижимости' }}" loading="lazy">
                     {% endif %}
                     {% if property.category %}<span class="badge">{{ property.category }}</span>{% endif %}
                     {% if property.deal_type == 'Аренда' %}<span class="badge-deal badge-deal--rent">Аренда</span>{% elif property.deal_type == 'Продажа' %}<span class="badge-deal badge-deal--sale">Продажа</span>{% endif %}

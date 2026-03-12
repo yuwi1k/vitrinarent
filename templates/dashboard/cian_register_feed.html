@@ -1,0 +1,98 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Подключение автозагрузки Циан{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none mb-3">
+  <h2 class="page-title">Подключение автозагрузки Циан</h2>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">URL вашего XML-фида</h3>
+      </div>
+      <div class="card-body">
+        <div class="input-group">
+          <input type="text" class="form-control" id="feed-url" value="{{ feed_url }}" readonly>
+          <button type="button" class="btn btn-primary" id="copy-feed-url">Скопировать</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">Инструкция</h3>
+      </div>
+      <div class="card-body">
+        <ol>
+          <li>Скопируйте URL фида выше.</li>
+          <li>Отправьте письмо на <strong>import@cian.ru</strong> с темой и текстом, указанными ниже.</li>
+          <li>В ответном письме Циан подтвердит подключение фида (обычно 1–3 рабочих дня).</li>
+          <li>После подключения статусы объявлений будут синхронизироваться автоматически через планировщик.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">Шаблон письма</h3>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Кому:</label>
+          <div>import@cian.ru</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Тема:</label>
+          <div id="email-subject">Подключение XML-фида</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Текст письма:</label>
+          <div class="border rounded p-3 bg-light" id="email-body">Здравствуйте!
+
+Прошу подключить автоматическую загрузку объявлений по XML-фиду.
+
+URL фида: {{ feed_url }}
+ID аккаунта Циан: [УКАЖИТЕ ВАШ ID АККАУНТА]
+
+Тип недвижимости: коммерческая
+Формат: XML (стандарт Циан)
+
+Буду благодарен за оперативное подключение.
+
+С уважением,
+[ВАШЕ ИМЯ]</div>
+        </div>
+        <button type="button" class="btn btn-secondary" id="copy-email-body">Скопировать текст письма</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block tail %}
+<script>
+(function () {
+  document.getElementById('copy-feed-url').addEventListener('click', function () {
+    var url = document.getElementById('feed-url').value;
+    navigator.clipboard.writeText(url).then(function () {
+      showToast('URL фида скопирован', 'success');
+    }).catch(function () {
+      showToast('Не удалось скопировать', 'danger');
+    });
+  });
+
+  document.getElementById('copy-email-body').addEventListener('click', function () {
+    var text = document.getElementById('email-body').innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      showToast('Текст письма скопирован', 'success');
+    }).catch(function () {
+      showToast('Не удалось скопировать', 'danger');
+    });
+  });
+})();
+</script>
+{% endblock %}

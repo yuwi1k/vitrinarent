@@ -23,45 +23,23 @@
         </h1>
         <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
           <div class="nav-item dropdown">
-            <a href="#" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown"
-              aria-expanded="false">Авито</a>
+            <a href="#" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">Экспорт и синхронизация</a>
             <div class="dropdown-menu dropdown-menu-end">
-              <a class="dropdown-item" href="/dashboard/export/avito" download="avito_feed.xml"
-                title="Полный XML по шаблонам Продам/Сдам">Скачать фид Авито</a>
-              <a class="dropdown-item" href="/dashboard/export/avito-new" download="avito_feed_new.xml"
-                title="Только объекты без AvitoId">Фид новых для Авито</a>
+              <h6 class="dropdown-header">Авито</h6>
+              <a class="dropdown-item" href="/dashboard/export/avito" download="avito_feed.xml">Скачать фид</a>
+              <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/export/avito-autoload-new" data-success="Автозагрузка запущена">Отправить новых на Авито</button>
+              <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/avito/sync" data-success="Статусы синхронизированы: {value}" data-success-field="updated">Синхронизировать статусы</button>
+              <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/avito.xml">Скопировать URL фида</button>
               <div class="dropdown-divider"></div>
-              <button type="button" class="dropdown-item ajax-action-btn"
-                data-url="/dashboard/export/avito-autoload-new" data-success="Автозагрузка Авито запущена"
-                title="Отправить через Autoload API">Отправить новых на Авито</button>
-              <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/avito/sync"
-                data-success="Статусы Авито синхронизированы: обновлено {value}" data-success-field="updated"
-                title="Подтянуть AvitoId из отчёта">Синхронизировать статусы Авито</button>
+              <h6 class="dropdown-header">Циан</h6>
+              <a class="dropdown-item" href="/dashboard/export/cian" download="cian_feed.xml">Скачать фид</a>
+              <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/cian/sync" data-success="Статусы синхронизированы: {value}" data-success-field="updated">Синхронизировать статусы</button>
+              <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/cian.xml">Скопировать URL фида</button>
               <div class="dropdown-divider"></div>
-              <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/avito.xml"
-                title="URL для настройки автозагрузки в ЛК Авито">Скопировать URL фида</button>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="/dashboard/settings">Настройки (контакты для фида)</a>
+              <a class="dropdown-item" href="/dashboard/export/csv">Экспорт CSV</a>
+              <a class="dropdown-item" href="/dashboard/settings">Настройки</a>
             </div>
           </div>
-          <div class="nav-item dropdown">
-            <a href="#" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown"
-              aria-expanded="false">Циан</a>
-            <div class="dropdown-menu dropdown-menu-end">
-              <a class="dropdown-item" href="/dashboard/export/cian" download="cian_feed.xml"
-                title="XML для импорта в ЛК Циан">Скачать фид Циан</a>
-              <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/cian/import-status"
-                data-success="Статус импорта Циан получен" title="Состояние последней выгрузки">Статус импорта
-                Циан</button>
-              <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/cian/sync"
-                data-success="Статусы Циан синхронизированы: обновлено {value}" data-success-field="updated"
-                title="Подтянуть CianOfferId и статус из API">Синхронизировать статусы Циан</button>
-              <div class="dropdown-divider"></div>
-              <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/cian.xml"
-                title="URL фида для настройки в ЛК Циан">Скопировать URL фида</button>
-            </div>
-          </div>
-          <a href="/dashboard/export/csv" class="btn btn-outline-secondary btn-sm">Экспорт CSV</a>
           <a href="/dashboard/logout" class="btn btn-outline-danger btn-sm">Выйти</a>
         </div>
         <div class="collapse navbar-collapse" id="navbar-menu">
@@ -78,12 +56,20 @@
                 href="/dashboard/properties">Объекты</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if request.url.path.startswith('/dashboard/folders') %}active{% endif %}"
-                href="/dashboard/folders">Файлы</a>
+              <a class="nav-link {% if request.url.path.startswith('/dashboard/promotion') %}active{% endif %}"
+                href="/dashboard/promotion">Продвижение</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if request.url.path == '/dashboard/settings/password' %}active{% endif %}"
-                href="/dashboard/settings/password">Сменить пароль</a>
+              <a class="nav-link {% if request.url.path.startswith('/dashboard/messages') %}active{% endif %}"
+                href="/dashboard/messages">Сообщения</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.url.path == '/dashboard/feed-errors' %}active{% endif %}"
+                href="/dashboard/feed-errors">Ошибки фидов</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.url.path == '/dashboard/scheduler' %}active{% endif %}"
+                href="/dashboard/scheduler">Планировщик</a>
             </li>
           </ul>
         </div>

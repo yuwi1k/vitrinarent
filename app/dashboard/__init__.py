@@ -12,6 +12,10 @@ from app.dashboard.properties import router as properties_router
 from app.dashboard.export import router as export_router
 from app.dashboard.settings import router as settings_router
 from app.dashboard.media import router as media_router
+from app.dashboard.scheduler_ui import router as scheduler_router
+from app.dashboard.errors_ui import router as errors_router
+from app.dashboard.messages_ui import router as messages_router
+from app.dashboard.promotion_ui import router as promotion_router
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -21,3 +25,7 @@ router.include_router(export_router)
 router.include_router(settings_router)
 router.include_router(properties_router)
 router.include_router(media_router)
+router.include_router(scheduler_router)
+router.include_router(errors_router)
+router.include_router(messages_router)
+router.include_router(promotion_router)

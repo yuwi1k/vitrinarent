@@ -108,6 +108,8 @@
                     <th>Тип</th>
                     <th>Цена</th>
                     <th>Статус</th>
+                    <th>Просмотры</th>
+                    <th>Контакты</th>
                     <th class="w-1">Действия</th>
                 </tr>
             </thead>
@@ -162,6 +164,18 @@
                         {% endif %}
                     </td>
                     <td>
+                        {% set sd = parent.stats_data or {} %}
+                        {% if sd and sd is mapping %}
+                        {{ (sd.get("avito_views", 0) or 0) + (sd.get("cian_views", 0) or 0) }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% set sd = parent.stats_data or {} %}
+                        {% if sd and sd is mapping %}
+                        {{ (sd.get("avito_contacts", 0) or 0) + (sd.get("cian_contacts", 0) or 0) }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
                         <div class="btn-list flex-nowrap">
                             <a href="/dashboard/properties/edit/{{ parent.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
                             <a href="/dashboard/properties/copy/{{ parent.id }}" class="btn btn-sm btn-outline-secondary" title="Копировать">Копировать</a>
@@ -171,7 +185,7 @@
                 </tr>
                 {% if children|length > 0 %}
                 <tr class="child-rows-wrapper">
-                    <td colspan="8" class="p-0 border-0">
+                    <td colspan="10" class="p-0 border-0">
                         <div class="collapse show" id="children-{{ parent.id }}">
                             <table class="table table-sm table-striped mb-0 bg-light">
                                 <tbody>
@@ -218,6 +232,18 @@
                                             {% endif %}
                                         </td>
                                         <td>
+                                            {% set sd_ch = ch.stats_data or {} %}
+                                            {% if sd_ch and sd_ch is mapping %}
+                                            {{ (sd_ch.get("avito_views", 0) or 0) + (sd_ch.get("cian_views", 0) or 0) }}
+                                            {% else %}—{% endif %}
+                                        </td>
+                                        <td>
+                                            {% set sd_ch = ch.stats_data or {} %}
+                                            {% if sd_ch and sd_ch is mapping %}
+                                            {{ (sd_ch.get("avito_contacts", 0) or 0) + (sd_ch.get("cian_contacts", 0) or 0) }}
+                                            {% else %}—{% endif %}
+                                        </td>
+                                        <td>
                                             <div class="btn-list flex-nowrap">
                                                 <a href="/dashboard/properties/edit/{{ ch.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
                                                 <a href="/dashboard/properties/copy/{{ ch.id }}" class="btn btn-sm btn-outline-secondary">Копировать</a>
@@ -234,7 +260,7 @@
                 {% endif %}
                 {% else %}
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">Нет объектов. <a href="/dashboard/properties/new">Добавить первый</a>.</td>
+                    <td colspan="10" class="text-center text-muted py-4">Нет объектов. <a href="/dashboard/properties/new">Добавить первый</a>.</td>
                 </tr>
                 {% endfor %}
             </tbody>

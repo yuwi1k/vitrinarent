@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 import bleach
 from fastapi import APIRouter, Request, Depends, HTTPException, Query, Response
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,6 +22,7 @@ from app.database import get_db
 from app.models import Property
 from app.feed import generate_avito_feed
 from app.feed_cian import generate_cian_feed
+from app.feed_jcat import generate_jcat_feed
 from app.services import build_search_query, group_properties_by_building, BUILDING_PREVIEW_COUNT
 from app.settings_store import get_public_contacts
 
@@ -298,6 +300,8 @@ async def read_property(slug: str, request: Request, db: AsyncSession = Depends(
         )
         result = await db.execute(stmt)
         property = result.unique().scalars().first()
+        if property and property.slug:
+            return RedirectResponse(url=f"/property/{property.slug}", status_code=301)
     if not property:
         raise HTTPException(status_code=404, detail="Object not found")
 
@@ -345,17 +349,22 @@ async def sitemap_xml(request: Request, db: AsyncSession = Depends(get_db)) -> R
     proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "https").split(",")[0].strip() or "https"
     base = f"{proto}://{host}".rstrip("/") if host else str(request.url.replace(path="", query="")).rstrip("/")
 
-    static_paths = ["/", "/search", "/faq", "/map"]
+    static_pages = [
+        ("/", "daily", "1.0"),
+        ("/search", "daily", "0.9"),
+        ("/map", "weekly", "0.7"),
+        ("/faq", "monthly", "0.5"),
+    ]
 
     stmt = select(Property).where(Property.is_active == True)
     result = await db.execute(stmt)
     props = result.scalars().all()
 
     url_entries: list[str] = []
-    for path in static_paths:
+    for path, freq, prio in static_pages:
         url_entries.append(
             f"<url><loc>{base}{path}</loc>"
-            f"<changefreq>weekly</changefreq><priority>0.8</priority></url>"
+            f"<changefreq>{freq}</changefreq><priority>{prio}</priority></url>"
         )
     for p in props:
         slug = p.slug or str(p.id)
@@ -385,6 +394,12 @@ async def get_avito_feed_route(db: AsyncSession = Depends(get_db)):
     properties = result.scalars().all()
     xml_content = generate_avito_feed(properties)
     return Response(content=xml_content, media_type="application/xml")
+
+
+@router.get("/jcat.xml")
+async def jcat_xml_feed(db: AsyncSession = Depends(get_db)):
+    xml = await generate_jcat_feed(db)
+    return Response(content=xml, media_type="application/xml; charset=utf-8")
 
 
 @router.get("/cian.xml")

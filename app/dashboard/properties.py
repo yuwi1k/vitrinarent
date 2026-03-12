@@ -102,6 +102,17 @@ def _form_model_from_params(
         power_kw=kwargs.get("power_kw"),
         ceiling_height=kwargs.get("ceiling_height"),
         avito_object_type=kwargs.get("avito_object_type"),
+        building_type=kwargs.get("building_type"),
+        building_class=kwargs.get("building_class"),
+        decoration=kwargs.get("decoration"),
+        parking_type=kwargs.get("parking_type"),
+        entrance_type=kwargs.get("entrance_type"),
+        layout_type=kwargs.get("layout_type"),
+        heating_type=kwargs.get("heating_type"),
+        property_rights=kwargs.get("property_rights"),
+        rental_type=kwargs.get("rental_type"),
+        parking_spaces=kwargs.get("parking_spaces"),
+        distance_from_road=kwargs.get("distance_from_road"),
     )
 
 
@@ -127,6 +138,17 @@ async def _render_create_form_error(
     power_kw_val: Optional[float] = None,
     ceiling_height_val: Optional[float] = None,
     avito_type_val: Optional[str] = None,
+    building_type_val: Optional[str] = None,
+    building_class_val: Optional[str] = None,
+    decoration_val: Optional[str] = None,
+    parking_type_val: Optional[str] = None,
+    entrance_type_val: Optional[str] = None,
+    layout_type_val: Optional[str] = None,
+    heating_type_val: Optional[str] = None,
+    property_rights_val: Optional[str] = None,
+    rental_type_val: Optional[str] = None,
+    parking_spaces_val: Optional[int] = None,
+    distance_from_road_val: Optional[str] = None,
 ):
     parents = await _get_parent_candidates(db)
     form_model = _form_model_from_params(
@@ -137,6 +159,12 @@ async def _render_create_form_error(
         floors_total=floors_total_val, floor_number=floor_number_val,
         power_kw=power_kw_val, ceiling_height=ceiling_height_val,
         avito_object_type=avito_type_val,
+        building_type=building_type_val, building_class=building_class_val,
+        decoration=decoration_val, parking_type=parking_type_val,
+        entrance_type=entrance_type_val, layout_type=layout_type_val,
+        heating_type=heating_type_val, property_rights=property_rights_val,
+        rental_type=rental_type_val, parking_spaces=parking_spaces_val,
+        distance_from_road=distance_from_road_val,
     )
     return templates.TemplateResponse(
         "dashboard/form.html",
@@ -206,6 +234,34 @@ if os.getenv("TESTING") == "1":
         return JSONResponse({"form": data})
 
 
+@router.get("/properties/api/parent-data/{id:int}", dependencies=[Depends(check_admin)])
+async def get_parent_data(id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Property).where(Property.id == id))
+    prop = result.scalar_one_or_none()
+    if not prop:
+        return JSONResponse({"ok": False}, status_code=404)
+    return JSONResponse({
+        "ok": True,
+        "data": {
+            "address": prop.address or "",
+            "latitude": prop.latitude,
+            "longitude": prop.longitude,
+            "floors_total": prop.floors_total,
+            "building_type": prop.building_type or "",
+            "building_class": prop.building_class or "",
+            "decoration": prop.decoration or "",
+            "parking_type": prop.parking_type or "",
+            "entrance_type": prop.entrance_type or "",
+            "layout_type": prop.layout_type or "",
+            "heating_type": prop.heating_type or "",
+            "property_rights": prop.property_rights or "",
+            "rental_type": prop.rental_type or "",
+            "parking_spaces": prop.parking_spaces,
+            "distance_from_road": prop.distance_from_road or "",
+        }
+    })
+
+
 @router.get("/properties/new", dependencies=[Depends(check_admin)])
 async def new_property_form(request: Request, db: AsyncSession = Depends(get_db)):
     parents = await _get_parent_candidates(db, exclude_id=None)
@@ -253,6 +309,17 @@ async def create_property(
     floor_number: Optional[str] = Form(None),
     power_kw: Optional[str] = Form(None),
     ceiling_height: Optional[str] = Form(None),
+    building_type: Optional[str] = Form(None),
+    building_class: Optional[str] = Form(None),
+    decoration: Optional[str] = Form(None),
+    parking_type: Optional[str] = Form(None),
+    entrance_type: Optional[str] = Form(None),
+    layout_type: Optional[str] = Form(None),
+    heating_type: Optional[str] = Form(None),
+    property_rights: Optional[str] = Form(None),
+    rental_type: Optional[str] = Form(None),
+    parking_spaces: Optional[str] = Form(None),
+    distance_from_road: Optional[str] = Form(None),
     latitude: Optional[str] = Form(None),
     longitude: Optional[str] = Form(None),
     is_active: Optional[str] = Form(None),
@@ -315,6 +382,25 @@ async def create_property(
             ceiling_height_val = None
 
     avito_type_val = (avito_object_type or "").strip() or None
+
+    building_type_val = (building_type or "").strip() or None
+    building_class_val = (building_class or "").strip() or None
+    decoration_val = (decoration or "").strip() or None
+    parking_type_val = (parking_type or "").strip() or None
+    entrance_type_val = (entrance_type or "").strip() or None
+    layout_type_val = (layout_type or "").strip() or None
+    heating_type_val = (heating_type or "").strip() or None
+    property_rights_val = (property_rights or "").strip() or None
+    rental_type_val = (rental_type or "").strip() or None
+    distance_from_road_val = (distance_from_road or "").strip() or None
+
+    parking_spaces_val: Optional[int] = None
+    if parking_spaces and parking_spaces.strip():
+        try:
+            parking_spaces_val = int(parking_spaces.strip())
+        except (TypeError, ValueError):
+            parking_spaces_val = None
+
     avito_data_val: Optional[dict[str, Any]] = None
     if avito_data_json and (avito_data_json or "").strip():
         try:
@@ -351,6 +437,17 @@ async def create_property(
         floor_number=floor_number_val,
         power_kw=power_kw_val,
         ceiling_height=ceiling_height_val,
+        building_type=building_type_val,
+        building_class=building_class_val,
+        decoration=decoration_val,
+        parking_type=parking_type_val,
+        entrance_type=entrance_type_val,
+        layout_type=layout_type_val,
+        heating_type=heating_type_val,
+        property_rights=property_rights_val,
+        rental_type=rental_type_val,
+        parking_spaces=parking_spaces_val,
+        distance_from_road=distance_from_road_val,
         parent_id=parent_id_val,
         main_image=None,
         is_active=is_active_val,
@@ -418,6 +515,12 @@ async def create_property(
         parent_id_val=parent_id_val, avito_data_val=avito_data_val, cian_data_val=cian_data_val,
         floors_total_val=floors_total_val, floor_number_val=floor_number_val, power_kw_val=power_kw_val,
         ceiling_height_val=ceiling_height_val, avito_type_val=avito_type_val,
+        building_type_val=building_type_val, building_class_val=building_class_val,
+        decoration_val=decoration_val, parking_type_val=parking_type_val,
+        entrance_type_val=entrance_type_val, layout_type_val=layout_type_val,
+        heating_type_val=heating_type_val, property_rights_val=property_rights_val,
+        rental_type_val=rental_type_val, parking_spaces_val=parking_spaces_val,
+        distance_from_road_val=distance_from_road_val,
     )
     if main_image and main_image.filename:
         err = _validate_upload_file(main_image, ALLOWED_IMAGE_EXTENSIONS, UPLOAD_MAX_FILE_SIZE)
@@ -527,6 +630,17 @@ async def update_property(
     floor_number: Optional[str] = Form(None),
     power_kw: Optional[str] = Form(None),
     ceiling_height: Optional[str] = Form(None),
+    building_type: Optional[str] = Form(None),
+    building_class: Optional[str] = Form(None),
+    decoration: Optional[str] = Form(None),
+    parking_type: Optional[str] = Form(None),
+    entrance_type: Optional[str] = Form(None),
+    layout_type: Optional[str] = Form(None),
+    heating_type: Optional[str] = Form(None),
+    property_rights: Optional[str] = Form(None),
+    rental_type: Optional[str] = Form(None),
+    parking_spaces: Optional[str] = Form(None),
+    distance_from_road: Optional[str] = Form(None),
     latitude: Optional[str] = Form(None),
     longitude: Optional[str] = Form(None),
     parent_id: Optional[str] = Form(None),
@@ -587,6 +701,25 @@ async def update_property(
             ceiling_height_val = None
 
     avito_type_val = (avito_object_type or "").strip() or None
+
+    building_type_val = (building_type or "").strip() or None
+    building_class_val = (building_class or "").strip() or None
+    decoration_val = (decoration or "").strip() or None
+    parking_type_val = (parking_type or "").strip() or None
+    entrance_type_val = (entrance_type or "").strip() or None
+    layout_type_val = (layout_type or "").strip() or None
+    heating_type_val = (heating_type or "").strip() or None
+    property_rights_val = (property_rights or "").strip() or None
+    rental_type_val = (rental_type or "").strip() or None
+    distance_from_road_val = (distance_from_road or "").strip() or None
+
+    parking_spaces_val: Optional[int] = None
+    if parking_spaces and parking_spaces.strip():
+        try:
+            parking_spaces_val = int(parking_spaces.strip())
+        except (TypeError, ValueError):
+            parking_spaces_val = None
+
     avito_data_val: Optional[dict[str, Any]] = None
     if avito_data_json and (avito_data_json or "").strip():
         try:
@@ -623,6 +756,17 @@ async def update_property(
     prop.floor_number = floor_number_val
     prop.power_kw = power_kw_val
     prop.ceiling_height = ceiling_height_val
+    prop.building_type = building_type_val
+    prop.building_class = building_class_val
+    prop.decoration = decoration_val
+    prop.parking_type = parking_type_val
+    prop.entrance_type = entrance_type_val
+    prop.layout_type = layout_type_val
+    prop.heating_type = heating_type_val
+    prop.property_rights = property_rights_val
+    prop.rental_type = rental_type_val
+    prop.parking_spaces = parking_spaces_val
+    prop.distance_from_road = distance_from_road_val
     prop.is_active = is_active_val
     prop.parent_id = parent_id_val
 
@@ -770,7 +914,7 @@ async def bulk_action(
     if not id_list or action not in ("activate", "deactivate", "delete"):
         return RedirectResponse(url="/dashboard/properties", status_code=303)
     base_ids = [i for i in id_list]
-    base = update(Property).where(Property.id.in_(base_ids), Property.parent_id.is_(None))
+    base = update(Property).where(Property.id.in_(base_ids))
     if action == "activate":
         await db.execute(base.values(is_active=True))
         await db.commit()

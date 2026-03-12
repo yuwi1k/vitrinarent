@@ -55,7 +55,6 @@ async def dashboard_home(
 
     no_photo_r = await db.execute(
         select(func.count(Property.id)).where(
-            Property.parent_id.is_(None),
             or_(Property.main_image.is_(None), Property.main_image == ""),
         )
     )
@@ -63,7 +62,6 @@ async def dashboard_home(
 
     no_coords_r = await db.execute(
         select(func.count(Property.id)).where(
-            Property.parent_id.is_(None),
             or_(Property.latitude.is_(None), Property.longitude.is_(None)),
         )
     )
@@ -82,7 +80,6 @@ async def dashboard_home(
 
     no_address_r = await db.execute(
         select(func.count(Property.id)).where(
-            Property.parent_id.is_(None),
             or_(Property.address.is_(None), Property.address == ""),
         )
     )

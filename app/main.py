@@ -2,6 +2,7 @@ import logging
 import os
 import time
 from collections import defaultdict
+from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 
@@ -9,6 +10,7 @@ logger = logging.getLogger(__name__)
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -146,11 +148,20 @@ _require_production_secrets()
 
 from app.routers import router as public_router
 from app.dashboard import router as dashboard_router
+from app.scheduler import start_scheduler, stop_scheduler
 
-# Инициализируем приложение (схема БД — через миграции Alembic)
+
+@asynccontextmanager
+async def lifespan(application: FastAPI):
+    start_scheduler()
+    yield
+    stop_scheduler()
+
+
 app = FastAPI(
     title="Vitrina Real Estate",
-    description="Внутренний каталог коммерческой недвижимости"
+    description="Внутренний каталог коммерческой недвижимости",
+    lifespan=lifespan,
 )
 
 
@@ -247,6 +258,18 @@ async def hero_background_image():
     return FileResponse(path, media_type=media_type)
 
 
+class StaticCacheMiddleware(BaseHTTPMiddleware):
+    """Cache-Control для статических ресурсов и динамических XML/txt."""
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        path = request.url.path
+        if path.startswith("/static/"):
+            response.headers["Cache-Control"] = "public, max-age=2592000, immutable"
+        elif path in ("/robots.txt", "/sitemap.xml"):
+            response.headers["Cache-Control"] = "public, max-age=3600"
+        return response
+
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
@@ -271,15 +294,25 @@ async def robots_txt(request: Request) -> PlainTextResponse:
     lines = [
         "User-agent: *",
         "Disallow: /dashboard/",
+        "Disallow: /health/",
+        "Allow: /",
         "",
+        "User-agent: Googlebot",
+        "Allow: /",
+        "",
+        "User-agent: Yandex",
+        "Allow: /",
+        "Crawl-delay: 2",
+        "",
+        f"Host: {host}" if host else "",
         f"Sitemap: {base}/sitemap.xml",
         "",
     ]
+    lines = [l for l in lines if l is not None]
     return PlainTextResponse("\n".join(lines))
 
 
 # Порядок middleware: последний add = первый при обработке запроса.
-# Итоговый порядок обработки: Session -> CSRF -> RequireDashboardAuth -> LoginRateLimit -> app.
 app.add_middleware(LoginRateLimitMiddleware)
 app.add_middleware(RequireDashboardAuthMiddleware)
 app.add_middleware(CSRFMiddleware)
@@ -290,6 +323,8 @@ app.add_middleware(
     same_site="lax",
     https_only=_is_production,
 )
+app.add_middleware(StaticCacheMiddleware)
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 
 # --- ПУБЛИЧНЫЕ МАРШРУТЫ ---
