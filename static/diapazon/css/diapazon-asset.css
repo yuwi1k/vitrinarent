@@ -178,7 +178,7 @@ body.menu-open { overflow: hidden; }
 
 .hero-title__top {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 2.75rem;
+  font-size: clamp(0.75rem, 3.5vw, 2.75rem);
   font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -188,10 +188,12 @@ body.menu-open { overflow: hidden; }
 
 .hero-title__name {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 8rem;
+  font-size: clamp(2rem, 10vw, 8rem);
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+  max-width: 100%;
+  word-wrap: break-word;
   line-height: 0.9;
   background: linear-gradient(160deg, #0f1f33 10%, #1e3a5f 50%, #64748b 100%);
   -webkit-background-clip: text;
@@ -2623,8 +2625,7 @@ body.map-page {
 
 /* ─── Responsive ─── */
 @media (max-width: 1024px) {
-  .hero-title__name { font-size: 6rem; }
-  .hero-title__top { font-size: 1.25rem; }
+  .hero-title__top { font-size: clamp(0.75rem, 3vw, 1.25rem); }
   .objects-grid { grid-template-columns: repeat(2, 1fr); }
   .showcase { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .showcase-block__title { font-size: 2.25rem; }
@@ -2647,8 +2648,7 @@ body.map-page {
   .container { padding: 0 1.25rem; }
 
   .hero { padding: 4rem 0 3.5rem; }
-  .hero-title__name { font-size: clamp(2.25rem, 10vw, 4rem); letter-spacing: 0.02em; }
-  .hero-title__top { font-size: clamp(0.75rem, 3vw, 1rem); letter-spacing: 0.1em; }
+  .hero-title__top { letter-spacing: 0.1em; }
   .hero-tagline { font-size: 0.875rem; letter-spacing: 0.12em; }
   .hero-detail { font-size: 0.75rem; }
   .hero-actions { flex-direction: column; align-items: center; gap: 0.5rem; }
