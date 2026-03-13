@@ -20,6 +20,7 @@ from slugify import slugify
 
 from app.config import PAGE_SIZE_DASHBOARD, UPLOAD_MAX_FILE_SIZE
 from app.database import get_db
+from app.indexing import notify_url_changed, notify_url_deleted
 from app.dashboard.common import (
     check_admin,
     templates,
@@ -579,6 +580,13 @@ async def create_property(
         db.add(doc)
 
     await db.commit()
+
+    if prop.is_active:
+        try:
+            await notify_url_changed(prop.slug or str(prop.id))
+        except Exception as e:
+            logger.warning("Indexing notification failed: %s", e)
+
     add_flash(request, "Объект создан.", "success")
     return RedirectResponse(url=f"/dashboard/properties/edit/{prop.id}", status_code=303)
 
@@ -864,6 +872,12 @@ async def update_property(
         db.add(doc)
 
     await db.commit()
+
+    try:
+        await notify_url_changed(prop.slug or str(prop.id))
+    except Exception as e:
+        logger.warning("Indexing notification failed: %s", e)
+
     add_flash(request, "Объект сохранён.", "success")
     return RedirectResponse(url="/dashboard/properties", status_code=303)
 
@@ -986,6 +1000,8 @@ async def delete_property(
         except Exception:
             continue
 
+    prop_slug_or_id = prop.slug or str(prop.id)
+
     if children:
         if remove_children:
             for child in children:
@@ -996,6 +1012,11 @@ async def delete_property(
 
     await db.delete(prop)
     await db.commit()
+
+    try:
+        await notify_url_deleted(prop_slug_or_id)
+    except Exception as e:
+        logger.warning("Indexing notification failed: %s", e)
 
     for folder in folders_to_remove:
         try:
