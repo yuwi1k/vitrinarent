@@ -2,6 +2,7 @@
 
 {% block title %}Объекты{% endblock %}
 
+<style>.feed-toggle{cursor:pointer;font-size:.7rem;padding:.25em .5em;transition:opacity .15s}.feed-toggle:hover{opacity:.8}.feed-toggle:disabled{opacity:.5;cursor:wait}</style>
 {% block content %}
 <div class="page-header d-print-none mb-4">
     <div class="row align-items-center">
@@ -141,26 +142,29 @@
                         {% else %}
                         <span class="badge bg-red text-white">Скрыт</span>
                         {% endif %}
-                        {% if parent.is_on_avito %}
-                        <span class="badge bg-purple-lt">Avito</span>
-                        {% else %}
-                        <span class="badge bg-secondary-lt">Без Avito</span>
-                        {% endif %}
+                        <button type="button"
+                            class="badge border-0 feed-toggle {{ 'bg-purple-lt' if parent.publish_on_avito else 'bg-secondary-lt' }}"
+                            data-id="{{ parent.id }}" data-field="publish_on_avito"
+                            onclick="toggleFeedFlag(this)"
+                            title="Нажмите, чтобы {{ 'выключить' if parent.publish_on_avito else 'включить' }} Авито">
+                            Avito {{ '✓' if parent.publish_on_avito else '✗' }}
+                        </button>
+                        <button type="button"
+                            class="badge border-0 feed-toggle {{ 'bg-purple-lt' if parent.publish_on_cian else 'bg-secondary-lt' }}"
+                            data-id="{{ parent.id }}" data-field="publish_on_cian"
+                            onclick="toggleFeedFlag(this)"
+                            title="Нажмите, чтобы {{ 'выключить' if parent.publish_on_cian else 'включить' }} Циан">
+                            Циан {{ '✓' if parent.publish_on_cian else '✗' }}
+                        </button>
                         {% set cian = parent.cian_data or {} %}
-                        {% if parent.is_on_cian or cian.get("CianStatus") %}
-                            {% if cian.get("CianStatus") == "published" %}
-                            <span class="badge bg-green-lt">Циан: опубликовано</span>
-                            {% elif cian.get("CianStatus") == "inactive" %}
-                            <span class="badge bg-yellow-lt">Циан: снято</span>
-                            {% elif cian.get("CianStatus") == "refusedByModerator" %}
-                            <span class="badge bg-red-lt">Циан: отказ модерации</span>
-                            {% elif cian.get("CianStatus") == "removedByModerator" %}
-                            <span class="badge bg-red-lt">Циан: снято модератором</span>
-                            {% else %}
-                            <span class="badge bg-purple-lt">Циан</span>
-                            {% endif %}
-                        {% else %}
-                        <span class="badge bg-secondary-lt">Без Циан</span>
+                        {% if cian.get("CianStatus") == "published" %}
+                        <span class="badge bg-green-lt">опубликовано</span>
+                        {% elif cian.get("CianStatus") == "inactive" %}
+                        <span class="badge bg-yellow-lt">снято</span>
+                        {% elif cian.get("CianStatus") == "refusedByModerator" %}
+                        <span class="badge bg-red-lt">отказ</span>
+                        {% elif cian.get("CianStatus") == "removedByModerator" %}
+                        <span class="badge bg-red-lt">снято мод.</span>
                         {% endif %}
                     </td>
                     <td>
@@ -209,26 +213,29 @@
                                             {% else %}
                                             <span class="badge bg-red text-white">Скрыт</span>
                                             {% endif %}
-                                            {% if ch.is_on_avito %}
-                                            <span class="badge bg-purple-lt">Avito</span>
-                                            {% else %}
-                                            <span class="badge bg-secondary-lt">Без Avito</span>
-                                            {% endif %}
+                                            <button type="button"
+                                                class="badge border-0 feed-toggle {{ 'bg-purple-lt' if ch.publish_on_avito else 'bg-secondary-lt' }}"
+                                                data-id="{{ ch.id }}" data-field="publish_on_avito"
+                                                onclick="toggleFeedFlag(this)"
+                                                title="Нажмите, чтобы {{ 'выключить' if ch.publish_on_avito else 'включить' }} Авито">
+                                                Avito {{ '✓' if ch.publish_on_avito else '✗' }}
+                                            </button>
+                                            <button type="button"
+                                                class="badge border-0 feed-toggle {{ 'bg-purple-lt' if ch.publish_on_cian else 'bg-secondary-lt' }}"
+                                                data-id="{{ ch.id }}" data-field="publish_on_cian"
+                                                onclick="toggleFeedFlag(this)"
+                                                title="Нажмите, чтобы {{ 'выключить' if ch.publish_on_cian else 'включить' }} Циан">
+                                                Циан {{ '✓' if ch.publish_on_cian else '✗' }}
+                                            </button>
                                             {% set cian_ch = ch.cian_data or {} %}
-                                            {% if ch.is_on_cian or cian_ch.get("CianStatus") %}
-                                                {% if cian_ch.get("CianStatus") == "published" %}
-                                                <span class="badge bg-green-lt">Циан: опубликовано</span>
-                                                {% elif cian_ch.get("CianStatus") == "inactive" %}
-                                                <span class="badge bg-yellow-lt">Циан: снято</span>
-                                                {% elif cian_ch.get("CianStatus") == "refusedByModerator" %}
-                                                <span class="badge bg-red-lt">Циан: отказ модерации</span>
-                                                {% elif cian_ch.get("CianStatus") == "removedByModerator" %}
-                                                <span class="badge bg-red-lt">Циан: снято модератором</span>
-                                                {% else %}
-                                                <span class="badge bg-purple-lt">Циан</span>
-                                                {% endif %}
-                                            {% else %}
-                                            <span class="badge bg-secondary-lt">Без Циан</span>
+                                            {% if cian_ch.get("CianStatus") == "published" %}
+                                            <span class="badge bg-green-lt">опубликовано</span>
+                                            {% elif cian_ch.get("CianStatus") == "inactive" %}
+                                            <span class="badge bg-yellow-lt">снято</span>
+                                            {% elif cian_ch.get("CianStatus") == "refusedByModerator" %}
+                                            <span class="badge bg-red-lt">отказ</span>
+                                            {% elif cian_ch.get("CianStatus") == "removedByModerator" %}
+                                            <span class="badge bg-red-lt">снято мод.</span>
                                             {% endif %}
                                         </td>
                                         <td>
@@ -271,6 +278,26 @@
 
 <script>
 var CSRF_TOKEN = "{{ csrf_token(request) }}";
+async function toggleFeedFlag(btn) {
+    var id = btn.getAttribute('data-id');
+    var field = btn.getAttribute('data-field');
+    btn.disabled = true;
+    try {
+        var resp = await fetch('/dashboard/properties/' + id + '/toggle-feed', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({field: field})
+        });
+        var data = await resp.json();
+        var label = field === 'publish_on_avito' ? 'Avito' : 'Циан';
+        btn.textContent = label + ' ' + (data.enabled ? '✓' : '✗');
+        btn.className = 'badge border-0 feed-toggle ' + (data.enabled ? 'bg-purple-lt' : 'bg-secondary-lt');
+        btn.title = 'Нажмите, чтобы ' + (data.enabled ? 'выключить' : 'включить') + ' ' + label;
+    } catch (e) {
+        alert('Ошибка: ' + e.message);
+    }
+    btn.disabled = false;
+}
 function submitDelete(propertyId, childrenCount) {
     childrenCount = childrenCount || 0;
     if (childrenCount > 0) {

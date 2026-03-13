@@ -1005,3 +1005,27 @@ async def delete_property(
             continue
     add_flash(request, "Объект удалён.", "success")
     return RedirectResponse(url="/dashboard/properties", status_code=303)
+
+
+@router.post("/properties/{id:int}/toggle-feed", dependencies=[Depends(check_admin)])
+async def toggle_property_feed(
+    request: Request,
+    id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    from fastapi.responses import JSONResponse
+    body = await request.json()
+    field = body.get("field")
+    if field not in ("publish_on_avito", "publish_on_cian"):
+        return JSONResponse({"error": "invalid field"}, status_code=400)
+
+    stmt = select(Property).where(Property.id == id)
+    result = await db.execute(stmt)
+    prop = result.scalar_one_or_none()
+    if not prop:
+        return JSONResponse({"error": "not found"}, status_code=404)
+
+    new_val = not getattr(prop, field)
+    setattr(prop, field, new_val)
+    await db.commit()
+    return JSONResponse({"id": id, "field": field, "enabled": new_val})
