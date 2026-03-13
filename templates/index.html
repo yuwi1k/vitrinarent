@@ -87,80 +87,94 @@
       </div>
     </section>
 
-    <section class="showcase" id="categories">
+    <section class="categories" id="categories">
+      <div class="container">
+        <h2 class="categories__heading">Направления</h2>
+        <div class="categories__grid">
 
-      <a href="/search?category=Офис" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/office.png');">
-        <div class="showcase-block__content">
-          <h2 class="showcase-block__title">Офисы</h2>
-          <p class="showcase-block__sub">Аренда и продажа от собственника</p>
-          <span class="btn-showcase">Подробнее</span>
+          <a href="/search?category=Офис" class="cat-card reveal">
+            <div class="cat-card__img"><img src="/static/images/office.png" alt="Офисы" loading="lazy"></div>
+            <div class="cat-card__body">
+              <h3 class="cat-card__title">Офисы</h3>
+              <p class="cat-card__sub">Аренда и продажа от собственника</p>
+              <span class="cat-card__link">Подробнее →</span>
+            </div>
+          </a>
+
+          <a href="/search?category=Торговая+площадь" class="cat-card reveal">
+            <div class="cat-card__img"><img src="/static/images/shop.png" alt="Магазины" loading="lazy"></div>
+            <div class="cat-card__body">
+              <h3 class="cat-card__title">Магазины</h3>
+              <p class="cat-card__sub">Стрит-ритейл и торговые помещения</p>
+              <span class="cat-card__link">Подробнее →</span>
+            </div>
+          </a>
+
+          <a href="/search?category=Склад" class="cat-card reveal">
+            <div class="cat-card__img"><img src="/static/images/warehouse.png" alt="Склады" loading="lazy"></div>
+            <div class="cat-card__body">
+              <h3 class="cat-card__title">Склады</h3>
+              <p class="cat-card__sub">Тёплые, холодные, класс A и B</p>
+              <span class="cat-card__link">Подробнее →</span>
+            </div>
+          </a>
+
+          <a href="/search?category=Автосервис" class="cat-card reveal">
+            <div class="cat-card__img"><img src="/static/images/venichle.png" alt="Автосервисы" loading="lazy"></div>
+            <div class="cat-card__body">
+              <h3 class="cat-card__title">Автосервисы</h3>
+              <p class="cat-card__sub">Боксы, СТО и автомоечные комплексы</p>
+              <span class="cat-card__link">Подробнее →</span>
+            </div>
+          </a>
+
+          <a href="/search?category=Здание" class="cat-card reveal">
+            <div class="cat-card__img"><img src="/static/images/building.png" alt="Здания" loading="lazy"></div>
+            <div class="cat-card__body">
+              <h3 class="cat-card__title">Здания</h3>
+              <p class="cat-card__sub">Отдельно стоящие здания и комплексы</p>
+              <span class="cat-card__link">Подробнее →</span>
+            </div>
+          </a>
+
+          <a href="/search?category=Промышленное" class="cat-card reveal">
+            <div class="cat-card__img"><img src="/static/images/zavod.png" alt="Производство" loading="lazy"></div>
+            <div class="cat-card__body">
+              <h3 class="cat-card__title">Производство</h3>
+              <p class="cat-card__sub">Промышленные помещения и цеха</p>
+              <span class="cat-card__link">Подробнее →</span>
+            </div>
+          </a>
+
+          <a href="/search?category=ГАБ" class="cat-card reveal">
+            <div class="cat-card__img"><img src="/static/images/gab.png" alt="ГАБ" loading="lazy"></div>
+            <div class="cat-card__body">
+              <h3 class="cat-card__title">ГАБ</h3>
+              <p class="cat-card__sub">Готовый арендный бизнес с доходом</p>
+              <span class="cat-card__link">Подробнее →</span>
+            </div>
+          </a>
+
+          <a href="/search" class="cat-card reveal">
+            <div class="cat-card__img"><img src="/static/images/catalog.png" alt="Весь каталог" loading="lazy"></div>
+            <div class="cat-card__body">
+              <h3 class="cat-card__title">Весь каталог</h3>
+              <p class="cat-card__sub">{{ total_properties }} объектов — аренда и продажа</p>
+              <span class="cat-card__link">Открыть каталог →</span>
+            </div>
+          </a>
+
+          <a href="/map" class="cat-card reveal">
+            <div class="cat-card__img"><img src="/static/images/map.png" alt="На карте" loading="lazy"></div>
+            <div class="cat-card__body">
+              <h3 class="cat-card__title">На карте</h3>
+              <p class="cat-card__sub">Все объекты на интерактивной карте</p>
+              <span class="cat-card__link">Открыть карту →</span>
+            </div>
+          </a>
+
         </div>
-      </a>
-
-      <a href="/search?category=Торговая+площадь" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/shop.png');">
-        <div class="showcase-block__content">
-          <h2 class="showcase-block__title">Магазины</h2>
-          <p class="showcase-block__sub">Стрит-ритейл и торговые помещения</p>
-          <span class="btn-showcase">Подробнее</span>
-        </div>
-      </a>
-
-      <a href="/search?category=Склад" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/warehouse.png');">
-        <div class="showcase-block__content">
-          <h2 class="showcase-block__title">Склады</h2>
-          <p class="showcase-block__sub">Тёплые, холодные, класс A и B</p>
-          <span class="btn-showcase">Подробнее</span>
-        </div>
-      </a>
-
-      <a href="/search?category=Автосервис" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/venichle.png');">
-        <div class="showcase-block__content">
-          <h2 class="showcase-block__title">Автосервисы</h2>
-          <p class="showcase-block__sub">Боксы, СТО и автомоечные комплексы</p>
-          <span class="btn-showcase">Подробнее</span>
-        </div>
-      </a>
-
-      <a href="/search?category=Здание" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/building.png');">
-        <div class="showcase-block__content">
-          <h2 class="showcase-block__title">Здания</h2>
-          <p class="showcase-block__sub">Отдельно стоящие здания и комплексы</p>
-          <span class="btn-showcase">Подробнее</span>
-        </div>
-      </a>
-
-      <a href="/search?category=Промышленное" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/zavod.png');">
-        <div class="showcase-block__content">
-          <h2 class="showcase-block__title">Производство</h2>
-          <p class="showcase-block__sub">Промышленные помещения и цеха</p>
-          <span class="btn-showcase">Подробнее</span>
-        </div>
-      </a>
-
-      <a href="/search?category=ГАБ" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/gab.png');">
-        <div class="showcase-block__content">
-          <h2 class="showcase-block__title">ГАБ</h2>
-          <p class="showcase-block__sub">Готовый арендный бизнес с доходом</p>
-          <span class="btn-showcase">Подробнее</span>
-        </div>
-      </a>
-
-      <a href="/search" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" style="background-image:url('/static/images/catalog.png');">
-        <div class="showcase-block__content">
-          <h2 class="showcase-block__title">Весь каталог</h2>
-          <p class="showcase-block__sub">{{ total_properties }} объектов — аренда и продажа</p>
-          <span class="btn-showcase">Открыть каталог</span>
-        </div>
-      </a>
-
-      <a href="/map" class="showcase-block showcase-block--dark showcase-block--has-bg reveal" id="showcase-map" style="background-image:url('/static/images/map.png');">
-        <div class="showcase-block__content">
-          <h2 class="showcase-block__title">На карте</h2>
-          <p class="showcase-block__sub">Все объекты на интерактивной карте</p>
-          <span class="btn-showcase">Открыть карту</span>
-        </div>
-      </a>
-
+      </div>
     </section>
   </main>
 
