@@ -62,7 +62,7 @@ def get_avito_contact_phone() -> str:
         return v
     return (
         os.getenv("AVITO_CONTACT_PHONE", os.getenv("CONTACT_PHONE", "")).strip()
-        or "+79990000000"
+        or "+79102535534"
     )
 
 

@@ -21,7 +21,7 @@ def _get_avito_contacts() -> Tuple[str, str]:
     except ImportError:
         logger.debug("settings_store not available for Avito feed, falling back to env vars")
     manager = os.getenv("AVITO_MANAGER_NAME", os.getenv("MANAGER_NAME", "Менеджер Vitrina")) or "Менеджер Vitrina"
-    phone = os.getenv("AVITO_CONTACT_PHONE", os.getenv("CONTACT_PHONE", "+79990000000")) or "+79990000000"
+    phone = os.getenv("AVITO_CONTACT_PHONE", os.getenv("CONTACT_PHONE", "+79102535534")) or "+79102535534"
     return manager.strip(), phone.strip()
 
 

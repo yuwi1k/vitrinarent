@@ -47,9 +47,9 @@ SITES: dict[str, SiteConfig] = {
         logo_text="Диапазон",
         show_contacts=True,
         contacts={
-            "phone": "+7 (XXX) XXX-XX-XX",
-            "email": "info@diapazon.ru",
-            "address": "г. Москва",
+            "phone": "+7 (910) 253-55-34",
+            "email": "aodiapazon@mail.ru",
+            "address": "г. Москва, ул. Рабочая, 91с2",
             "manager_name": "Менеджер",
         },
         nav_items=[
