@@ -145,7 +145,6 @@ body.menu-open { overflow: hidden; }
   padding: 8rem 0 7rem;
   background: var(--color-surface);
   position: relative;
-  overflow: hidden;
 }
 
 .hero-glow {
@@ -439,7 +438,8 @@ body.menu-open { overflow: hidden; }
   transition: opacity 0.8s cubic-bezier(.25,.1,.25,1), transform 0.8s cubic-bezier(.25,.1,.25,1);
 }
 
-.reveal.visible {
+.reveal.visible,
+.reveal.reveal-fallback {
   opacity: 1;
   transform: translateY(0);
 }
@@ -2647,8 +2647,8 @@ body.map-page {
   .container { padding: 0 1.25rem; }
 
   .hero { padding: 4rem 0 3.5rem; }
-  .hero-title__name { font-size: 4rem; letter-spacing: 0.05em; }
-  .hero-title__top { font-size: 1rem; letter-spacing: 0.2em; }
+  .hero-title__name { font-size: clamp(2.25rem, 10vw, 4rem); letter-spacing: 0.02em; }
+  .hero-title__top { font-size: clamp(0.75rem, 3vw, 1rem); letter-spacing: 0.1em; }
   .hero-tagline { font-size: 0.875rem; letter-spacing: 0.12em; }
   .hero-detail { font-size: 0.75rem; }
   .hero-actions { flex-direction: column; align-items: center; gap: 0.5rem; }

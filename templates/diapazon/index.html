@@ -212,6 +212,11 @@
     var reveals = document.querySelectorAll('.reveal');
     if (!reveals.length) return;
 
+    if (!('IntersectionObserver' in window)) {
+      reveals.forEach(function(el) { el.classList.add('visible'); });
+      return;
+    }
+
     var observer = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
         if (entry.isIntersecting) {
@@ -220,10 +225,15 @@
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.15 });
+    }, { threshold: 0.05 });
 
     reveals.forEach(function(el) { observer.observe(el); });
 
+    setTimeout(function() {
+      reveals.forEach(function(el) {
+        if (!el.classList.contains('visible')) el.classList.add('reveal-fallback');
+      });
+    }, 2000);
   })();
   </script>
 </body>
