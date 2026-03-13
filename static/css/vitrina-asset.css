@@ -135,9 +135,9 @@ body.menu-open { overflow: hidden; }
 
 .hero-title {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(1.5rem, 3vw, 2.75rem);
+  font-size: clamp(2rem, 4.5vw, 4rem);
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   line-height: 1.1;
   margin-bottom: 1.5rem;
@@ -2575,7 +2575,7 @@ body.map-page {
   .container { padding: 0 1.25rem; }
 
   .hero { padding: 4.5rem 0 4rem; }
-  .hero-title { font-size: clamp(1.25rem, 4.5vw, 1.75rem); letter-spacing: 0; }
+  .hero-title { font-size: clamp(1.5rem, 5vw, 2.25rem); letter-spacing: 0.02em; }
   .hero-tagline { font-size: 1rem; letter-spacing: 0.12em; }
   .hero-detail { font-size: 0.75rem; }
   .hero-actions { flex-direction: column; align-items: center; gap: 0.5rem; }
