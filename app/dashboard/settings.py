@@ -7,7 +7,11 @@ from fastapi import APIRouter, Request, Depends, Form
 from app.admin_password import check_admin_password, set_admin_password
 from app.dashboard.common import check_admin, templates
 from app.notification_config import get_scenarios_for_edit, save_scenarios
-from app.settings_store import get_settings_for_edit, save_settings
+from app.settings_store import (
+    get_settings_for_edit, save_settings,
+    is_avito_feed_enabled, set_avito_feed_enabled,
+    is_cian_feed_enabled, set_cian_feed_enabled,
+)
 
 router = APIRouter()
 
@@ -56,7 +60,12 @@ async def settings_form(request: Request):
     settings_data = get_settings_for_edit()
     return templates.TemplateResponse(
         "dashboard/settings.html",
-        {"request": request, "settings": settings_data, "error": None, "success": False},
+        {
+            "request": request, "settings": settings_data,
+            "avito_feed_enabled": is_avito_feed_enabled(),
+            "cian_feed_enabled": is_cian_feed_enabled(),
+            "error": None, "success": False,
+        },
     )
 
 
@@ -79,8 +88,27 @@ async def settings_save(
     settings_data = get_settings_for_edit()
     return templates.TemplateResponse(
         "dashboard/settings.html",
-        {"request": request, "settings": settings_data, "error": None, "success": True},
+        {
+            "request": request, "settings": settings_data,
+            "avito_feed_enabled": is_avito_feed_enabled(),
+            "cian_feed_enabled": is_cian_feed_enabled(),
+            "error": None, "success": True,
+        },
     )
+
+
+@router.post("/settings/toggle-avito", dependencies=[Depends(check_admin)])
+async def toggle_avito_feed(request: Request):
+    from fastapi.responses import JSONResponse
+    set_avito_feed_enabled(not is_avito_feed_enabled())
+    return JSONResponse({"enabled": is_avito_feed_enabled()})
+
+
+@router.post("/settings/toggle-cian", dependencies=[Depends(check_admin)])
+async def toggle_cian_feed(request: Request):
+    from fastapi.responses import JSONResponse
+    set_cian_feed_enabled(not is_cian_feed_enabled())
+    return JSONResponse({"enabled": is_cian_feed_enabled()})
 
 
 @router.get("/settings/notifications", dependencies=[Depends(check_admin)])

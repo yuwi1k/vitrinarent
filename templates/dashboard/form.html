@@ -961,6 +961,14 @@
                         <input type="checkbox" name="is_active" class="form-check-input" id="is_active" value="1" {% if not model or model.is_active %}checked{% endif %}>
                         <label class="form-check-label" for="is_active">Активен (показывать на сайте)</label>
                     </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" name="publish_on_avito" class="form-check-input" id="publish_on_avito" value="1" {% if not model or model.publish_on_avito %}checked{% endif %}>
+                        <label class="form-check-label" for="publish_on_avito">Публиковать на Авито</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" name="publish_on_cian" class="form-check-input" id="publish_on_cian" value="1" {% if not model or model.publish_on_cian %}checked{% endif %}>
+                        <label class="form-check-label" for="publish_on_cian">Публиковать на Циан</label>
+                    </div>
                 </div>
             </div>
         </div>

@@ -468,7 +468,11 @@ async def robots_txt(request: Request) -> Response:
 
 @router.get("/avito.xml")
 async def get_avito_feed_route(db: AsyncSession = Depends(get_db)):
-    stmt = select(Property).where(Property.is_active == True)
+    from app.settings_store import is_avito_feed_enabled
+    if not is_avito_feed_enabled():
+        empty = '<?xml version="1.0" encoding="UTF-8"?><Ads formatVersion="3" target="Avito.ru"/>'
+        return Response(content=empty, media_type="application/xml")
+    stmt = select(Property).where(Property.is_active == True, Property.publish_on_avito == True)
     result = await db.execute(stmt)
     properties = result.scalars().all()
     xml_content = generate_avito_feed(properties)
@@ -484,9 +488,13 @@ async def jcat_xml_feed(db: AsyncSession = Depends(get_db)):
 @router.get("/cian.xml")
 async def get_cian_feed_route(db: AsyncSession = Depends(get_db)):
     """Публичный XML-фид для импорта объявлений на Циан (URL указать в ЛК Циан)."""
+    from app.settings_store import is_cian_feed_enabled
+    if not is_cian_feed_enabled():
+        empty = '<?xml version="1.0" encoding="UTF-8"?><feed version="2"/>'
+        return Response(content=empty, media_type="application/xml")
     stmt = (
         select(Property)
-        .where(Property.is_active == True)
+        .where(Property.is_active == True, Property.publish_on_cian == True)
         .options(selectinload(Property.images))
     )
     result = await db.execute(stmt)

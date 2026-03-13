@@ -61,6 +61,10 @@ class Property(Base):
     parking_spaces = Column(Integer, nullable=True)
     distance_from_road = Column(String, nullable=True)  # "Первая линия", "Вторая линия и дальше"
 
+    # Управление публикацией на площадках
+    publish_on_avito = Column(Boolean, default=True, server_default="true")
+    publish_on_cian = Column(Boolean, default=True, server_default="true")
+
     # Статистика с площадок (заполняется scheduler)
     stats_data = Column(JSON, nullable=True)
 

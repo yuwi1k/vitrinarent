@@ -323,6 +323,8 @@ async def create_property(
     latitude: Optional[str] = Form(None),
     longitude: Optional[str] = Form(None),
     is_active: Optional[str] = Form(None),
+    publish_on_avito: Optional[str] = Form(None),
+    publish_on_cian: Optional[str] = Form(None),
     parent_id: Optional[str] = Form(None),
     main_image: UploadFile = File(None),
     extra_images: list[UploadFile] = File([]),
@@ -349,6 +351,8 @@ async def create_property(
     slug_val = await _ensure_unique_slug(db, slug_val_input)
 
     is_active_val = is_active in ("1", "true", "on", True)
+    publish_on_avito_val = publish_on_avito in ("1", "true", "on", True)
+    publish_on_cian_val = publish_on_cian in ("1", "true", "on", True)
 
     lat_val = float(latitude) if latitude and latitude.strip() else None
     lon_val = float(longitude) if longitude and longitude.strip() else None
@@ -451,6 +455,8 @@ async def create_property(
         parent_id=parent_id_val,
         main_image=None,
         is_active=is_active_val,
+        publish_on_avito=publish_on_avito_val,
+        publish_on_cian=publish_on_cian_val,
     )
     db.add(prop)
     await db.flush()
@@ -649,6 +655,8 @@ async def update_property(
     extra_documents: list[UploadFile] = File([]),
     gallery_order: Optional[str] = Form(None),
     is_active: Optional[str] = Form(None),
+    publish_on_avito: Optional[str] = Form(None),
+    publish_on_cian: Optional[str] = Form(None),
     avito_data_json: Optional[str] = Form(None),
     cian_data_json: Optional[str] = Form(None),
 ):
@@ -668,6 +676,8 @@ async def update_property(
     slug_val = await _ensure_unique_slug(db, slug_val_input, exclude_id=id)
 
     is_active_val = is_active in ("1", "true", "on", True)
+    publish_on_avito_val = publish_on_avito in ("1", "true", "on", True)
+    publish_on_cian_val = publish_on_cian in ("1", "true", "on", True)
 
     lat_val = float(latitude) if latitude and latitude.strip() else None
     lon_val = float(longitude) if longitude and longitude.strip() else None
@@ -768,6 +778,8 @@ async def update_property(
     prop.parking_spaces = parking_spaces_val
     prop.distance_from_road = distance_from_road_val
     prop.is_active = is_active_val
+    prop.publish_on_avito = publish_on_avito_val
+    prop.publish_on_cian = publish_on_cian_val
     prop.parent_id = parent_id_val
 
     street_slug = await _get_street_slug_for_property(db, prop)

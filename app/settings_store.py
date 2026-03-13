@@ -130,3 +130,23 @@ def save_settings(
     data["contact_email"] = (contact_email or "").strip()
     data["contact_telegram"] = (contact_telegram or "").strip()
     _write_settings(data)
+
+
+def is_avito_feed_enabled() -> bool:
+    return _read_settings().get("avito_feed_enabled", True)
+
+
+def set_avito_feed_enabled(val: bool) -> None:
+    data = _read_settings()
+    data["avito_feed_enabled"] = bool(val)
+    _write_settings(data)
+
+
+def is_cian_feed_enabled() -> bool:
+    return _read_settings().get("cian_feed_enabled", True)
+
+
+def set_cian_feed_enabled(val: bool) -> None:
+    data = _read_settings()
+    data["cian_feed_enabled"] = bool(val)
+    _write_settings(data)

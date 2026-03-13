@@ -40,10 +40,15 @@ class SchedulerService:
         self._mark_running("upload_avito_feed")
         t0 = time.monotonic()
         try:
+            from app.settings_store import is_avito_feed_enabled
+            if not is_avito_feed_enabled():
+                self._record("upload_avito_feed", "skipped", "Avito feed disabled", t0)
+                return
+
             async with AsyncSessionLocal() as db:
                 stmt = (
                     select(Property)
-                    .where(Property.is_active.is_(True))
+                    .where(Property.is_active.is_(True), Property.publish_on_avito.is_(True))
                     .options(selectinload(Property.images))
                     .order_by(Property.id.asc())
                 )
