@@ -1,9 +1,12 @@
 """
-Настройки дашборда: смена пароля, контакты для фидов.
+Настройки дашборда: смена пароля, контакты для фидов, пороги уведомлений.
 """
+import json
+
 from fastapi import APIRouter, Request, Depends, Form
 from app.admin_password import check_admin_password, set_admin_password
 from app.dashboard.common import check_admin, templates
+from app.notification_config import get_scenarios_for_edit, save_scenarios
 from app.settings_store import get_settings_for_edit, save_settings
 
 router = APIRouter()
@@ -77,4 +80,56 @@ async def settings_save(
     return templates.TemplateResponse(
         "dashboard/settings.html",
         {"request": request, "settings": settings_data, "error": None, "success": True},
+    )
+
+
+@router.get("/settings/notifications", dependencies=[Depends(check_admin)])
+async def notification_settings_form(request: Request):
+    return templates.TemplateResponse(
+        "dashboard/settings_notifications.html",
+        {"request": request, "scenarios": get_scenarios_for_edit(), "error": None, "success": False},
+    )
+
+
+@router.post("/settings/notifications", dependencies=[Depends(check_admin)])
+async def notification_settings_save(request: Request):
+    form = await request.form()
+    scenarios = get_scenarios_for_edit()
+    updates: dict[str, dict] = {}
+
+    int_fields = ("min_views", "max_views", "min_contacts", "max_contacts",
+                  "min_favorites", "max_items_in_message")
+    float_fields = ("min_conversion", "max_conversion")
+
+    for s in scenarios:
+        key = s["key"]
+        updates[key] = {}
+
+        enabled_val = form.get(f"{key}__enabled")
+        updates[key]["enabled"] = enabled_val == "on"
+
+        for fld in int_fields:
+            raw = (form.get(f"{key}__{fld}") or "").strip()
+            if raw == "" or raw == "—":
+                updates[key][fld] = None
+            else:
+                try:
+                    updates[key][fld] = int(raw)
+                except ValueError:
+                    pass
+
+        for fld in float_fields:
+            raw = (form.get(f"{key}__{fld}") or "").strip()
+            if raw == "" or raw == "—":
+                updates[key][fld] = None
+            else:
+                try:
+                    updates[key][fld] = float(raw)
+                except ValueError:
+                    pass
+
+    save_scenarios(updates)
+    return templates.TemplateResponse(
+        "dashboard/settings_notifications.html",
+        {"request": request, "scenarios": get_scenarios_for_edit(), "error": None, "success": True},
     )

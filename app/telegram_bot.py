@@ -51,5 +51,41 @@ class TelegramNotifier:
         text = f"🔴 <b>Ошибка планировщика</b>\nЗадача: {job_name}\n{error}"
         await self.send_message(text)
 
+    async def send_stats_report(self, report: dict, scenarios: list) -> None:
+        """Универсальный рендер отчёта — формат берётся из scenarios."""
+        header = "📊 <b>Отчёт по статистике объектов</b>\n"
+
+        for s in scenarios:
+            items = report.get(s.key, [])
+            if not items:
+                continue
+
+            limit = s.max_items_in_message
+            lines = [f"{s.emoji} <b>{s.title} ({len(items)})</b>"]
+            if s.description:
+                lines.append(s.description)
+
+            for it in items[:limit]:
+                line = f"  • ID {it['id']} — {it['title']}"
+                details = []
+                if it.get("views"):
+                    details.append(f"просм: {it['views']}")
+                if it.get("favorites"):
+                    details.append(f"избр: {it['favorites']}")
+                if it.get("contacts"):
+                    details.append(f"конт: {it['contacts']}")
+                if it.get("conversion"):
+                    details.append(f"конв: {it['conversion']}%")
+                if details:
+                    line += f" ({', '.join(details)})"
+                lines.append(line)
+
+            if len(items) > limit:
+                lines.append(f"  ...и ещё {len(items) - limit}")
+            if s.advice:
+                lines.append(f"<i>Совет: {s.advice}</i>")
+
+            await self.send_message(header + "\n".join(lines))
+
 
 notifier = TelegramNotifier()

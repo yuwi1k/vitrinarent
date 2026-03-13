@@ -302,6 +302,58 @@ class SchedulerService:
             )
             await notifier.send_daily_digest(active_avito, active_cian, total_views, total_contacts)
 
+            from app.notification_config import get_scenarios
+
+            scenarios = get_scenarios()
+            report: Dict[str, list] = {s.key: [] for s in scenarios}
+
+            for p in props:
+                sd = p.stats_data if isinstance(p.stats_data, dict) else {}
+                title = p.title or f"Объект #{p.id}"
+
+                has_avito = isinstance(p.avito_data, dict) and p.avito_data.get("AvitoId")
+                has_cian = isinstance(p.cian_data, dict) and p.cian_data.get("CianOfferId")
+                is_published = bool(has_avito or has_cian)
+
+                views = sd.get("avito_views", 0) + sd.get("cian_views", 0)
+                contacts = sd.get("avito_contacts", 0) + sd.get("cian_contacts", 0)
+                favorites = sd.get("avito_favorites", 0)
+                conv = round(contacts / views * 100, 1) if views > 0 else 0.0
+
+                info: Dict[str, Any] = {
+                    "id": p.id, "title": title,
+                    "views": views, "contacts": contacts,
+                    "favorites": favorites, "conversion": conv,
+                }
+
+                for s in scenarios:
+                    if not s.enabled:
+                        continue
+                    if s.key == "not_published":
+                        if not is_published:
+                            report[s.key].append(info)
+                        continue
+                    if not is_published:
+                        continue
+                    if s.min_views and views < s.min_views:
+                        continue
+                    if s.max_views is not None and views > s.max_views:
+                        continue
+                    if s.max_contacts is not None and contacts > s.max_contacts:
+                        continue
+                    if s.min_contacts and contacts < s.min_contacts:
+                        continue
+                    if s.min_favorites and favorites < s.min_favorites:
+                        continue
+                    if s.min_conversion and conv < s.min_conversion:
+                        continue
+                    if s.max_conversion is not None and conv > s.max_conversion:
+                        continue
+                    report[s.key].append(info)
+
+            if any(report[k] for k in report):
+                await notifier.send_stats_report(report, scenarios)
+
             msg = f"avito_updated={avito_updated} cian_updated={cian_updated} views={total_views} contacts={total_contacts}"
             logger.info("scheduler: collect_statistics OK — %s", msg)
             self._record("collect_statistics", "ok", msg, t0)

@@ -1,0 +1,102 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Настройки уведомлений{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/dashboard">Главная</a></li>
+        <li class="breadcrumb-item"><a href="/dashboard/settings">Настройки</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Уведомления</li>
+    </ol>
+</nav>
+
+<div class="page-header d-print-none mb-4">
+    <h2 class="page-title">Настройки уведомлений</h2>
+    <p class="text-muted mt-1 mb-0">Пороговые значения для сценариев Telegram-уведомлений о статистике объектов.</p>
+</div>
+
+{% if success %}
+<div class="alert alert-success" role="alert">Настройки сохранены.</div>
+{% endif %}
+{% if error %}
+<div class="alert alert-danger" role="alert">{{ error }}</div>
+{% endif %}
+
+<form method="post" action="/dashboard/settings/notifications">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
+
+    {% for s in scenarios %}
+    <div class="card mb-3">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <h3 class="card-title mb-0">{{ s.emoji }} {{ s.title }}</h3>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="{{ s.key }}__enabled"
+                       id="sw_{{ s.key }}" {{ 'checked' if s.enabled }}>
+                <label class="form-check-label" for="sw_{{ s.key }}">Активен</label>
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">{{ s.description }}</p>
+            {% if s.advice %}
+            <p class="text-muted mb-3"><em>Совет: {{ s.advice }}</em></p>
+            {% endif %}
+
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Мин. просмотров</label>
+                    <input type="number" class="form-control" name="{{ s.key }}__min_views"
+                           value="{{ s.min_views }}" min="0">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Макс. просмотров</label>
+                    <input type="text" class="form-control" name="{{ s.key }}__max_views"
+                           value="{{ s.max_views if s.max_views is not none else '—' }}"
+                           placeholder="—">
+                    <small class="form-text text-muted">— = без ограничения</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Мин. контактов</label>
+                    <input type="number" class="form-control" name="{{ s.key }}__min_contacts"
+                           value="{{ s.min_contacts }}" min="0">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Макс. контактов</label>
+                    <input type="text" class="form-control" name="{{ s.key }}__max_contacts"
+                           value="{{ s.max_contacts if s.max_contacts is not none else '—' }}"
+                           placeholder="—">
+                    <small class="form-text text-muted">— = без ограничения</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Мин. избранного</label>
+                    <input type="number" class="form-control" name="{{ s.key }}__min_favorites"
+                           value="{{ s.min_favorites }}" min="0">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Мин. конверсия (%)</label>
+                    <input type="text" class="form-control" name="{{ s.key }}__min_conversion"
+                           value="{{ s.min_conversion }}" placeholder="0.0">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Макс. конверсия (%)</label>
+                    <input type="text" class="form-control" name="{{ s.key }}__max_conversion"
+                           value="{{ s.max_conversion if s.max_conversion is not none else '—' }}"
+                           placeholder="—">
+                    <small class="form-text text-muted">— = без ограничения</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Макс. объектов в сообщении</label>
+                    <input type="number" class="form-control" name="{{ s.key }}__max_items_in_message"
+                           value="{{ s.max_items_in_message }}" min="1" max="50">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="mb-4">
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <a href="/dashboard/settings" class="btn btn-outline-secondary ms-2">Назад</a>
+    </div>
+</form>
+{% endblock %}
