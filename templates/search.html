@@ -329,32 +329,36 @@
               </div>
 
               {% else %}
-              {# ── Standalone property card ── #}
-              {% set property = group.property %}
-              <div class="standalone-card-wrap">
-                <article class="object-card">
-                  <a class="object-image" href="/property/{{ property.slug or property.id }}">
-                    {% if property.main_image %}
-                      <img src="{{ property.main_image if property.main_image.startswith('/') else '/' + property.main_image }}" alt="{{ property.title or property.address or 'Объект недвижимости' }}" loading="lazy">
+              {# ── Standalone property (same layout as building) ── #}
+              {% set bld = group.property %}
+              <div class="building-group">
+                <div class="building-group__header">
+                  <a class="building-group__image" href="/property/{{ bld.slug or bld.id }}">
+                    {% if bld.main_image %}
+                      <img src="{{ bld.main_image if bld.main_image.startswith('/') else '/' + bld.main_image }}" alt="{{ bld.title or bld.address or 'Объект недвижимости' }}" loading="lazy">
                     {% else %}
-                      <img src="/static/images/hero_bg_2.png" alt="{{ property.title or property.address or 'Объект недвижимости' }}" loading="lazy">
+                      <img src="/static/images/hero_bg_2.png" alt="{{ bld.title or bld.address or 'Объект недвижимости' }}" loading="lazy">
                     {% endif %}
-                    {% if property.category %}<span class="badge">{{ property.category }}</span>{% endif %}
-                    {% if property.deal_type == 'Аренда' %}<span class="badge-deal badge-deal--rent">Аренда</span>{% elif property.deal_type == 'Продажа' %}<span class="badge-deal badge-deal--sale">Продажа</span>{% endif %}
                   </a>
-                  <div class="object-content">
-                    <div class="object-price">{{ "{:,.0f}".format(property.price).replace(',', ' ') }} ₽{% if property.deal_type == 'Аренда' %}/мес{% endif %}</div>
-                    {% if property.area and property.price and property.area > 0 %}
-                    <div class="object-price-per-m2">{{ "{:,.0f}".format(property.price // property.area).replace(',', ' ') }} ₽/м²{% if property.deal_type == 'Аренда' %} в мес{% endif %}</div>
-                    {% endif %}
-                    <h3 class="object-title">{{ property.title }}</h3>
-                    <p class="object-address">{{ property.address or '—' }}</p>
-                    <div class="object-metrics">
-                      <span class="metric">{{ property.area|fmt_area }} м²</span>
+                  <div class="building-group__info">
+                    <div class="building-group__top">
+                      {% if bld.category %}<span class="building-group__deal">{{ bld.category }}</span>{% endif %}
+                      {% if bld.deal_type == 'Аренда' %}<span class="building-group__deal building-group__deal--rent">Аренда</span>{% elif bld.deal_type == 'Продажа' %}<span class="building-group__deal building-group__deal--sale">Продажа</span>{% endif %}
                     </div>
-                    <a href="/property/{{ property.slug or property.id }}" class="btn btn-outline btn-block">Подробнее</a>
+                    <h3 class="building-group__title"><a href="/property/{{ bld.slug or bld.id }}">{{ bld.title or bld.address or 'Объект' }}</a></h3>
+                    <p class="building-group__address">{{ bld.address or '' }}</p>
+                    <div class="building-group__offer">
+                      <div class="building-group__price">{{ "{:,.0f}".format(bld.price).replace(',', ' ') }} ₽{% if bld.deal_type == 'Аренда' %}<span class="building-group__price-suffix">/мес</span>{% endif %}</div>
+                      {% if bld.area and bld.price and bld.area > 0 %}
+                      <span class="building-group__price-perm2">{{ "{:,.0f}".format(bld.price // bld.area).replace(',', ' ') }} ₽/м²</span>
+                      {% endif %}
+                      {% if bld.area %}
+                      <span class="building-group__stat">{{ bld.area|fmt_area }} м²</span>
+                      {% endif %}
+                    </div>
+                    <a href="/property/{{ bld.slug or bld.id }}" class="btn btn-outline btn-sm">Подробнее</a>
                   </div>
-                </article>
+                </div>
               </div>
               {% endif %}
 
