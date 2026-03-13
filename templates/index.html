@@ -3,22 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vitrina — Коммерческая недвижимость</title>
-  <meta name="description" content="Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа. Сервис для агентов." />
-  <meta name="keywords" content="коммерческая недвижимость, аренда офиса, продажа склада, торговые площади, Vitrina, витрина рент" />
-  <meta name="author" content="Vitrina" />
+  <title>Витрина-Рент — аренда и продажа коммерческой недвижимости от собственника</title>
+  <meta name="description" content="Витрина-Рент — каталог коммерческой недвижимости: аренда и продажа офисов, складов, торговых площадей от собственника. Подбор объектов для бизнеса." />
+  <meta name="keywords" content="коммерческая недвижимость, аренда офиса, продажа склада, торговые площади, Витрина-Рент, витрина рент" />
+  <meta name="author" content="Витрина-Рент" />
   <link rel="shortcut icon" href="/static/images/favicon.png" />
   <link rel="canonical" href="{{ base_url }}{{ request.url.path }}" />
 
-  <meta property="og:title" content="Vitrina — Коммерческая недвижимость" />
-  <meta property="og:description" content="Офисы, склады и торговые площади от собственника — подбор для агентов" />
+  <meta property="og:title" content="Витрина-Рент — аренда и продажа коммерческой недвижимости" />
+  <meta property="og:description" content="Офисы, склады и торговые площади от собственника. Подбор коммерческой недвижимости для бизнеса." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ base_url }}{{ request.url.path }}" />
   <meta property="og:image" content="{{ base_url }}/static/images/og-default.png" />
   <meta property="og:locale" content="ru_RU" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Vitrina — Коммерческая недвижимость" />
-  <meta name="twitter:description" content="Офисы, склады и торговые площади от собственника — подбор для агентов" />
+  <meta name="twitter:title" content="Витрина-Рент — аренда и продажа коммерческой недвижимости" />
+  <meta name="twitter:description" content="Офисы, склады и торговые площади от собственника. Подбор коммерческой недвижимости для бизнеса." />
   <meta name="twitter:image" content="{{ base_url }}/static/images/og-default.png" />
   <meta name="yandex-verification" content="e6fcd66bd1186ee2" />
   <meta name="google-site-verification" content="oEtd5BxM5fAybSDNtTC5PJZCCKSnBITBUe5syl3J2WY" />
@@ -29,15 +29,15 @@
     "@graph": [
       {
         "@type": "Organization",
-        "name": "Vitrina",
+        "name": "Витрина-Рент",
         "url": "{{ base_url }}",
-        "description": "Каталог коммерческой недвижимости: аренда и продажа офисов, складов, торговых площадей."
+        "description": "Витрина-Рент — аренда и продажа коммерческой недвижимости: офисы, склады, торговые площади от собственника."
       },
       {
         "@type": "WebSite",
-        "name": "Vitrina",
+        "name": "Витрина-Рент",
         "url": "{{ base_url }}",
-        "description": "Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа.",
+        "description": "Каталог коммерческой недвижимости: офисы, склады, торговые площади. Аренда и продажа от собственника.",
         "potentialAction": {
           "@type": "SearchAction",
           "target": { "@type": "EntryPoint", "urlTemplate": "{{ base_url }}/search?q={search_term_string}" },
@@ -60,7 +60,7 @@
 
   <header class="header">
     <div class="container header-container">
-      <a href="/" class="logo">Vitrina</a>
+      <a href="/" class="logo">Витрина-Рент</a>
       <nav class="nav" id="nav">
         <a href="/" class="nav-link active">Главная</a>
         <a href="/search" class="nav-link">Поиск</a>
@@ -78,8 +78,9 @@
   <main>
     <section class="hero">
       <div class="container hero-content">
+        <p class="hero-brand">Витрина-Рент</p>
         <h1 class="hero-title">Коммерческая<br>недвижимость</h1>
-        <p class="hero-subtitle">Офисы, склады, торговые площади и здания от собственника</p>
+        <p class="hero-subtitle">Аренда и продажа офисов, складов, торговых площадей и зданий от собственника</p>
         <p class="hero-detail">{{ total_properties }} объектов в каталоге</p>
         <div class="hero-actions">
           <a href="/search" class="btn-pill btn-pill--primary">Выбрать</a>
@@ -182,7 +183,7 @@
     <div class="container">
       <div class="footer-inner">
         <div class="footer-left">
-          <span class="footer-logo">Vitrina</span>
+          <span class="footer-logo">Витрина-Рент</span>
           <span class="footer-sep">&middot;</span>
           <span class="footer-tagline">Коммерческая недвижимость</span>
           <span class="footer-sep">&middot;</span>

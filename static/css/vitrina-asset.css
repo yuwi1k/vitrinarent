@@ -133,6 +133,16 @@ body.menu-open { overflow: hidden; }
   z-index: 1;
 }
 
+.hero-brand {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin-bottom: 0.5rem;
+}
+
 .hero-title {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: clamp(2rem, 4.5vw, 4rem);

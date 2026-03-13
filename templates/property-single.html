@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ property.title }} — Vitrina</title>
+  <title>{{ property.title }} — аренда и продажа | Витрина-Рент</title>
   <link rel="shortcut icon" href="/static/images/favicon.png" />
 
   <meta name="description" content="{{ (property.description or property.title or 'Объект недвижимости')[:160] }}" />
   <link rel="canonical" href="{{ site_url }}/property/{{ property.slug or property.id }}" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="{{ property.title }} — Vitrina" />
+  <meta property="og:title" content="{{ property.title }} | Витрина-Рент" />
   <meta property="og:description" content="{{ (property.description or property.title or 'Коммерческая недвижимость')[:200] }}" />
   <meta property="og:url" content="{{ site_url }}/property/{{ property.slug or property.id }}" />
   {% set _og_img = display_for_media.main_image if display_for_media and display_for_media.main_image else property.main_image %}
@@ -20,7 +20,7 @@
   {% endif %}
   <meta property="og:locale" content="ru_RU" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="{{ property.title }} — Vitrina" />
+  <meta name="twitter:title" content="{{ property.title }} | Витрина-Рент" />
   <meta name="twitter:description" content="{{ (property.description or property.title or 'Коммерческая недвижимость')[:200] }}" />
   {% if _og_img %}
   <meta name="twitter:image" content="{{ site_url }}{{ _og_img if _og_img.startswith('/') else '/' + _og_img }}" />
@@ -61,7 +61,7 @@
 
   <header class="header">
     <div class="container header-container">
-      <a href="/" class="logo">Vitrina</a>
+      <a href="/" class="logo">Витрина-Рент</a>
       <nav class="nav" id="nav">
         <a href="/" class="nav-link">Главная</a>
         <a href="/search" class="nav-link active">Поиск</a>
@@ -262,7 +262,7 @@
     <div class="container">
       <div class="footer-inner">
         <div class="footer-left">
-          <span class="footer-logo">Vitrina</span>
+          <span class="footer-logo">Витрина-Рент</span>
           <span class="footer-sep">&middot;</span>
           <span class="footer-tagline">Коммерческая недвижимость</span>
           <span class="footer-sep">&middot;</span>
