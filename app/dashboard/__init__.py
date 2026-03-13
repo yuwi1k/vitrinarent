@@ -16,6 +16,7 @@ from app.dashboard.scheduler_ui import router as scheduler_router
 from app.dashboard.errors_ui import router as errors_router
 from app.dashboard.messages_ui import router as messages_router
 from app.dashboard.promotion_ui import router as promotion_router
+from app.dashboard.statistics_ui import router as statistics_router
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -29,3 +30,4 @@ router.include_router(scheduler_router)
 router.include_router(errors_router)
 router.include_router(messages_router)
 router.include_router(promotion_router)
+router.include_router(statistics_router)

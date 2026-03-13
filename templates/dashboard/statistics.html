@@ -1,0 +1,238 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Статистика{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none mb-4">
+    <div class="row align-items-center">
+        <div class="col">
+            <h2 class="page-title">Статистика объявлений</h2>
+            <p class="text-muted mt-1 mb-0">Данные собираются автоматически (планировщик «Сбор статистики»). Активных объектов: {{ count }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="row row-deck row-cards mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <span class="avatar avatar-md bg-blue-lt rounded me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg>
+                    </span>
+                    <div>
+                        <div class="text-muted small">Просмотры</div>
+                        <div class="h3 mb-0">{{ "{:,}".format(totals.total_views)|replace(",", " ") }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <span class="avatar avatar-md bg-red-lt rounded me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" /></svg>
+                    </span>
+                    <div>
+                        <div class="text-muted small">В избранном</div>
+                        <div class="h3 mb-0">{{ "{:,}".format(totals.total_favorites)|replace(",", " ") }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <span class="avatar avatar-md bg-green-lt rounded me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2" /></svg>
+                    </span>
+                    <div>
+                        <div class="text-muted small">Звонки / контакты</div>
+                        <div class="h3 mb-0">{{ "{:,}".format(totals.total_contacts)|replace(",", " ") }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <span class="avatar avatar-md bg-yellow-lt rounded me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 7v5l3 3" /></svg>
+                    </span>
+                    <div>
+                        <div class="text-muted small">Конверсия</div>
+                        <div class="h3 mb-0">{{ totals.conversion }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row row-deck row-cards mb-4">
+    <div class="col-sm-6">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Авито</h3></div>
+            <div class="card-body">
+                <div class="datagrid">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Просмотры</div>
+                        <div class="datagrid-content">{{ "{:,}".format(totals.avito_views)|replace(",", " ") }}</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">В избранном</div>
+                        <div class="datagrid-content">{{ "{:,}".format(totals.avito_favorites)|replace(",", " ") }}</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Контакты</div>
+                        <div class="datagrid-content">{{ "{:,}".format(totals.avito_contacts)|replace(",", " ") }}</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Конверсия</div>
+                        <div class="datagrid-content">{{ "%.1f"|format(totals.avito_contacts / totals.avito_views * 100) if totals.avito_views > 0 else "0.0" }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Циан</h3></div>
+            <div class="card-body">
+                <div class="datagrid">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Просмотры</div>
+                        <div class="datagrid-content">{{ "{:,}".format(totals.cian_views)|replace(",", " ") }}</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Показы телефона</div>
+                        <div class="datagrid-content">{{ "{:,}".format(totals.cian_contacts)|replace(",", " ") }}</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">Конверсия</div>
+                        <div class="datagrid-content">{{ "%.1f"|format(totals.cian_contacts / totals.cian_views * 100) if totals.cian_views > 0 else "0.0" }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Статистика по объектам</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table table-striped table-hover" id="stats-table">
+            <thead>
+                <tr>
+                    <th class="sortable" data-col="0">ID <span class="sort-arrow"></span></th>
+                    <th>Объект</th>
+                    <th>Площадки</th>
+                    <th class="sortable text-end" data-col="3">Просмотры <span class="sort-arrow"></span></th>
+                    <th class="sortable text-end" data-col="4">Избранное <span class="sort-arrow"></span></th>
+                    <th class="sortable text-end" data-col="5">Контакты <span class="sort-arrow"></span></th>
+                    <th class="sortable text-end" data-col="6">Конверсия <span class="sort-arrow"></span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td>{{ r.id }}</td>
+                    <td>
+                        <a href="/dashboard/properties/{{ r.id }}/edit" class="text-reset">{{ r.title }}</a>
+                        {% if r.address %}<div class="text-muted small">{{ r.address }}</div>{% endif %}
+                    </td>
+                    <td>
+                        {% if r.is_on_avito %}<span class="badge bg-purple-lt">Авито</span>{% endif %}
+                        {% if r.is_on_cian %}<span class="badge bg-cyan-lt">Циан</span>{% endif %}
+                        {% if not r.is_on_avito and not r.is_on_cian %}<span class="text-muted">—</span>{% endif %}
+                    </td>
+                    <td class="text-end">
+                        <span title="Авито: {{ r.avito_views }}, Циан: {{ r.cian_views }}">{{ "{:,}".format(r.total_views)|replace(",", " ") }}</span>
+                    </td>
+                    <td class="text-end">{{ "{:,}".format(r.total_favorites)|replace(",", " ") }}</td>
+                    <td class="text-end">
+                        <span title="Авито: {{ r.avito_contacts }}, Циан: {{ r.cian_contacts }}">{{ "{:,}".format(r.total_contacts)|replace(",", " ") }}</span>
+                    </td>
+                    <td class="text-end">
+                        {% if r.conversion > 5 %}
+                        <span class="badge bg-green-lt">{{ r.conversion }}%</span>
+                        {% elif r.conversion > 0 %}
+                        <span class="badge bg-yellow-lt">{{ r.conversion }}%</span>
+                        {% else %}
+                        <span class="text-muted">0%</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not rows %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">Нет активных объектов или статистика ещё не собрана. Запустите «Сбор статистики» в <a href="/dashboard/scheduler">планировщике</a>.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+            {% if rows %}
+            <tfoot>
+                <tr class="fw-bold">
+                    <td colspan="3">Итого</td>
+                    <td class="text-end">{{ "{:,}".format(totals.total_views)|replace(",", " ") }}</td>
+                    <td class="text-end">{{ "{:,}".format(totals.total_favorites)|replace(",", " ") }}</td>
+                    <td class="text-end">{{ "{:,}".format(totals.total_contacts)|replace(",", " ") }}</td>
+                    <td class="text-end">{{ totals.conversion }}%</td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { background: rgba(0,0,0,.04); }
+    th.sortable .sort-arrow::after { content: '\2195'; opacity: .3; margin-left: 4px; }
+    th.sortable.asc .sort-arrow::after { content: '\2191'; opacity: 1; }
+    th.sortable.desc .sort-arrow::after { content: '\2193'; opacity: 1; }
+</style>
+{% endblock %}
+
+{% block tail %}
+<script>
+(function() {
+    var table = document.getElementById('stats-table');
+    if (!table) return;
+    var headers = table.querySelectorAll('th.sortable');
+    var tbody = table.querySelector('tbody');
+    var sortCol = null, sortAsc = true;
+
+    function parseNum(cell) {
+        if (!cell) return 0;
+        var t = cell.textContent.trim().replace(/\s/g, '').replace(',', '.').replace('%', '');
+        return parseFloat(t) || 0;
+    }
+
+    headers.forEach(function(th) {
+        th.addEventListener('click', function() {
+            var col = parseInt(th.getAttribute('data-col'));
+            if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = false; }
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+            rows.sort(function(a, b) {
+                var diff = parseNum(a.cells[col]) - parseNum(b.cells[col]);
+                return sortAsc ? diff : -diff;
+            });
+            rows.forEach(function(r) { tbody.appendChild(r); });
+            headers.forEach(function(h) { h.classList.remove('asc', 'desc'); });
+            th.classList.add(sortAsc ? 'asc' : 'desc');
+        });
+    });
+})();
+</script>
+{% endblock %}

@@ -64,6 +64,10 @@
                 href="/dashboard/messages">Сообщения</a>
             </li>
             <li class="nav-item">
+              <a class="nav-link {% if request.url.path == '/dashboard/statistics' %}active{% endif %}"
+                href="/dashboard/statistics">Статистика</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link {% if request.url.path == '/dashboard/feed-errors' %}active{% endif %}"
                 href="/dashboard/feed-errors">Ошибки фидов</a>
             </li>
