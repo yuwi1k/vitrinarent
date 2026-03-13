@@ -291,15 +291,6 @@ async def favicon(request: Request):
     return FileResponse("static/images/favicon.png")
 
 
-@app.get("/{key}.txt", include_in_schema=False)
-async def indexnow_key_file(key: str) -> PlainTextResponse:
-    """Serve IndexNow verification key file."""
-    from app.indexing import INDEXNOW_KEY
-    if not INDEXNOW_KEY or key != INDEXNOW_KEY:
-        raise HTTPException(status_code=404)
-    return PlainTextResponse(INDEXNOW_KEY)
-
-
 @app.get("/robots.txt", include_in_schema=False)
 async def robots_txt(request: Request) -> PlainTextResponse:
     """Динамический robots.txt с учётом домена/прокси."""
@@ -318,6 +309,15 @@ async def robots_txt(request: Request) -> PlainTextResponse:
         "",
     ]
     return PlainTextResponse("\n".join(lines))
+
+
+@app.get("/{key}.txt", include_in_schema=False)
+async def indexnow_key_file(key: str) -> PlainTextResponse:
+    """Serve IndexNow verification key file."""
+    from app.indexing import INDEXNOW_KEY
+    if not INDEXNOW_KEY or key != INDEXNOW_KEY:
+        raise HTTPException(status_code=404)
+    return PlainTextResponse(INDEXNOW_KEY)
 
 
 # Порядок middleware: последний add = первый при обработке запроса.
