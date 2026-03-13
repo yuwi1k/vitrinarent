@@ -110,7 +110,6 @@ body.menu-open { overflow: hidden; }
   padding: 8rem 0 7rem;
   background: var(--color-surface);
   position: relative;
-  overflow: hidden;
 }
 
 .hero-glow {
