@@ -24,6 +24,20 @@
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@300;400;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@300;400;600;700&display=swap" /></noscript>
   <link rel="stylesheet" href="{{ site_css }}" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Коммерческая недвижимость на карте — АО Диапазон",
+    "description": "Интерактивная карта объектов коммерческой недвижимости: офисы, склады, торговые помещения от собственника.",
+    "url": "{{ base_url }}/map",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "АО Диапазон",
+      "url": "{{ base_url }}"
+    }
+  }
+  </script>
 </head>
 <body class="map-page">
   <a href="#main-content" class="skip-link">Перейти к содержимому</a>
@@ -98,7 +112,7 @@
     <div class="map-canvas" id="map"></div>
   </main>
 
-  <script src="/static/js/vitrina-asset.js"></script>
+  <script src="/static/js/vitrina-asset.js" defer></script>
   <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU{% if yandex_maps_api_key %}&apikey={{ yandex_maps_api_key }}{% endif %}&load=package.full" async></script>
   <script>
   (function() {

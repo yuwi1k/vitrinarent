@@ -26,6 +26,27 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@300;400;600;700&display=swap" /></noscript>
 
   <link rel="stylesheet" href="{{ site_css }}" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Контакты АО «Диапазон»",
+    "url": "{{ base_url }}/contacts",
+    "mainEntity": {
+      "@type": "LocalBusiness",
+      "name": "АО «Диапазон»",
+      "url": "{{ base_url }}",
+      "telephone": "{{ site_contacts.phone }}",
+      "email": "{{ site_contacts.email }}",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Москва",
+        "streetAddress": "{{ site_contacts.address }}"
+      },
+      "openingHours": "Mo-Fr 09:00-18:00"
+    }
+  }
+  </script>
 </head>
 <body>
   <a href="#main-content" class="skip-link">Перейти к содержимому</a>
@@ -114,6 +135,6 @@
     </div>
   </footer>
 
-  <script src="/static/js/vitrina-asset.js"></script>
+  <script src="/static/js/vitrina-asset.js" defer></script>
 </body>
 </html>

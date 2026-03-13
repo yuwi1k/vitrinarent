@@ -449,22 +449,6 @@ async def sitemap_xml(request: Request, db: AsyncSession = Depends(get_db)) -> R
     return Response(content=xml, media_type="application/xml")
 
 
-@router.get("/robots.txt")
-async def robots_txt(request: Request) -> Response:
-    host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc or "").strip()
-    proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "https").split(",")[0].strip() or "https"
-    base = f"{proto}://{host}".rstrip("/") if host else str(request.url.replace(path="", query="")).rstrip("/")
-
-    txt = (
-        "User-agent: *\n"
-        "Allow: /\n"
-        "Disallow: /dashboard/\n"
-        "Disallow: /static/uploads/\n"
-        "\n"
-        f"Sitemap: {base}/sitemap.xml\n"
-    )
-    return Response(content=txt, media_type="text/plain")
-
 
 @router.get("/avito.xml")
 async def get_avito_feed_route(db: AsyncSession = Depends(get_db)):

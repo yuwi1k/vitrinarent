@@ -18,7 +18,7 @@
 
   <meta name="description" content="Удобный подбор коммерческой недвижимости от собственника: офисы, склады, торговые площади. Фильтры по цене, площади и типу. Аренда и продажа." />
   <link rel="shortcut icon" href="/static/images/favicon.png" />
-  <link rel="canonical" href="{{ base_url }}{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}" />
+  <link rel="canonical" href="{{ base_url }}/search" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -393,7 +393,7 @@
     </div>
   </footer>
 
-  <script src="/static/js/vitrina-asset.js"></script>
+  <script src="/static/js/vitrina-asset.js" defer></script>
   <script>
   (function() {
     document.querySelectorAll('[data-expand-units]').forEach(function(btn) {

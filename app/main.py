@@ -283,19 +283,17 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/favicon.ico")
-async def favicon():
-    """Отдаём favicon из статики, чтобы убрать 404 в логах браузера."""
+async def favicon(request: Request):
+    """Отдаём favicon из статики с учётом текущего сайта."""
+    site = getattr(request.state, "site", None) or {}
+    if site.get("id") == "diapazon":
+        return FileResponse("static/diapazon/images/favicon.png")
     return FileResponse("static/images/favicon.png")
 
 
 @app.get("/robots.txt", include_in_schema=False)
 async def robots_txt(request: Request) -> PlainTextResponse:
-    """
-    Динамический robots.txt:
-    - Разрешаем индексацию всего, кроме /dashboard
-    - Отдаём ссылку на sitemap.xml с учётом реального домена/схемы.
-    """
-    # Определяем базовый URL с учётом возможного прокси
+    """Динамический robots.txt с учётом домена/прокси."""
     host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc or "").strip()
     proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "https").split(",")[0].strip() or "https"
     base = f"{proto}://{host}".rstrip("/") if host else str(request.url.replace(path="", query="")).rstrip("/")
@@ -304,20 +302,12 @@ async def robots_txt(request: Request) -> PlainTextResponse:
         "User-agent: *",
         "Disallow: /dashboard/",
         "Disallow: /health/",
+        "Disallow: /static/uploads/",
         "Allow: /",
         "",
-        "User-agent: Googlebot",
-        "Allow: /",
-        "",
-        "User-agent: Yandex",
-        "Allow: /",
-        "Crawl-delay: 2",
-        "",
-        f"Host: {host}" if host else "",
         f"Sitemap: {base}/sitemap.xml",
         "",
     ]
-    lines = [l for l in lines if l is not None]
     return PlainTextResponse("\n".join(lines))
 
 

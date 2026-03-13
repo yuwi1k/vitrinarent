@@ -26,6 +26,21 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@300;400;600;700&display=swap" /></noscript>
 
   <link rel="stylesheet" href="{{ site_css }}" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "О компании АО «Диапазон»",
+    "description": "АО «Диапазон» — группа компаний по аренде и продаже коммерческой недвижимости от собственника.",
+    "url": "{{ base_url }}/about",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "АО «Диапазон»",
+      "url": "{{ base_url }}",
+      "description": "Аренда и продажа коммерческой недвижимости: офисы, склады, торговые площади и здания от собственника."
+    }
+  }
+  </script>
 </head>
 <body>
   <a href="#main-content" class="skip-link">Перейти к содержимому</a>
@@ -89,6 +104,6 @@
     </div>
   </footer>
 
-  <script src="/static/js/vitrina-asset.js"></script>
+  <script src="/static/js/vitrina-asset.js" defer></script>
 </body>
 </html>
