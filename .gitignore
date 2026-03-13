@@ -4,3 +4,4 @@ __pycache__/
 *.db
 data/
 backups/
+google-service-account.json
