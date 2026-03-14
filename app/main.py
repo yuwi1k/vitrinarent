@@ -336,6 +336,28 @@ app.add_middleware(StaticCacheMiddleware)
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 
+from starlette.types import ASGIApp, Receive, Scope, Send
+
+class HeadMethodMiddleware:
+    """Convert HEAD → GET so BaseHTTPMiddleware doesn't block it with 405."""
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        if scope["type"] == "http" and scope["method"] == "HEAD":
+            scope = dict(scope, method="GET")
+            original_send = send
+            async def send_no_body(message):
+                if message["type"] == "http.response.body":
+                    message = {**message, "body": b""}
+                await original_send(message)
+            await self.app(scope, receive, send_no_body)
+        else:
+            await self.app(scope, receive, send)
+
+app.add_middleware(HeadMethodMiddleware)
+
+
 # --- ПУБЛИЧНЫЕ МАРШРУТЫ ---
 app.include_router(public_router)
 
