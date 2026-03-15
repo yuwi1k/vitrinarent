@@ -61,10 +61,20 @@ def generate_avito_feed(properties: list) -> bytes:
         etree.SubElement(ad, "Square").text = str(prop.area or 0)
         etree.SubElement(ad, "ContactPhone").text = contact_phone
         etree.SubElement(ad, "ManagerName").text = manager_name
+        image_urls = []
         if getattr(prop, "main_image", None) and (prop.main_image or "").strip():
-            images = etree.SubElement(ad, "Images")
-            url = prop.main_image if prop.main_image.startswith("/") else "/" + (prop.main_image or "")
-            etree.SubElement(images, "Image", url=site_url + url.strip())
+            url = (prop.main_image if prop.main_image.startswith("/") else "/" + prop.main_image).strip()
+            image_urls.append(site_url + url)
+        for img in sorted(getattr(prop, "images", []) or [], key=lambda x: getattr(x, "sort_order", 0)):
+            if getattr(img, "image_url", None) and (img.image_url or "").strip():
+                url = (img.image_url if img.image_url.startswith("/") else "/" + img.image_url).strip()
+                full = site_url + url
+                if full not in image_urls:
+                    image_urls.append(full)
+        if image_urls:
+            images_el = etree.SubElement(ad, "Images")
+            for url in image_urls[:40]:
+                etree.SubElement(images_el, "Image", url=url)
 
     return etree.tostring(root, pretty_print=True, encoding="UTF-8", xml_declaration=True)
 

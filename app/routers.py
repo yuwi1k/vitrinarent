@@ -510,7 +510,11 @@ async def get_avito_feed_route(db: AsyncSession = Depends(get_db)):
     if not is_avito_feed_enabled():
         empty = '<?xml version="1.0" encoding="UTF-8"?><Ads formatVersion="3" target="Avito.ru"/>'
         return Response(content=empty, media_type="application/xml")
-    stmt = select(Property).where(Property.is_active == True, Property.publish_on_avito == True)
+    stmt = (
+        select(Property)
+        .where(Property.is_active == True, Property.publish_on_avito == True)
+        .options(selectinload(Property.images))
+    )
     result = await db.execute(stmt)
     properties = result.scalars().all()
     xml_content = generate_avito_feed(properties)
