@@ -293,6 +293,56 @@ async def map_page(
     )
 
 
+@router.get("/catalog/{slug}")
+async def catalog_category_page(
+    slug: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    sort: Optional[str] = Query("date_desc"),
+):
+    from app.seo_categories import CATEGORY_MAP
+    cat_data = CATEGORY_MAP.get(slug)
+    if not cat_data:
+        raise HTTPException(status_code=404, detail="Category not found")
+
+    category_name = cat_data["category"]
+    site = getattr(request.state, "site", None) or SITES["vitrina"]
+    site_id = site.id
+
+    stmt = build_search_query(category=category_name)
+    stmt = _search_order_by(stmt, sort)
+    result_all = await db.execute(stmt)
+    all_filtered = result_all.unique().scalars().all()
+    total_items = len(all_filtered)
+
+    building_groups = group_properties_by_building(all_filtered, has_active_filters=True)
+
+    base_url = _base_url(request)
+    other_categories = [
+        {"slug": s, "label": d["label"]}
+        for s, d in CATEGORY_MAP.items() if s != slug
+    ]
+
+    return templates.TemplateResponse(
+        _tpl(request, "catalog.html"),
+        {
+            "request": request,
+            "base_url": base_url,
+            "cat": cat_data,
+            "cat_slug": slug,
+            "site_id": site_id,
+            "building_groups": building_groups,
+            "total_items": total_items,
+            "preview_count": BUILDING_PREVIEW_COUNT,
+            "sort": sort or "date_desc",
+            "other_categories": other_categories,
+            "yandex_maps_api_key": os.getenv("YANDEX_MAPS_API_KEY", ""),
+            **get_public_contacts(),
+            **_site_ctx(request),
+        },
+    )
+
+
 @router.get("/faq")
 async def faq_page(request: Request):
     return templates.TemplateResponse(
@@ -406,12 +456,16 @@ async def sitemap_xml(request: Request, db: AsyncSession = Depends(get_db)) -> R
     proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "https").split(",")[0].strip() or "https"
     base = f"{proto}://{host}".rstrip("/") if host else str(request.url.replace(path="", query="")).rstrip("/")
 
+    from app.seo_categories import ALL_CATEGORY_SLUGS
+
     site = getattr(request.state, "site", None)
     static_pages = [
         ("/", "daily", "1.0"),
         ("/search", "daily", "0.9"),
         ("/map", "weekly", "0.7"),
     ]
+    for cat_slug in ALL_CATEGORY_SLUGS:
+        static_pages.append((f"/catalog/{cat_slug}", "daily", "0.8"))
     if site and site.id == "diapazon":
         static_pages.append(("/about", "monthly", "0.6"))
         static_pages.append(("/contacts", "monthly", "0.6"))

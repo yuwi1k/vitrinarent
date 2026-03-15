@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+      (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=107710253','ym');
+      ym(107710253,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/107710253" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ cat.title[site_id] }}</title>
+  <meta name="description" content="{{ cat.description[site_id] }}" />
+  <link rel="shortcut icon" href="/static/diapazon/images/favicon.png" />
+  <link rel="canonical" href="{{ base_url }}/catalog/{{ cat_slug }}" />
+
+  <meta property="og:title" content="{{ cat.title[site_id] }}" />
+  <meta property="og:description" content="{{ cat.description[site_id] }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ base_url }}/catalog/{{ cat_slug }}" />
+  <meta property="og:image" content="{{ base_url }}/static/diapazon/images/og-default.png" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{{ cat.title[site_id] }}" />
+  <meta name="twitter:description" content="{{ cat.description[site_id] }}" />
+  <meta name="twitter:image" content="{{ base_url }}/static/diapazon/images/og-default.png" />
+  <meta name="yandex-verification" content="f98d09cc5997b2b3" />
+  <meta name="google-site-verification" content="ibR8LkjAf2UVL55MA3h6YIom5iVN5iE214xflMiKr4k" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "{{ cat.h1 }}",
+    "description": "{{ cat.description[site_id] }}",
+    "url": "{{ base_url }}/catalog/{{ cat_slug }}",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Главная", "item": "{{ base_url }}/"},
+        {"@type": "ListItem", "position": 2, "name": "Каталог", "item": "{{ base_url }}/search"},
+        {"@type": "ListItem", "position": 3, "name": "{{ cat.label }}"}
+      ]
+    }
+    {% if building_groups %},
+    "mainEntity": {
+      "@type": "OfferCatalog",
+      "name": "{{ cat.h1 }}",
+      "numberOfItems": {{ total_items }},
+      "itemListElement": [
+        {% set ns = namespace(items=[]) %}
+        {% for group in building_groups %}
+          {% if group.type == 'building' %}
+            {% set _ = ns.items.append('{"@type":"Offer","name":"' ~ (group.building.title or 'Здание')|replace('\\', '\\\\')|replace('"', '\\"') ~ '","url":"' ~ base_url ~ '/property/' ~ (group.building.slug or group.building.id) ~ '"}') %}
+          {% else %}
+            {% set _ = ns.items.append('{"@type":"Offer","name":"' ~ (group.property.title or 'Объект')|replace('\\', '\\\\')|replace('"', '\\"') ~ '","url":"' ~ base_url ~ '/property/' ~ (group.property.slug or group.property.id) ~ '"}') %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.items | join(',\n        ') }}
+      ]
+    }
+    {% endif %}
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@300;400;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@300;400;600;700&display=swap" /></noscript>
+  <link rel="stylesheet" href="{{ site_css }}">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Перейти к содержимому</a>
+
+  <header class="header">
+    <div class="container header-container">
+      <a href="/" class="logo">{{ site_logo }}</a>
+      <nav class="nav" id="nav">
+        {% for item in nav_items %}
+        <a href="{{ item.url }}" class="nav-link{% if item.id == 'search' %} active{% endif %}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+      <button class="burger-btn" id="burger-btn" aria-label="Открыть меню" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="search-section">
+      <div class="container">
+
+        <nav class="breadcrumbs" aria-label="Навигация">
+          <a href="/">Главная</a>
+          <span class="breadcrumbs__sep">›</span>
+          <a href="/search">Каталог</a>
+          <span class="breadcrumbs__sep">›</span>
+          <span>{{ cat.label }}</span>
+        </nav>
+
+        <div class="search-header">
+          <h1 class="page-title">{{ cat.h1 }}</h1>
+          <span class="results-count">{{ total_items }} объектов</span>
+        </div>
+
+        <div class="catalog-intro">
+          <p>{{ cat.intro }}</p>
+        </div>
+
+        <div class="search-results">
+          {% if building_groups %}
+          <div class="search-results-list">
+            {% for group in building_groups %}
+
+            {% if group.type == 'building' %}
+            {% set bld = group.building %}
+            {% set units = group.units %}
+            {% set visible = units[:preview_count] %}
+            {% set hidden = units[preview_count:] %}
+            <div class="building-group">
+              <div class="building-group__header">
+                <a class="building-group__image" href="/property/{{ bld.slug or bld.id }}">
+                  {% if bld.main_image %}
+                    <img src="{{ bld.main_image if bld.main_image.startswith('/') else '/' + bld.main_image }}" alt="{{ bld.title or bld.address or 'Объект недвижимости' }}" loading="lazy">
+                  {% else %}
+                    <img src="/static/images/hero_bg_2.png" alt="{{ bld.title or bld.address or 'Объект недвижимости' }}" loading="lazy">
+                  {% endif %}
+                </a>
+                <div class="building-group__info">
+                  <div class="building-group__top">
+                    {% if bld.deal_type == 'Аренда' %}<span class="building-group__deal building-group__deal--rent">Аренда</span>{% elif bld.deal_type == 'Продажа' %}<span class="building-group__deal building-group__deal--sale">Продажа</span>{% endif %}
+                  </div>
+                  <h3 class="building-group__title"><a href="/property/{{ bld.slug or bld.id }}">{{ bld.title or bld.address or 'Здание' }}</a></h3>
+                  <p class="building-group__address">{{ bld.address or '' }}</p>
+                  <div class="building-group__offer">
+                    <div class="building-group__price">{{ "{:,.0f}".format(bld.price).replace(',', ' ') }} ₽{% if bld.deal_type == 'Аренда' %}<span class="building-group__price-suffix">/мес</span>{% endif %}</div>
+                    {% if bld.area and bld.price and bld.area > 0 %}
+                    <span class="building-group__price-perm2">{{ "{:,.0f}".format(bld.price // bld.area).replace(',', ' ') }} ₽/м²</span>
+                    {% endif %}
+                    {% if bld.area %}
+                    <span class="building-group__stat">{{ bld.area|fmt_area }} м²</span>
+                    {% endif %}
+                  </div>
+                  <a href="/property/{{ bld.slug or bld.id }}" class="btn btn-outline btn-sm">Подробнее</a>
+                </div>
+              </div>
+
+              {% if visible %}
+              <div class="building-group__units-header">
+                {% set n = units|length %}
+                {% set prices = units|map(attribute='price')|select('ne', None)|list %}
+                {% set areas = units|map(attribute='area')|select('ne', None)|list %}
+                <svg class="building-group__units-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                {% set unit_deal_types = units|map(attribute='deal_type')|unique|list %}
+                <span>Помещения в этом здании {% if unit_deal_types|length == 1 %}{{ 'в аренду' if unit_deal_types[0] == 'Аренда' else 'на продажу' }}{% endif %}</span>
+                <span class="building-group__units-count">{{ n }} шт.</span>
+                {% if areas %}
+                <span class="building-group__units-meta">{% if areas|min == areas|max %}{{ areas|min|fmt_area }}{% else %}{{ areas|min|fmt_area }}–{{ areas|max|fmt_area }}{% endif %} м²</span>
+                {% endif %}
+                {% if prices %}
+                <span class="building-group__units-meta">от {{ "{:,.0f}".format(prices|min).replace(',', ' ') }} ₽</span>
+                {% endif %}
+              </div>
+              <div class="unit-row unit-row--head">
+                <span>Назначение</span>
+                <span>Площадь</span>
+                <span>Цена</span>
+                <span>Цена за м²</span>
+                <span></span>
+              </div>
+              <div class="building-group__units">
+                {% for unit in visible %}
+                <div class="unit-row">
+                  <span class="unit-row__category">{{ unit.category|short_cat }}</span>
+                  <span class="unit-row__area">{{ unit.area|fmt_area }} м²</span>
+                  <span class="unit-row__price">{{ "{:,.0f}".format(unit.price).replace(',', ' ') }} ₽{% if unit.deal_type == 'Аренда' %}<small>/мес</small>{% endif %}</span>
+                  {% if unit.area and unit.price and unit.area > 0 %}
+                  <span class="unit-row__perm2">{{ "{:,.0f}".format(unit.price // unit.area).replace(',', ' ') }} ₽/м²</span>
+                  {% else %}
+                  <span class="unit-row__perm2"></span>
+                  {% endif %}
+                  <a href="/property/{{ unit.slug or unit.id }}" class="btn btn-outline btn-sm unit-row__btn">Подробнее</a>
+                </div>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              {% if hidden %}
+              <div class="building-group__units building-group__units--hidden" data-hidden-units>
+                {% for unit in hidden %}
+                <div class="unit-row">
+                  <span class="unit-row__category">{{ unit.category|short_cat }}</span>
+                  <span class="unit-row__area">{{ unit.area|fmt_area }} м²</span>
+                  <span class="unit-row__price">{{ "{:,.0f}".format(unit.price).replace(',', ' ') }} ₽{% if unit.deal_type == 'Аренда' %}<small>/мес</small>{% endif %}</span>
+                  {% if unit.area and unit.price and unit.area > 0 %}
+                  <span class="unit-row__perm2">{{ "{:,.0f}".format(unit.price // unit.area).replace(',', ' ') }} ₽/м²</span>
+                  {% else %}
+                  <span class="unit-row__perm2"></span>
+                  {% endif %}
+                  <a href="/property/{{ unit.slug or unit.id }}" class="btn btn-outline btn-sm unit-row__btn">Подробнее</a>
+                </div>
+                {% endfor %}
+              </div>
+              {% set hn = hidden|length %}
+              <button type="button" class="building-group__expand" data-expand-units>
+                <span data-expand-label>Ещё {{ hn }} {{ 'помещение' if hn % 10 == 1 and hn % 100 != 11 else 'помещения' if hn % 10 in [2,3,4] and hn % 100 not in [12,13,14] else 'помещений' }}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              {% endif %}
+            </div>
+
+            {% else %}
+            {% set bld = group.property %}
+            <div class="building-group">
+              <div class="building-group__header">
+                <a class="building-group__image" href="/property/{{ bld.slug or bld.id }}">
+                  {% if bld.main_image %}
+                    <img src="{{ bld.main_image if bld.main_image.startswith('/') else '/' + bld.main_image }}" alt="{{ bld.title or bld.address or 'Объект недвижимости' }}" loading="lazy">
+                  {% else %}
+                    <img src="/static/images/hero_bg_2.png" alt="{{ bld.title or bld.address or 'Объект недвижимости' }}" loading="lazy">
+                  {% endif %}
+                </a>
+                <div class="building-group__info">
+                  <div class="building-group__top">
+                    {% if bld.category %}<span class="building-group__deal">{{ bld.category }}</span>{% endif %}
+                    {% if bld.deal_type == 'Аренда' %}<span class="building-group__deal building-group__deal--rent">Аренда</span>{% elif bld.deal_type == 'Продажа' %}<span class="building-group__deal building-group__deal--sale">Продажа</span>{% endif %}
+                  </div>
+                  <h3 class="building-group__title"><a href="/property/{{ bld.slug or bld.id }}">{{ bld.title or bld.address or 'Объект' }}</a></h3>
+                  <p class="building-group__address">{{ bld.address or '' }}</p>
+                  <div class="building-group__offer">
+                    <div class="building-group__price">{{ "{:,.0f}".format(bld.price).replace(',', ' ') }} ₽{% if bld.deal_type == 'Аренда' %}<span class="building-group__price-suffix">/мес</span>{% endif %}</div>
+                    {% if bld.area and bld.price and bld.area > 0 %}
+                    <span class="building-group__price-perm2">{{ "{:,.0f}".format(bld.price // bld.area).replace(',', ' ') }} ₽/м²</span>
+                    {% endif %}
+                    {% if bld.area %}
+                    <span class="building-group__stat">{{ bld.area|fmt_area }} м²</span>
+                    {% endif %}
+                  </div>
+                  <a href="/property/{{ bld.slug or bld.id }}" class="btn btn-outline btn-sm">Подробнее</a>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% endfor %}
+          </div>
+
+          {% else %}
+          <div style="text-align:center; padding: 3rem 0; color: var(--color-text-secondary);">
+            <p style="font-size:1.125rem; margin-bottom:0.5rem;">Объектов пока нет</p>
+            <p style="font-size:0.875rem; color: var(--color-text-tertiary);">В этой категории пока нет доступных объектов. Посмотрите <a href="/search">весь каталог</a>.</p>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="catalog-outro">
+          <p>{{ cat.outro }}</p>
+        </div>
+
+        <div class="catalog-related">
+          <h2 class="catalog-related__title">Смотрите также</h2>
+          <div class="catalog-related__links">
+            {% for other in other_categories %}
+            <a href="/catalog/{{ other.slug }}" class="catalog-related__link">{{ other.label }}</a>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-logo">{{ site_logo }}</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-tagline">Коммерческая недвижимость</span>
+          <span class="footer-sep">&middot;</span>
+          <span class="footer-copy">&copy; {{ now().year }}</span>
+        </div>
+        <div class="footer-contacts">
+          {% if site_contacts.phone %}<a href="tel:{{ site_contacts.phone }}">{{ site_contacts.phone }}</a>{% endif %}
+          {% if site_contacts.email %}<a href="mailto:{{ site_contacts.email }}">{{ site_contacts.email }}</a>{% endif %}
+        </div>
+        <nav class="footer-nav">
+          {% for item in nav_items %}
+          <a href="{{ item.url }}">{{ item.label }}</a>
+          {% endfor %}
+        </nav>
+      </div>
+      <div class="footer-company">{{ site_name }}</div>
+    </div>
+  </footer>
+
+  <script src="/static/js/vitrina-asset.js" defer></script>
+  <script>
+  (function() {
+    document.querySelectorAll('[data-expand-units]').forEach(function(btn) {
+      btn.setAttribute('aria-expanded', 'false');
+      btn.addEventListener('click', function() {
+        var group = btn.closest('.building-group');
+        var hidden = group.querySelector('[data-hidden-units]');
+        if (!hidden) return;
+        var expanded = btn.getAttribute('aria-expanded') === 'true';
+        hidden.style.display = expanded ? 'none' : 'block';
+        btn.setAttribute('aria-expanded', String(!expanded));
+        var label = btn.querySelector('[data-expand-label]');
+        if (label) {
+          if (!label.dataset.originalText) label.dataset.originalText = label.textContent;
+          label.textContent = expanded ? label.dataset.originalText : 'Свернуть';
+        }
+      });
+    });
+  })();
+  </script>
+</body>
+</html>
