@@ -2,15 +2,17 @@
 
 {% block title %}Объекты{% endblock %}
 
-<style>.feed-toggle{cursor:pointer;font-size:.7rem;padding:.25em .5em;transition:opacity .15s}.feed-toggle:hover{opacity:.8}.feed-toggle:disabled{opacity:.5;cursor:wait}</style>
 {% block content %}
 <div class="page-header d-print-none mb-4">
     <div class="row align-items-center">
         <div class="col">
+            <div class="page-pretitle">Каталог</div>
             <h2 class="page-title">Объекты недвижимости</h2>
         </div>
         <div class="col-auto">
-            <a href="/dashboard/properties/new" class="btn btn-primary">Добавить объект</a>
+            <a href="/dashboard/properties/new" class="btn btn-primary">
+                <i class="ti ti-plus me-1"></i>Добавить объект
+            </a>
         </div>
     </div>
 </div>
@@ -19,24 +21,24 @@
     <div class="card-body">
         <div class="row g-3">
             <div class="col-md-3">
-                <label class="form-label small text-muted">Поиск</label>
-                <input type="text" name="q" class="form-control" placeholder="Название или адрес" value="{{ q or '' }}" aria-label="Поиск по названию или адресу">
+                <label class="form-label small text-secondary">Поиск</label>
+                <input type="text" name="q" class="form-control" placeholder="Название или адрес" value="{{ q or '' }}">
             </div>
             <div class="col-md-2">
-                <label class="form-label small text-muted">ID или slug</label>
-                <input type="text" name="id_or_slug" class="form-control" placeholder="Напр. 5 или url-slug" value="{{ id_or_slug or '' }}" aria-label="Фильтр по ID или slug">
+                <label class="form-label small text-secondary">ID или slug</label>
+                <input type="text" name="id_or_slug" class="form-control" placeholder="5 или url-slug" value="{{ id_or_slug or '' }}">
             </div>
             <div class="col-md-2">
-                <label class="form-label small text-muted">Тип сделки</label>
-                <select name="deal_type" class="form-select" aria-label="Тип сделки">
+                <label class="form-label small text-secondary">Тип сделки</label>
+                <select name="deal_type" class="form-select">
                     <option value="Все" {% if (deal_type or 'Все') == 'Все' %}selected{% endif %}>Все</option>
                     <option value="Аренда" {% if deal_type == 'Аренда' %}selected{% endif %}>Аренда</option>
                     <option value="Продажа" {% if deal_type == 'Продажа' %}selected{% endif %}>Продажа</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label small text-muted">Категория</label>
-                <select name="category" class="form-select" aria-label="Категория">
+                <label class="form-label small text-secondary">Категория</label>
+                <select name="category" class="form-select">
                     <option value="Все" {% if (category or 'Все') == 'Все' %}selected{% endif %}>Все</option>
                     <option value="Офис" {% if category == 'Офис' %}selected{% endif %}>Офис</option>
                     <option value="Торговая площадь" {% if category == 'Торговая площадь' %}selected{% endif %}>Торговая площадь</option>
@@ -48,29 +50,29 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label small text-muted">Статус</label>
-                <select name="is_active" class="form-select" aria-label="Статус">
+                <label class="form-label small text-secondary">Статус</label>
+                <select name="is_active" class="form-select">
                     <option value="all" {% if (is_active or 'all') == 'all' %}selected{% endif %}>Все</option>
                     <option value="1" {% if is_active == '1' %}selected{% endif %}>Активные</option>
                     <option value="0" {% if is_active == '0' %}selected{% endif %}>Скрытые</option>
                 </select>
             </div>
             <div class="col-md-1 d-flex align-items-end">
-                <button type="submit" class="btn btn-outline-primary w-100">Применить</button>
+                <button type="submit" class="btn btn-primary w-100"><i class="ti ti-search"></i></button>
             </div>
         </div>
         <div class="row g-3 mt-1">
             <div class="col-md-3">
-                <label class="form-label small text-muted">Сортировка</label>
+                <label class="form-label small text-secondary">Сортировка</label>
                 <div class="d-flex gap-2">
-                    <select name="sort_by" class="form-select form-select-sm" aria-label="Поле сортировки">
+                    <select name="sort_by" class="form-select form-select-sm">
                         <option value="id" {% if (sort_by or 'id') == 'id' %}selected{% endif %}>ID</option>
                         <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Цена</option>
                         <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Название</option>
                     </select>
-                    <select name="order" class="form-select form-select-sm w-auto" aria-label="Направление">
-                        <option value="desc" {% if (order or 'desc') == 'desc' %}selected{% endif %}>↓ Убыв.</option>
-                        <option value="asc" {% if order == 'asc' %}selected{% endif %}>↑ Возр.</option>
+                    <select name="order" class="form-select form-select-sm w-auto">
+                        <option value="desc" {% if (order or 'desc') == 'desc' %}selected{% endif %}>Убыв.</option>
+                        <option value="asc" {% if order == 'asc' %}selected{% endif %}>Возр.</option>
                     </select>
                 </div>
             </div>
@@ -84,12 +86,10 @@
     <div class="card mb-3">
         <div class="card-body py-2">
             <div class="d-flex align-items-center flex-wrap gap-2">
-                <span class="text-muted small me-2">Массовые действия:</span>
-                <button type="submit" name="action" value="activate" class="btn btn-sm btn-outline-success">Опубликовать</button>
-                <button type="submit" name="action" value="deactivate" class="btn btn-sm btn-outline-warning">Снять с публикации</button>
-                <button type="button" class="btn btn-sm btn-outline-danger" id="btn-bulk-delete">
-                    Удалить выбранные
-                </button>
+                <span class="text-secondary small me-2"><i class="ti ti-layers-intersect me-1"></i>Массовые:</span>
+                <button type="submit" name="action" value="activate" class="btn btn-sm btn-outline-success"><i class="ti ti-eye me-1"></i>Опубликовать</button>
+                <button type="submit" name="action" value="deactivate" class="btn btn-sm btn-outline-warning"><i class="ti ti-eye-off me-1"></i>Снять</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="btn-bulk-delete"><i class="ti ti-trash me-1"></i>Удалить</button>
             </div>
         </div>
     </div>
@@ -97,11 +97,11 @@
 
 <div class="card">
     <div class="table-responsive">
-        <table class="table table-vcenter card-table table-striped">
+        <table class="table table-vcenter card-table">
             <thead>
                 <tr>
                     <th class="w-1">
-                        <input type="checkbox" id="select-all" class="form-check-input" aria-label="Выбрать все на странице">
+                        <input type="checkbox" id="select-all" class="form-check-input">
                     </th>
                     <th>ID</th>
                     <th>Фото</th>
@@ -119,53 +119,55 @@
                 <tr class="parent-row">
                     <td>
                         {% if children|length > 0 %}
-                        <button type="button" class="btn btn-sm btn-outline-secondary p-1 me-1" data-bs-toggle="collapse" data-bs-target="#children-{{ parent.id }}" aria-expanded="true" aria-controls="children-{{ parent.id }}" title="Показать/скрыть дочерние ({{ children|length }})">
-                            <span class="expand-icon">▾</span>
+                        <button type="button" class="btn btn-sm p-1 me-1 text-secondary" data-bs-toggle="collapse" data-bs-target="#children-{{ parent.id }}" aria-expanded="true" title="{{ children|length }} дочерних">
+                            <span class="expand-icon"><i class="ti ti-chevron-down" style="font-size:.85rem;"></i></span>
                         </button>
                         {% endif %}
                         <input type="checkbox" name="ids" value="{{ parent.id }}" class="form-check-input row-select">
                     </td>
-                    <td class="text-muted">{{ parent.id }}</td>
+                    <td class="text-secondary">{{ parent.id }}</td>
                     <td>
                         {% if parent.main_image %}
-                        <img src="{{ parent.main_image if parent.main_image.startswith('/') else '/' + parent.main_image }}" alt="" class="rounded" style="width:48px;height:48px;object-fit:cover;">
+                        <img src="{{ parent.main_image if parent.main_image.startswith('/') else '/' + parent.main_image }}" alt="" class="img-property-thumb">
                         {% else %}
-                        <span class="avatar avatar-sm bg-secondary rounded">—</span>
+                        <div class="empty-avatar"><i class="ti ti-photo-off"></i></div>
                         {% endif %}
                     </td>
-                    <td>{{ parent.title or '—' }}</td>
-                    <td><span class="badge bg-azure-lt">{{ parent.deal_type or '—' }}</span> {{ parent.category or '' }}</td>
-                    <td>{{ "{:,.0f}".format(parent.price).replace(',', ' ') }} ₽</td>
                     <td>
-                        {% if parent.is_active %}
-                        <span class="badge bg-green text-white">Активен</span>
-                        {% else %}
-                        <span class="badge bg-red text-white">Скрыт</span>
-                        {% endif %}
-                        <button type="button"
-                            class="badge border-0 feed-toggle {{ 'bg-purple-lt' if parent.publish_on_avito else 'bg-secondary-lt' }}"
-                            data-id="{{ parent.id }}" data-field="publish_on_avito"
-                            onclick="toggleFeedFlag(this)"
-                            title="Нажмите, чтобы {{ 'выключить' if parent.publish_on_avito else 'включить' }} Авито">
-                            Avito {{ '✓' if parent.publish_on_avito else '✗' }}
-                        </button>
-                        <button type="button"
-                            class="badge border-0 feed-toggle {{ 'bg-purple-lt' if parent.publish_on_cian else 'bg-secondary-lt' }}"
-                            data-id="{{ parent.id }}" data-field="publish_on_cian"
-                            onclick="toggleFeedFlag(this)"
-                            title="Нажмите, чтобы {{ 'выключить' if parent.publish_on_cian else 'включить' }} Циан">
-                            Циан {{ '✓' if parent.publish_on_cian else '✗' }}
-                        </button>
-                        {% set cian = parent.cian_data or {} %}
-                        {% if cian.get("CianStatus") == "published" %}
-                        <span class="badge bg-green-lt">опубликовано</span>
-                        {% elif cian.get("CianStatus") == "inactive" %}
-                        <span class="badge bg-yellow-lt">снято</span>
-                        {% elif cian.get("CianStatus") == "refusedByModerator" %}
-                        <span class="badge bg-red-lt">отказ</span>
-                        {% elif cian.get("CianStatus") == "removedByModerator" %}
-                        <span class="badge bg-red-lt">снято мод.</span>
-                        {% endif %}
+                        <a href="/dashboard/properties/edit/{{ parent.id }}" class="text-reset fw-medium">{{ parent.title or '—' }}</a>
+                    </td>
+                    <td><span class="badge bg-azure-lt">{{ parent.deal_type or '—' }}</span> <span class="text-secondary small">{{ parent.category or '' }}</span></td>
+                    <td class="fw-medium">{{ "{:,.0f}".format(parent.price).replace(',', ' ') }} ₽</td>
+                    <td>
+                        <div class="d-flex flex-wrap align-items-center gap-1">
+                            {% if parent.is_active %}
+                            <span class="d-inline-flex align-items-center"><span class="status-dot dot-green"></span><span class="small">Активен</span></span>
+                            {% else %}
+                            <span class="d-inline-flex align-items-center"><span class="status-dot dot-red"></span><span class="small">Скрыт</span></span>
+                            {% endif %}
+                            <button type="button"
+                                class="feed-pill {{ 'pill-on' if parent.publish_on_avito else 'pill-off' }}"
+                                data-id="{{ parent.id }}" data-field="publish_on_avito"
+                                onclick="toggleFeedFlag(this)">
+                                Avito {{ '✓' if parent.publish_on_avito else '✗' }}
+                            </button>
+                            <button type="button"
+                                class="feed-pill {{ 'pill-on' if parent.publish_on_cian else 'pill-off' }}"
+                                data-id="{{ parent.id }}" data-field="publish_on_cian"
+                                onclick="toggleFeedFlag(this)">
+                                Циан {{ '✓' if parent.publish_on_cian else '✗' }}
+                            </button>
+                            {% set cian = parent.cian_data or {} %}
+                            {% if cian.get("CianStatus") == "published" %}
+                            <span class="badge badge-cian-status bg-green-lt">опубл.</span>
+                            {% elif cian.get("CianStatus") == "inactive" %}
+                            <span class="badge badge-cian-status bg-yellow-lt">снято</span>
+                            {% elif cian.get("CianStatus") == "refusedByModerator" %}
+                            <span class="badge badge-cian-status bg-red-lt">отказ</span>
+                            {% elif cian.get("CianStatus") == "removedByModerator" %}
+                            <span class="badge badge-cian-status bg-red-lt">снято мод.</span>
+                            {% endif %}
+                        </div>
                     </td>
                     <td>
                         {% set sd = parent.stats_data or {} %}
@@ -181,9 +183,9 @@
                     </td>
                     <td>
                         <div class="btn-list flex-nowrap">
-                            <a href="/dashboard/properties/edit/{{ parent.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
-                            <a href="/dashboard/properties/copy/{{ parent.id }}" class="btn btn-sm btn-outline-secondary" title="Копировать">Копировать</a>
-                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="submitDelete({{ parent.id }}, {{ children|length }})">Удалить</button>
+                            <a href="/dashboard/properties/edit/{{ parent.id }}" class="btn btn-sm btn-outline-primary" title="Редактировать"><i class="ti ti-pencil"></i></a>
+                            <a href="/dashboard/properties/copy/{{ parent.id }}" class="btn btn-sm btn-outline-secondary" title="Копировать"><i class="ti ti-copy"></i></a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="submitDelete({{ parent.id }}, {{ children|length }})" title="Удалить"><i class="ti ti-trash"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -191,52 +193,52 @@
                 <tr class="child-rows-wrapper">
                     <td colspan="10" class="p-0 border-0">
                         <div class="collapse show" id="children-{{ parent.id }}">
-                            <table class="table table-sm table-striped mb-0 bg-light">
+                            <table class="table table-sm mb-0" style="background:rgba(255,255,255,.02);">
                                 <tbody>
                                     {% for ch in children %}
                                     <tr>
-                                        <td class="w-1"><input type="checkbox" name="ids" value="{{ ch.id }}" class="form-check-input row-select"></td>
-                                        <td class="text-muted">{{ ch.id }}</td>
+                                        <td class="w-1 ps-4"><input type="checkbox" name="ids" value="{{ ch.id }}" class="form-check-input row-select"></td>
+                                        <td class="text-secondary">{{ ch.id }}</td>
                                         <td>
                                             {% if ch.main_image %}
                                             <img src="{{ ch.main_image if ch.main_image.startswith('/') else '/' + ch.main_image }}" alt="" class="rounded" style="width:40px;height:40px;object-fit:cover;">
                                             {% else %}
-                                            <span class="avatar avatar-sm bg-secondary rounded">—</span>
+                                            <span class="empty-avatar" style="width:40px;height:40px;font-size:.7rem;"><i class="ti ti-photo-off"></i></span>
                                             {% endif %}
                                         </td>
-                                        <td><span class="text-muted small">↳</span> {{ ch.title or '—' }}</td>
-                                        <td><span class="badge bg-azure-lt">{{ ch.deal_type or '—' }}</span> {{ ch.category or '' }}</td>
+                                        <td><span class="text-secondary small me-1">↳</span> <a href="/dashboard/properties/edit/{{ ch.id }}" class="text-reset">{{ ch.title or '—' }}</a></td>
+                                        <td><span class="badge bg-azure-lt">{{ ch.deal_type or '—' }}</span> <span class="text-secondary small">{{ ch.category or '' }}</span></td>
                                         <td>{{ "{:,.0f}".format(ch.price).replace(',', ' ') }} ₽</td>
                                         <td>
-                                            {% if ch.is_active %}
-                                            <span class="badge bg-green text-white">Активен</span>
-                                            {% else %}
-                                            <span class="badge bg-red text-white">Скрыт</span>
-                                            {% endif %}
-                                            <button type="button"
-                                                class="badge border-0 feed-toggle {{ 'bg-purple-lt' if ch.publish_on_avito else 'bg-secondary-lt' }}"
-                                                data-id="{{ ch.id }}" data-field="publish_on_avito"
-                                                onclick="toggleFeedFlag(this)"
-                                                title="Нажмите, чтобы {{ 'выключить' if ch.publish_on_avito else 'включить' }} Авито">
-                                                Avito {{ '✓' if ch.publish_on_avito else '✗' }}
-                                            </button>
-                                            <button type="button"
-                                                class="badge border-0 feed-toggle {{ 'bg-purple-lt' if ch.publish_on_cian else 'bg-secondary-lt' }}"
-                                                data-id="{{ ch.id }}" data-field="publish_on_cian"
-                                                onclick="toggleFeedFlag(this)"
-                                                title="Нажмите, чтобы {{ 'выключить' if ch.publish_on_cian else 'включить' }} Циан">
-                                                Циан {{ '✓' if ch.publish_on_cian else '✗' }}
-                                            </button>
-                                            {% set cian_ch = ch.cian_data or {} %}
-                                            {% if cian_ch.get("CianStatus") == "published" %}
-                                            <span class="badge bg-green-lt">опубликовано</span>
-                                            {% elif cian_ch.get("CianStatus") == "inactive" %}
-                                            <span class="badge bg-yellow-lt">снято</span>
-                                            {% elif cian_ch.get("CianStatus") == "refusedByModerator" %}
-                                            <span class="badge bg-red-lt">отказ</span>
-                                            {% elif cian_ch.get("CianStatus") == "removedByModerator" %}
-                                            <span class="badge bg-red-lt">снято мод.</span>
-                                            {% endif %}
+                                            <div class="d-flex flex-wrap align-items-center gap-1">
+                                                {% if ch.is_active %}
+                                                <span class="d-inline-flex align-items-center"><span class="status-dot dot-green"></span><span class="small">Активен</span></span>
+                                                {% else %}
+                                                <span class="d-inline-flex align-items-center"><span class="status-dot dot-red"></span><span class="small">Скрыт</span></span>
+                                                {% endif %}
+                                                <button type="button"
+                                                    class="feed-pill {{ 'pill-on' if ch.publish_on_avito else 'pill-off' }}"
+                                                    data-id="{{ ch.id }}" data-field="publish_on_avito"
+                                                    onclick="toggleFeedFlag(this)">
+                                                    Avito {{ '✓' if ch.publish_on_avito else '✗' }}
+                                                </button>
+                                                <button type="button"
+                                                    class="feed-pill {{ 'pill-on' if ch.publish_on_cian else 'pill-off' }}"
+                                                    data-id="{{ ch.id }}" data-field="publish_on_cian"
+                                                    onclick="toggleFeedFlag(this)">
+                                                    Циан {{ '✓' if ch.publish_on_cian else '✗' }}
+                                                </button>
+                                                {% set cian_ch = ch.cian_data or {} %}
+                                                {% if cian_ch.get("CianStatus") == "published" %}
+                                                <span class="badge badge-cian-status bg-green-lt">опубл.</span>
+                                                {% elif cian_ch.get("CianStatus") == "inactive" %}
+                                                <span class="badge badge-cian-status bg-yellow-lt">снято</span>
+                                                {% elif cian_ch.get("CianStatus") == "refusedByModerator" %}
+                                                <span class="badge badge-cian-status bg-red-lt">отказ</span>
+                                                {% elif cian_ch.get("CianStatus") == "removedByModerator" %}
+                                                <span class="badge badge-cian-status bg-red-lt">снято мод.</span>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                         <td>
                                             {% set sd_ch = ch.stats_data or {} %}
@@ -252,9 +254,9 @@
                                         </td>
                                         <td>
                                             <div class="btn-list flex-nowrap">
-                                                <a href="/dashboard/properties/edit/{{ ch.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
-                                                <a href="/dashboard/properties/copy/{{ ch.id }}" class="btn btn-sm btn-outline-secondary">Копировать</a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="submitDelete({{ ch.id }}, 0)">Удалить</button>
+                                                <a href="/dashboard/properties/edit/{{ ch.id }}" class="btn btn-sm btn-outline-primary" title="Редактировать"><i class="ti ti-pencil"></i></a>
+                                                <a href="/dashboard/properties/copy/{{ ch.id }}" class="btn btn-sm btn-outline-secondary" title="Копировать"><i class="ti ti-copy"></i></a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="submitDelete({{ ch.id }}, 0)" title="Удалить"><i class="ti ti-trash"></i></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -267,7 +269,7 @@
                 {% endif %}
                 {% else %}
                 <tr>
-                    <td colspan="10" class="text-center text-muted py-4">Нет объектов. <a href="/dashboard/properties/new">Добавить первый</a>.</td>
+                    <td colspan="10" class="text-center text-secondary py-4">Нет объектов. <a href="/dashboard/properties/new">Добавить первый</a>.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -290,11 +292,10 @@ async function toggleFeedFlag(btn) {
         });
         var data = await resp.json();
         var label = field === 'publish_on_avito' ? 'Avito' : 'Циан';
-        btn.textContent = label + ' ' + (data.enabled ? '✓' : '✗');
-        btn.className = 'badge border-0 feed-toggle ' + (data.enabled ? 'bg-purple-lt' : 'bg-secondary-lt');
-        btn.title = 'Нажмите, чтобы ' + (data.enabled ? 'выключить' : 'включить') + ' ' + label;
+        btn.textContent = label + ' ' + (data.enabled ? '\u2713' : '\u2717');
+        btn.className = 'feed-pill ' + (data.enabled ? 'pill-on' : 'pill-off');
     } catch (e) {
-        alert('Ошибка: ' + e.message);
+        showToast('Ошибка: ' + e.message, 'danger');
     }
     btn.disabled = false;
 }
@@ -302,29 +303,21 @@ function submitDelete(propertyId, childrenCount) {
     childrenCount = childrenCount || 0;
     if (childrenCount > 0) {
         var msg = 'У этого объекта есть ' + childrenCount + ' дочерних. Удалить их тоже?';
-        if (!confirm(msg + '\n\n«ОК» — удалить родителя и дочерние.\n«Отмена» — удалить только родителя, дочерние останутся в списке.')) {
+        if (!confirm(msg + '\n\n\u00abОК\u00bb \u2014 удалить родителя и дочерние.\n\u00abОтмена\u00bb \u2014 удалить только родителя.')) {
         var form = document.createElement('form');
         form.method = 'POST';
         form.action = '/dashboard/properties/delete/' + propertyId + '?delete_children=0';
         var token = document.createElement('input');
-        token.type = 'hidden';
-        token.name = '_csrf_token';
-        token.value = CSRF_TOKEN;
-        form.appendChild(token);
-        document.body.appendChild(form);
-        form.submit();
+        token.type = 'hidden'; token.name = '_csrf_token'; token.value = CSRF_TOKEN;
+        form.appendChild(token); document.body.appendChild(form); form.submit();
             return;
         }
         var form = document.createElement('form');
         form.method = 'POST';
         form.action = '/dashboard/properties/delete/' + propertyId + '?delete_children=1';
         var token = document.createElement('input');
-        token.type = 'hidden';
-        token.name = '_csrf_token';
-        token.value = CSRF_TOKEN;
-        form.appendChild(token);
-        document.body.appendChild(form);
-        form.submit();
+        token.type = 'hidden'; token.name = '_csrf_token'; token.value = CSRF_TOKEN;
+        form.appendChild(token); document.body.appendChild(form); form.submit();
         return;
     }
     if (!confirm('Удалить объект?')) return;
@@ -332,12 +325,8 @@ function submitDelete(propertyId, childrenCount) {
     form.method = 'POST';
     form.action = '/dashboard/properties/delete/' + propertyId;
     var token = document.createElement('input');
-    token.type = 'hidden';
-    token.name = '_csrf_token';
-    token.value = CSRF_TOKEN;
-    form.appendChild(token);
-    document.body.appendChild(form);
-    form.submit();
+    token.type = 'hidden'; token.name = '_csrf_token'; token.value = CSRF_TOKEN;
+    form.appendChild(token); document.body.appendChild(form); form.submit();
 }
 var bulkDeleteBtn = document.getElementById('btn-bulk-delete');
 if (bulkDeleteBtn) {
@@ -349,7 +338,7 @@ if (bulkDeleteBtn) {
             if (cb && cb.checked) ids.push(cb.value);
         });
         if (ids.length === 0) {
-            showToast('Выберите хотя бы один объект (корневой) для удаления.', 'warning');
+            showToast('Выберите хотя бы один объект для удаления.', 'warning');
             return;
         }
         window.location.href = '/dashboard/properties/bulk-delete-confirm?ids=' + ids.join(',');
@@ -366,11 +355,11 @@ if (bulkDeleteBtn) {
     document.querySelectorAll('.collapse').forEach(function(el) {
         el.addEventListener('show.bs.collapse', function() {
             var btn = document.querySelector('[data-bs-target="#' + el.id + '"]');
-            if (btn) { var s = btn.querySelector('.expand-icon'); if (s) s.textContent = '▾'; }
+            if (btn) { var ic = btn.querySelector('.ti'); if (ic) { ic.className = 'ti ti-chevron-down'; ic.style.fontSize = '.85rem'; } }
         });
         el.addEventListener('hide.bs.collapse', function() {
             var btn = document.querySelector('[data-bs-target="#' + el.id + '"]');
-            if (btn) { var s = btn.querySelector('.expand-icon'); if (s) s.textContent = '▸'; }
+            if (btn) { var ic = btn.querySelector('.ti'); if (ic) { ic.className = 'ti ti-chevron-right'; ic.style.fontSize = '.85rem'; } }
         });
     });
 })();
@@ -378,20 +367,20 @@ if (bulkDeleteBtn) {
 
 {% if total_pages > 1 %}
 <div class="d-flex align-items-center mt-3 flex-wrap gap-2">
-    <p class="text-muted small me-2 mb-0">Всего: {{ total }}</p>
+    <p class="text-secondary small me-2 mb-0">Всего: {{ total }}</p>
     <ul class="pagination m-0">
         <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-            <a class="page-link" href="?page={{ page - 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}">Назад</a>
+            <a class="page-link" href="?page={{ page - 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}"><i class="ti ti-chevron-left"></i></a>
         </li>
         {% for p in pages %}
         <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="?page={{ p }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}">{{ p }}</a></li>
         {% endfor %}
         <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-            <a class="page-link" href="?page={{ page + 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}">Вперёд</a>
+            <a class="page-link" href="?page={{ page + 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}"><i class="ti ti-chevron-right"></i></a>
         </li>
     </ul>
 </div>
 {% else %}
-<p class="text-muted small mt-3">Всего: {{ total }}</p>
+<p class="text-secondary small mt-3">Всего: {{ total }}</p>
 {% endif %}
 {% endblock %}

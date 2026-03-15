@@ -10,163 +10,166 @@
   'Check errors and notify': 'Проверка ошибок и уведомления'
 } %}
 <div class="page-header d-print-none mb-3">
-  <div class="row align-items-center">
-    <div class="col-auto">
-      <h2 class="page-title">Планировщик задач</h2>
-      <p class="text-muted mb-0">Автоматические задачи выполняются по расписанию. Можно запустить вручную.</p>
+    <div class="row align-items-center">
+        <div class="col-auto">
+            <div class="page-pretitle">Автоматизация</div>
+            <h2 class="page-title">Планировщик задач</h2>
+            <p class="text-secondary mb-0">Автоматические задачи. Можно запустить вручную.</p>
+        </div>
+        <div class="col-auto ms-auto">
+            <span id="scheduler-state-badge" class="d-inline-flex align-items-center gap-1">
+                <span class="status-dot {{ 'dot-green' if jobs.running else 'dot-red' }}"></span>
+                <span class="small fw-medium">{{ "Работает" if jobs.running else "Остановлен" }}</span>
+            </span>
+        </div>
     </div>
-    <div class="col-auto ms-auto">
-      <span id="scheduler-state-badge" class="badge {{ 'bg-green' if jobs.running else 'bg-red' }}">
-        {{ "Работает" if jobs.running else "Остановлен" }}
-      </span>
-    </div>
-  </div>
 </div>
 
 <div class="card">
-  <div class="table-responsive">
-    <table class="table table-vcenter card-table">
-      <thead>
-        <tr>
-          <th>Задача</th>
-          <th>Следующий запуск</th>
-          <th>Последний запуск</th>
-          <th>Статус</th>
-          <th>Время (мс)</th>
-          <th>Сообщение</th>
-          <th class="w-1"></th>
-        </tr>
-      </thead>
-      <tbody id="scheduler-tbody">
-        {% for job_id, job_info in jobs.jobs.items() %}
-        {% set result = jobs.results.get(job_id, {}) %}
-        <tr data-job-id="{{ job_id }}">
-          <td>{{ job_names_ru.get(job_info.name, job_info.name) }}</td>
-          <td><span class="sched-date" data-iso="{{ job_info.next_run or '' }}">{{ job_info.next_run or "—" }}</span></td>
-          <td><span class="sched-date" data-iso="{{ result.get('last_run', '') }}">{{ result.get("last_run", "—") }}</span></td>
-          <td>
-            {% if result.get("status") == "ok" %}
-            <span class="badge bg-green">OK</span>
-            {% elif result.get("status") == "error" %}
-            <span class="badge bg-red">Ошибка</span>
-            {% else %}
-            <span class="badge bg-secondary">—</span>
-            {% endif %}
-          </td>
-          <td>{{ result.get("duration_ms", "—") }}</td>
-          <td><small class="text-muted">{{ result.get("message", "") | truncate(80) }}</small></td>
-          <td>
-            <button type="button" class="btn btn-sm btn-primary scheduler-run-btn" data-job="{{ job_id }}">
-              Запустить
-            </button>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Задача</th>
+                    <th>Следующий запуск</th>
+                    <th>Последний запуск</th>
+                    <th>Статус</th>
+                    <th>Время (мс)</th>
+                    <th>Сообщение</th>
+                    <th class="w-1"></th>
+                </tr>
+            </thead>
+            <tbody id="scheduler-tbody">
+                {% for job_id, job_info in jobs.jobs.items() %}
+                {% set result = jobs.results.get(job_id, {}) %}
+                <tr data-job-id="{{ job_id }}">
+                    <td class="fw-medium">{{ job_names_ru.get(job_info.name, job_info.name) }}</td>
+                    <td><span class="sched-date" data-iso="{{ job_info.next_run or '' }}">{{ job_info.next_run or "—" }}</span></td>
+                    <td><span class="sched-date" data-iso="{{ result.get('last_run', '') }}">{{ result.get("last_run", "—") }}</span></td>
+                    <td>
+                        {% if result.get("status") == "ok" %}
+                        <span class="d-inline-flex align-items-center"><span class="status-dot dot-green"></span><span class="small">OK</span></span>
+                        {% elif result.get("status") == "error" %}
+                        <span class="d-inline-flex align-items-center"><span class="status-dot dot-red"></span><span class="small">Ошибка</span></span>
+                        {% else %}
+                        <span class="text-secondary small">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-secondary">{{ result.get("duration_ms", "—") }}</td>
+                    <td><small class="text-secondary">{{ result.get("message", "") | truncate(80) }}</small></td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-primary scheduler-run-btn" data-job="{{ job_id }}">
+                            <i class="ti ti-player-play me-1"></i>Запустить
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}
 
 {% block tail %}
 <script>
 (function () {
-  var JOB_NAMES_RU = {
-    'Upload Avito feed': 'Загрузка фида на Авито',
-    'Sync Avito statuses': 'Синхронизация статусов Авито',
-    'Sync CIAN statuses': 'Синхронизация статусов Циан',
-    'Collect statistics': 'Сбор статистики',
-    'Check errors and notify': 'Проверка ошибок и уведомления'
-  };
+    var JOB_NAMES_RU = {
+        'Upload Avito feed': 'Загрузка фида на Авито',
+        'Sync Avito statuses': 'Синхронизация статусов Авито',
+        'Sync CIAN statuses': 'Синхронизация статусов Циан',
+        'Collect statistics': 'Сбор статистики',
+        'Check errors and notify': 'Проверка ошибок и уведомления'
+    };
 
-  function fmtDate(iso) {
-    if (!iso) return '—';
-    var d = new Date(iso);
-    if (isNaN(d.getTime())) return iso;
-    var parts = d.toLocaleString('ru-RU', {
-      timeZone: 'Europe/Moscow',
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
-    return parts;
-  }
-
-  function statusBadge(s) {
-    if (s === 'ok') return '<span class="badge bg-green">OK</span>';
-    if (s === 'error') return '<span class="badge bg-red">Ошибка</span>';
-    if (s === 'running') return '<span class="badge bg-blue"><span class="spinner-border spinner-border-sm me-1"></span>Выполняется</span>';
-    return '<span class="badge bg-secondary">—</span>';
-  }
-
-  function refreshTable(data) {
-    var badge = document.getElementById('scheduler-state-badge');
-    if (badge) {
-      badge.className = 'badge ' + (data.running ? 'bg-green' : 'bg-red');
-      badge.textContent = data.running ? 'Работает' : 'Остановлен';
+    function fmtDate(iso) {
+        if (!iso) return '—';
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return iso;
+        return d.toLocaleString('ru-RU', {
+            timeZone: 'Europe/Moscow',
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
     }
-    var tbody = document.getElementById('scheduler-tbody');
-    if (!tbody) return;
-    var rows = tbody.querySelectorAll('tr[data-job-id]');
-    rows.forEach(function (tr) {
-      var jobId = tr.getAttribute('data-job-id');
-      var jobInfo = data.jobs[jobId] || {};
-      var result = (data.results || {})[jobId] || {};
-      var cells = tr.querySelectorAll('td');
-      if (cells.length < 7) return;
-      cells[0].textContent = JOB_NAMES_RU[jobInfo.name] || jobInfo.name || jobId;
-      cells[1].textContent = fmtDate(jobInfo.next_run);
-      cells[2].textContent = fmtDate(result.last_run);
-      cells[3].innerHTML = statusBadge(result.status);
-      cells[4].textContent = result.duration_ms != null ? result.duration_ms : '—';
-      cells[5].innerHTML = '<small class="text-muted">' + ((result.message || '').substring(0, 80)) + '</small>';
-    });
-  }
 
-  function pollStatus(attempts) {
-    if (attempts <= 0) return;
-    setTimeout(function () {
-      fetch('/dashboard/scheduler/status')
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          refreshTable(data);
-          var hasRunning = false;
-          for (var k in data.results) {
-            if ((data.results[k] || {}).status === 'running') { hasRunning = true; break; }
-          }
-          if (hasRunning) pollStatus(attempts - 1);
-        })
-        .catch(function () {});
-    }, 2000);
-  }
+    function statusHTML(s) {
+        if (s === 'ok') return '<span class="d-inline-flex align-items-center"><span class="status-dot dot-green"></span><span class="small">OK</span></span>';
+        if (s === 'error') return '<span class="d-inline-flex align-items-center"><span class="status-dot dot-red"></span><span class="small">Ошибка</span></span>';
+        if (s === 'running') return '<span class="d-inline-flex align-items-center"><span class="status-dot dot-blue"></span><span class="small"><span class="spinner-border spinner-border-sm me-1"></span>Выполняется</span></span>';
+        return '<span class="text-secondary small">—</span>';
+    }
 
-  document.querySelectorAll('.sched-date').forEach(function (el) {
-    el.textContent = fmtDate(el.getAttribute('data-iso'));
-  });
-
-  document.querySelectorAll('.scheduler-run-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var jobName = btn.getAttribute('data-job');
-      fetchWithToast(btn, '/dashboard/scheduler/run/' + jobName, {
-        method: 'POST',
-        successMsg: 'Задача запущена',
-        onSuccess: function () {
-          var tr = btn.closest('tr');
-          if (tr) {
-            var cells = tr.querySelectorAll('td');
-            if (cells.length >= 4) cells[3].innerHTML = statusBadge('running');
-          }
-          pollStatus(30);
+    function refreshTable(data) {
+        var badge = document.getElementById('scheduler-state-badge');
+        if (badge) {
+            var dot = badge.querySelector('.status-dot');
+            var text = badge.querySelector('.small');
+            if (dot) dot.className = 'status-dot ' + (data.running ? 'dot-green' : 'dot-red');
+            if (text) text.textContent = data.running ? 'Работает' : 'Остановлен';
         }
-      });
-    });
-  });
+        var tbody = document.getElementById('scheduler-tbody');
+        if (!tbody) return;
+        tbody.querySelectorAll('tr[data-job-id]').forEach(function (tr) {
+            var jobId = tr.getAttribute('data-job-id');
+            var jobInfo = data.jobs[jobId] || {};
+            var result = (data.results || {})[jobId] || {};
+            var cells = tr.querySelectorAll('td');
+            if (cells.length < 7) return;
+            cells[0].textContent = JOB_NAMES_RU[jobInfo.name] || jobInfo.name || jobId;
+            cells[0].className = 'fw-medium';
+            cells[1].textContent = fmtDate(jobInfo.next_run);
+            cells[2].textContent = fmtDate(result.last_run);
+            cells[3].innerHTML = statusHTML(result.status);
+            cells[4].textContent = result.duration_ms != null ? result.duration_ms : '—';
+            cells[5].innerHTML = '<small class="text-secondary">' + ((result.message || '').substring(0, 80)) + '</small>';
+        });
+    }
 
-  setInterval(function () {
-    fetch('/dashboard/scheduler/status')
-      .then(function (r) { return r.json(); })
-      .then(refreshTable)
-      .catch(function () {});
-  }, 30000);
+    function pollStatus(attempts) {
+        if (attempts <= 0) return;
+        setTimeout(function () {
+            fetch('/dashboard/scheduler/status')
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    refreshTable(data);
+                    var hasRunning = false;
+                    for (var k in data.results) {
+                        if ((data.results[k] || {}).status === 'running') { hasRunning = true; break; }
+                    }
+                    if (hasRunning) pollStatus(attempts - 1);
+                })
+                .catch(function () {});
+        }, 2000);
+    }
+
+    document.querySelectorAll('.sched-date').forEach(function (el) {
+        el.textContent = fmtDate(el.getAttribute('data-iso'));
+    });
+
+    document.querySelectorAll('.scheduler-run-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var jobName = btn.getAttribute('data-job');
+            fetchWithToast(btn, '/dashboard/scheduler/run/' + jobName, {
+                method: 'POST',
+                successMsg: 'Задача запущена',
+                onSuccess: function () {
+                    var tr = btn.closest('tr');
+                    if (tr) {
+                        var cells = tr.querySelectorAll('td');
+                        if (cells.length >= 4) cells[3].innerHTML = statusHTML('running');
+                    }
+                    pollStatus(30);
+                }
+            });
+        });
+    });
+
+    setInterval(function () {
+        fetch('/dashboard/scheduler/status')
+            .then(function (r) { return r.json(); })
+            .then(refreshTable)
+            .catch(function () {});
+    }, 30000);
 })();
 </script>
 {% endblock %}

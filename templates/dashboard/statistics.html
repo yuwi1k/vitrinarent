@@ -6,68 +6,61 @@
 <div class="page-header d-print-none mb-4">
     <div class="row align-items-center">
         <div class="col">
+            <div class="page-pretitle">Аналитика</div>
             <h2 class="page-title">Статистика объявлений</h2>
-            <p class="text-muted mt-1 mb-0">Данные собираются автоматически (планировщик «Сбор статистики»). Активных объектов: {{ count }}</p>
+            <p class="text-secondary mt-1 mb-0">Данные собираются автоматически. Активных объектов: {{ count }}</p>
         </div>
     </div>
 </div>
 
 <div class="row row-deck row-cards mb-4">
     <div class="col-sm-6 col-lg-3">
-        <div class="card">
+        <div class="card stat-card stat-blue">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <span class="avatar avatar-md bg-blue-lt rounded me-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg>
-                    </span>
+                    <div class="stat-icon me-3"><i class="ti ti-eye"></i></div>
                     <div>
-                        <div class="text-muted small">Просмотры</div>
-                        <div class="h3 mb-0">{{ "{:,}".format(totals.total_views)|replace(",", " ") }}</div>
+                        <div class="stat-label">Просмотры</div>
+                        <div class="stat-value">{{ "{:,}".format(totals.total_views)|replace(",", " ") }}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="card">
+        <div class="card stat-card stat-red">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <span class="avatar avatar-md bg-red-lt rounded me-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" /></svg>
-                    </span>
+                    <div class="stat-icon me-3"><i class="ti ti-heart"></i></div>
                     <div>
-                        <div class="text-muted small">В избранном</div>
-                        <div class="h3 mb-0">{{ "{:,}".format(totals.total_favorites)|replace(",", " ") }}</div>
+                        <div class="stat-label">В избранном</div>
+                        <div class="stat-value">{{ "{:,}".format(totals.total_favorites)|replace(",", " ") }}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="card">
+        <div class="card stat-card stat-success">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <span class="avatar avatar-md bg-green-lt rounded me-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2" /></svg>
-                    </span>
+                    <div class="stat-icon me-3"><i class="ti ti-phone"></i></div>
                     <div>
-                        <div class="text-muted small">Звонки / контакты</div>
-                        <div class="h3 mb-0">{{ "{:,}".format(totals.total_contacts)|replace(",", " ") }}</div>
+                        <div class="stat-label">Звонки / контакты</div>
+                        <div class="stat-value">{{ "{:,}".format(totals.total_contacts)|replace(",", " ") }}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="card">
+        <div class="card stat-card stat-warning">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <span class="avatar avatar-md bg-yellow-lt rounded me-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 7v5l3 3" /></svg>
-                    </span>
+                    <div class="stat-icon me-3"><i class="ti ti-target-arrow"></i></div>
                     <div>
-                        <div class="text-muted small">Конверсия</div>
-                        <div class="h3 mb-0">{{ totals.conversion }}%</div>
+                        <div class="stat-label">Конверсия</div>
+                        <div class="stat-value">{{ totals.conversion }}%</div>
                     </div>
                 </div>
             </div>
@@ -78,7 +71,7 @@
 <div class="row row-deck row-cards mb-4">
     <div class="col-sm-6">
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Авито</h3></div>
+            <div class="card-header"><h3 class="card-title"><i class="ti ti-brand-hipchat me-2" style="opacity:.5;"></i>Авито</h3></div>
             <div class="card-body">
                 <div class="datagrid">
                     <div class="datagrid-item">
@@ -103,7 +96,7 @@
     </div>
     <div class="col-sm-6">
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Циан</h3></div>
+            <div class="card-header"><h3 class="card-title"><i class="ti ti-building-skyscraper me-2" style="opacity:.5;"></i>Циан</h3></div>
             <div class="card-body">
                 <div class="datagrid">
                     <div class="datagrid-item">
@@ -126,10 +119,10 @@
 
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Статистика по объектам</h3>
+        <h3 class="card-title"><i class="ti ti-table me-2" style="opacity:.5;"></i>Статистика по объектам</h3>
     </div>
     <div class="table-responsive">
-        <table class="table table-vcenter card-table table-striped table-hover" id="stats-table">
+        <table class="table table-vcenter card-table" id="stats-table">
             <thead>
                 <tr>
                     <th class="sortable" data-col="0">ID <span class="sort-arrow"></span></th>
@@ -146,13 +139,13 @@
                 <tr>
                     <td>{{ r.id }}</td>
                     <td>
-                        <a href="/dashboard/properties/{{ r.id }}/edit" class="text-reset">{{ r.title }}</a>
-                        {% if r.address %}<div class="text-muted small">{{ r.address }}</div>{% endif %}
+                        <a href="/dashboard/properties/edit/{{ r.id }}" class="text-reset">{{ r.title }}</a>
+                        {% if r.address %}<div class="text-secondary small">{{ r.address }}</div>{% endif %}
                     </td>
                     <td>
                         {% if r.is_on_avito %}<span class="badge bg-purple-lt">Авито</span>{% endif %}
                         {% if r.is_on_cian %}<span class="badge bg-cyan-lt">Циан</span>{% endif %}
-                        {% if not r.is_on_avito and not r.is_on_cian %}<span class="text-muted">—</span>{% endif %}
+                        {% if not r.is_on_avito and not r.is_on_cian %}<span class="text-secondary">—</span>{% endif %}
                     </td>
                     <td class="text-end">
                         <span title="Авито: {{ r.avito_views }}, Циан: {{ r.cian_views }}">{{ "{:,}".format(r.total_views)|replace(",", " ") }}</span>
@@ -163,18 +156,18 @@
                     </td>
                     <td class="text-end">
                         {% if r.conversion > 5 %}
-                        <span class="badge bg-green-lt">{{ r.conversion }}%</span>
+                        <span class="badge conv-high">{{ r.conversion }}%</span>
                         {% elif r.conversion > 0 %}
-                        <span class="badge bg-yellow-lt">{{ r.conversion }}%</span>
+                        <span class="badge conv-mid">{{ r.conversion }}%</span>
                         {% else %}
-                        <span class="text-muted">0%</span>
+                        <span class="badge conv-low">0%</span>
                         {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
                 {% if not rows %}
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">Нет активных объектов или статистика ещё не собрана. Запустите «Сбор статистики» в <a href="/dashboard/scheduler">планировщике</a>.</td>
+                    <td colspan="7" class="text-center text-secondary py-4">Нет данных. Запустите сбор статистики в <a href="/dashboard/scheduler">планировщике</a>.</td>
                 </tr>
                 {% endif %}
             </tbody>
@@ -197,7 +190,7 @@
 {% block head %}
 <style>
     th.sortable { cursor: pointer; user-select: none; }
-    th.sortable:hover { background: rgba(0,0,0,.04); }
+    th.sortable:hover { background: rgba(255,255,255,.04); }
     th.sortable .sort-arrow::after { content: '\2195'; opacity: .3; margin-left: 4px; }
     th.sortable.asc .sort-arrow::after { content: '\2191'; opacity: 1; }
     th.sortable.desc .sort-arrow::after { content: '\2193'; opacity: 1; }

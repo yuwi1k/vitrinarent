@@ -6,19 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Вход — Vitrina</title>
     <link rel="shortcut icon" href="/static/images/favicon.png" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
 </head>
 
-<body class="d-flex flex-column">
+<body class="d-flex flex-column login-bg" data-bs-theme="dark">
     <div class="page page-center">
         <div class="container container-tight py-4">
             <div class="text-center mb-4">
-                <a href="/" class="navbar-brand navbar-brand-autodark">
-                    <h1 class="h2 mb-0">Vitrina</h1>
+                <a href="/" class="navbar-brand navbar-brand-autodark" style="text-decoration:none;">
+                    <h1 class="h2 mb-0" style="background:linear-gradient(135deg,#6366f1,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:700;letter-spacing:.02em;">Vitrina</h1>
                 </a>
-                <p class="text-muted mt-2">Панель управления</p>
+                <p class="text-secondary mt-2">Панель управления</p>
             </div>
-            <div class="card card-md">
+            <div class="card card-md login-card">
                 <div class="card-body">
                     <h2 class="card-title text-center mb-4">Вход в панель</h2>
                     {% if error %}
@@ -27,27 +29,33 @@
                     <form action="/dashboard/login" method="post" autocomplete="off">
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
                         <div class="mb-3">
-                            <label class="form-label" for="username">Логин</label>
+                            <label class="form-label" for="username">
+                                <i class="ti ti-user me-1" style="opacity:.5;"></i>Логин
+                            </label>
                             <input type="text" class="form-control" id="username" name="username" placeholder="admin"
                                 autocomplete="username" value="{{ username or '' }}" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="password">Пароль</label>
+                            <label class="form-label" for="password">
+                                <i class="ti ti-lock me-1" style="opacity:.5;"></i>Пароль
+                            </label>
                             <input type="password" class="form-control" id="password" name="password"
                                 placeholder="Пароль" autocomplete="current-password" required>
                         </div>
                         <div class="form-footer">
-                            <button type="submit" class="btn btn-primary w-100">Войти</button>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="ti ti-login me-2"></i>Войти
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
-            <p class="text-center text-muted mt-3 small">
-                <a href="/">На сайт</a>
+            <p class="text-center text-secondary mt-3 small">
+                <a href="/" class="text-secondary"><i class="ti ti-external-link me-1"></i>На сайт</a>
             </p>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
 </body>
 
 </html>

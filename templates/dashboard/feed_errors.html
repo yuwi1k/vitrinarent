@@ -6,6 +6,7 @@
 <div class="page-header d-print-none mb-4">
     <div class="row align-items-center">
         <div class="col">
+            <div class="page-pretitle">Мониторинг</div>
             <h2 class="page-title">Ошибки выгрузки фидов</h2>
         </div>
     </div>
@@ -14,7 +15,7 @@
 {% if errors %}
 <div class="card">
     <div class="table-responsive">
-        <table class="table table-vcenter card-table table-striped">
+        <table class="table table-vcenter card-table">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -27,32 +28,32 @@
             <tbody>
                 {% for item in errors %}
                 <tr>
-                    <td class="text-muted">{{ item.property.id }}</td>
-                    <td>{{ item.property.title or '—' }}</td>
+                    <td class="text-secondary">{{ item.property.id }}</td>
+                    <td class="fw-medium">{{ item.property.title or '—' }}</td>
                     <td>
                         {% if item.avito_errors %}
                         <ul class="list-unstyled mb-0">
                             {% for e in item.avito_errors %}
-                            <li class="text-danger small">{{ e if e is string else e.get("message", e) if e is mapping else e }}</li>
+                            <li class="small" style="color:var(--vt-accent-hover);"><i class="ti ti-alert-circle me-1" style="font-size:.8rem;"></i>{{ e if e is string else e.get("message", e) if e is mapping else e }}</li>
                             {% endfor %}
                         </ul>
                         {% else %}
-                        <span class="text-muted">—</span>
+                        <span class="text-secondary">—</span>
                         {% endif %}
                     </td>
                     <td>
                         {% if item.cian_errors %}
                         <ul class="list-unstyled mb-0">
                             {% for e in item.cian_errors %}
-                            <li class="text-danger small">{{ e if e is string else e }}</li>
+                            <li class="small" style="color:var(--vt-accent-hover);"><i class="ti ti-alert-circle me-1" style="font-size:.8rem;"></i>{{ e if e is string else e }}</li>
                             {% endfor %}
                         </ul>
                         {% else %}
-                        <span class="text-muted">—</span>
+                        <span class="text-secondary">—</span>
                         {% endif %}
                     </td>
                     <td>
-                        <a href="/dashboard/properties/edit/{{ item.property.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
+                        <a href="/dashboard/properties/edit/{{ item.property.id }}" class="btn btn-sm btn-outline-primary"><i class="ti ti-pencil"></i></a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -63,11 +64,11 @@
 {% else %}
 <div class="card">
     <div class="card-body text-center py-5">
-        <div class="text-success mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg" width="40" height="40" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M5 12l5 5l10 -10"/></svg>
+        <div class="mb-3" style="color:#4ade80;">
+            <i class="ti ti-circle-check" style="font-size:3rem;"></i>
         </div>
-        <h3 class="text-success">Ошибок нет</h3>
-        <p class="text-muted">Все активные объекты выгружены без ошибок.</p>
+        <h3 style="color:#4ade80;">Ошибок нет</h3>
+        <p class="text-secondary">Все активные объекты выгружены без ошибок.</p>
     </div>
 </div>
 {% endif %}

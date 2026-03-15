@@ -12,12 +12,13 @@
 </nav>
 
 <div class="page-header d-print-none mb-4">
+    <div class="page-pretitle">Конфигурация</div>
     <h2 class="page-title">Настройки уведомлений</h2>
-    <p class="text-muted mt-1 mb-0">Пороговые значения для сценариев Telegram-уведомлений о статистике объектов.</p>
+    <p class="text-secondary mt-1 mb-0">Пороговые значения для Telegram-уведомлений о статистике объектов.</p>
 </div>
 
 {% if success %}
-<div class="alert alert-success" role="alert">Настройки сохранены.</div>
+<div class="alert alert-success" role="alert"><i class="ti ti-check me-2"></i>Настройки сохранены.</div>
 {% endif %}
 {% if error %}
 <div class="alert alert-danger" role="alert">{{ error }}</div>
@@ -37,9 +38,9 @@
             </div>
         </div>
         <div class="card-body">
-            <p class="text-muted mb-3">{{ s.description }}</p>
+            <p class="text-secondary mb-3">{{ s.description }}</p>
             {% if s.advice %}
-            <p class="text-muted mb-3"><em>Совет: {{ s.advice }}</em></p>
+            <p class="text-secondary mb-3"><em>{{ s.advice }}</em></p>
             {% endif %}
 
             <div class="row g-3">
@@ -53,7 +54,7 @@
                     <input type="text" class="form-control" name="{{ s.key }}__max_views"
                            value="{{ s.max_views if s.max_views is not none else '—' }}"
                            placeholder="—">
-                    <small class="form-text text-muted">— = без ограничения</small>
+                    <small class="form-text text-secondary">— = без ограничения</small>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Мин. контактов</label>
@@ -65,7 +66,7 @@
                     <input type="text" class="form-control" name="{{ s.key }}__max_contacts"
                            value="{{ s.max_contacts if s.max_contacts is not none else '—' }}"
                            placeholder="—">
-                    <small class="form-text text-muted">— = без ограничения</small>
+                    <small class="form-text text-secondary">— = без ограничения</small>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Мин. избранного</label>
@@ -82,10 +83,10 @@
                     <input type="text" class="form-control" name="{{ s.key }}__max_conversion"
                            value="{{ s.max_conversion if s.max_conversion is not none else '—' }}"
                            placeholder="—">
-                    <small class="form-text text-muted">— = без ограничения</small>
+                    <small class="form-text text-secondary">— = без ограничения</small>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Макс. объектов в сообщении</label>
+                    <label class="form-label">Макс. объектов</label>
                     <input type="number" class="form-control" name="{{ s.key }}__max_items_in_message"
                            value="{{ s.max_items_in_message }}" min="1" max="50">
                 </div>
@@ -94,9 +95,9 @@
     </div>
     {% endfor %}
 
-    <div class="mb-4">
-        <button type="submit" class="btn btn-primary">Сохранить</button>
-        <a href="/dashboard/settings" class="btn btn-outline-secondary ms-2">Назад</a>
+    <div class="mb-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i>Сохранить</button>
+        <a href="/dashboard/settings" class="btn btn-outline-secondary">Назад</a>
     </div>
 </form>
 {% endblock %}
