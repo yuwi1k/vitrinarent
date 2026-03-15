@@ -2,17 +2,15 @@
 
 {% block title %}Объекты{% endblock %}
 
-<style>.feed-toggle{cursor:pointer;font-size:.7rem;padding:.25em .5em;transition:opacity .15s}.feed-toggle:hover{opacity:.8}.feed-toggle:disabled{opacity:.5;cursor:wait}</style>
 {% block content %}
-<div class="page-header d-print-none mb-4">
-    <div class="row align-items-center">
-        <div class="col">
-            <h2 class="page-title">Объекты недвижимости</h2>
-        </div>
-        <div class="col-auto">
-            <a href="/dashboard/properties/new" class="btn btn-primary">Добавить объект</a>
-        </div>
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+    <div>
+        <h2 class="db-page-title">Объекты недвижимости</h2>
     </div>
+    <a href="/dashboard/properties/new" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
+        Добавить объект
+    </a>
 </div>
 
 <form method="get" action="/dashboard/properties" class="card mb-4">

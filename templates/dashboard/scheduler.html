@@ -9,18 +9,14 @@
   'Collect statistics': 'Сбор статистики',
   'Check errors and notify': 'Проверка ошибок и уведомления'
 } %}
-<div class="page-header d-print-none mb-3">
-  <div class="row align-items-center">
-    <div class="col-auto">
-      <h2 class="page-title">Планировщик задач</h2>
-      <p class="text-muted mb-0">Автоматические задачи выполняются по расписанию. Можно запустить вручную.</p>
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+    <div>
+        <h2 class="db-page-title">Планировщик задач</h2>
+        <p class="db-page-subtitle">Автоматические задачи выполняются по расписанию. Можно запустить вручную.</p>
     </div>
-    <div class="col-auto ms-auto">
-      <span id="scheduler-state-badge" class="badge {{ 'bg-green' if jobs.running else 'bg-red' }}">
+    <span id="scheduler-state-badge" class="badge {{ 'bg-green' if jobs.running else 'bg-red' }}">
         {{ "Работает" if jobs.running else "Остановлен" }}
-      </span>
-    </div>
-  </div>
+    </span>
 </div>
 
 <div class="card">

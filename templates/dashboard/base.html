@@ -6,24 +6,106 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Дашборд{% endblock %} — Vitrina</title>
   <link rel="shortcut icon" href="/static/images/favicon.png">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css">
+  <link rel="stylesheet" href="/static/css/dashboard.css">
   {% block head %}{% endblock %}
 </head>
 
-<body>
-  <div class="page">
-    <header class="navbar navbar-expand-md navbar-light d-print-none">
-      <div class="container-xl">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu"
-          aria-controls="navbar-menu" aria-expanded="false" aria-label="Переключить меню">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-          <a href="/dashboard">Vitrina</a>
-        </h1>
-        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
-          <div class="nav-item dropdown">
-            <a href="#" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">Экспорт и синхронизация</a>
+<body class="db-body">
+  <div class="db-wrapper">
+    <!-- Overlay for mobile -->
+    <div class="db-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside class="db-sidebar" id="sidebar">
+      <div class="db-sidebar-brand">
+        <div class="db-sidebar-brand__logo">V</div>
+        <a href="/dashboard" class="db-sidebar-brand__text">Vitrina</a>
+      </div>
+
+      <nav class="db-sidebar-nav">
+        <div class="db-nav-section">Основное</div>
+
+        <a href="/dashboard" class="db-nav-item {% if request.url.path == '/dashboard' %}active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg>
+          Главная
+        </a>
+
+        <a href="/dashboard/properties" class="db-nav-item {% if request.url.path.startswith('/dashboard/properties') %}active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l18 0"/><path d="M9 8l1 0"/><path d="M9 12l1 0"/><path d="M9 16l1 0"/><path d="M14 8l1 0"/><path d="M14 12l1 0"/><path d="M14 16l1 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/></svg>
+          Объекты
+        </a>
+
+        <a href="/dashboard/folders" class="db-nav-item {% if request.url.path.startswith('/dashboard/folders') %}active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"/></svg>
+          Файлы
+        </a>
+
+        <div class="db-nav-section">Маркетинг</div>
+
+        <a href="/dashboard/promotion" class="db-nav-item {% if request.url.path.startswith('/dashboard/promotion') %}active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a3 3 0 0 1 0 6"/><path d="M10 8v11a1 1 0 0 1 -1 1h-1a1 1 0 0 1 -1 -1v-5"/><path d="M12 8h0l4.524 -3.77a.9 .9 0 0 1 1.476 .692v12.156a.9 .9 0 0 1 -1.476 .692l-4.524 -3.77h-8a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h8"/></svg>
+          Продвижение
+        </a>
+
+        <a href="/dashboard/messages" class="db-nav-item {% if request.url.path.startswith('/dashboard/messages') %}active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12"/></svg>
+          Сообщения
+        </a>
+
+        <a href="/dashboard/statistics" class="db-nav-item {% if request.url.path == '/dashboard/statistics' %}active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"/><path d="M9 8m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"/><path d="M15 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"/></svg>
+          Статистика
+        </a>
+
+        <div class="db-nav-section">Система</div>
+
+        <a href="/dashboard/feed-errors" class="db-nav-item {% if request.url.path == '/dashboard/feed-errors' %}active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></svg>
+          Ошибки фидов
+        </a>
+
+        <a href="/dashboard/scheduler" class="db-nav-item {% if request.url.path == '/dashboard/scheduler' %}active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M12 7v5l3 3"/></svg>
+          Планировщик
+        </a>
+
+        <a href="/dashboard/settings" class="db-nav-item {% if request.url.path.startswith('/dashboard/settings') %}active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg>
+          Настройки
+        </a>
+      </nav>
+
+      <div class="db-sidebar-footer">
+        <a href="/" class="db-nav-item" target="_blank">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"/><path d="M11 13l9 -9"/><path d="M15 4h5v5"/></svg>
+          На сайт
+        </a>
+        <a href="/dashboard/logout" class="db-nav-item" style="color:#f87171;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"/><path d="M9 12h12l-3 -3"/><path d="M18 15l3 -3"/></svg>
+          Выйти
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="db-content">
+      <div class="db-topbar">
+        <div class="db-topbar__left">
+          <button class="db-topbar__toggle" onclick="toggleSidebar()" aria-label="Меню">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l16 0"/><path d="M4 12l16 0"/><path d="M4 18l16 0"/></svg>
+          </button>
+          <span class="text-muted" style="font-size:.8125rem;">{% block topbar_title %}{% endblock %}</span>
+        </div>
+        <div class="db-topbar__right">
+          <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" style="font-size:.8125rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 11l5 5l5 -5"/><path d="M12 4l0 12"/></svg>
+              Экспорт
+            </button>
             <div class="dropdown-menu dropdown-menu-end">
               <h6 class="dropdown-header">Авито</h6>
               <a class="dropdown-item" href="/dashboard/export/avito" download="avito_feed.xml">Скачать фид</a>
@@ -37,67 +119,36 @@
               <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/cian.xml">Скопировать URL фида</button>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="/dashboard/export/csv">Экспорт CSV</a>
-              <a class="dropdown-item" href="/dashboard/settings">Настройки</a>
             </div>
           </div>
-          <a href="/dashboard/logout" class="btn btn-outline-danger btn-sm">Выйти</a>
-        </div>
-        <div class="collapse navbar-collapse" id="navbar-menu">
-          <ul class="navbar-nav">
-            <li class="nav-item">
-              <a class="nav-link" href="/">На сайт</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {% if request.url.path == '/dashboard' %}active{% endif %}"
-                href="/dashboard">Главная</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {% if request.url.path.startswith('/dashboard/properties') %}active{% endif %}"
-                href="/dashboard/properties">Объекты</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {% if request.url.path.startswith('/dashboard/promotion') %}active{% endif %}"
-                href="/dashboard/promotion">Продвижение</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {% if request.url.path.startswith('/dashboard/messages') %}active{% endif %}"
-                href="/dashboard/messages">Сообщения</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {% if request.url.path == '/dashboard/statistics' %}active{% endif %}"
-                href="/dashboard/statistics">Статистика</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {% if request.url.path == '/dashboard/feed-errors' %}active{% endif %}"
-                href="/dashboard/feed-errors">Ошибки фидов</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {% if request.url.path == '/dashboard/scheduler' %}active{% endif %}"
-                href="/dashboard/scheduler">Планировщик</a>
-            </li>
-          </ul>
         </div>
       </div>
-    </header>
-    <div class="page-wrapper">
-      <div class="page-body">
-        <div class="container-xl">
-          {% set flashes = get_flash(request) %}
-          {% for msg in flashes %}
-          <div class="alert alert-{{ 'danger' if msg.type == 'error' else msg.type }} alert-dismissible fade show mb-3"
-            role="alert">
-            {{ msg.message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
-          </div>
-          {% endfor %}
-          {% block content %}{% endblock %}
+
+      <div class="db-main">
+        {% set flashes = get_flash(request) %}
+        {% for msg in flashes %}
+        <div class="alert alert-{{ 'danger' if msg.type == 'error' else msg.type }} alert-dismissible fade show mb-3" role="alert">
+          {{ msg.message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
         </div>
+        {% endfor %}
+        {% block content %}{% endblock %}
       </div>
     </div>
   </div>
+
   <div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index:11080"></div>
-  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js"></script>
   <script>
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('show');
+      document.getElementById('sidebar-overlay').classList.toggle('show');
+    }
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('show');
+      document.getElementById('sidebar-overlay').classList.remove('show');
+    }
+
     window.__CSRF_TOKEN = '{{ csrf_token(request) }}';
     function csrfHeaders(extra) {
       var h = { 'X-CSRF-Token': window.__CSRF_TOKEN };
@@ -105,10 +156,6 @@
       return h;
     }
 
-    /**
-     * showToast(message, type, delay)
-     * type: 'success' | 'danger' | 'warning' | 'info'
-     */
     function showToast(message, type, delay) {
       type = type || 'info';
       delay = delay || 5000;
@@ -143,10 +190,6 @@
       showToast('Ошибка JS: ' + msg, 'danger');
     };
 
-    /**
-     * Вспомогательная функция для AJAX-кнопок: показывает спиннер, делает fetch, показывает toast.
-     * btn — HTMLElement кнопки, url — URL, opts — {method, onSuccess(data), successMsg, errorMsg}
-     */
     function fetchWithToast(btn, url, opts) {
       opts = opts || {};
       var method = opts.method || 'GET';
@@ -204,7 +247,6 @@
           });
         });
       });
-
     })();
   </script>
   {% block tail %}{% endblock %}

@@ -3,9 +3,9 @@
 {% block title %}{% if is_copy %}Копирование{% elif model %}Редактирование{% else %}Новый объект{% endif %}{% endblock %}
 
 {% block content %}
-<div class="page-header d-print-none mb-4">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <h2 class="page-title mb-0">{% if is_copy %}Копирование: {{ model.title or 'Без названия' }}{% elif model %}Редактирование: {{ model.title or 'Без названия' }}{% else %}Создание объекта{% endif %}{% if is_copy %} <span class="badge bg-warning text-dark ms-2">Копия</span>{% endif %}</h2>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <h2 class="db-page-title mb-0">{% if is_copy %}Копирование: {{ model.title or 'Без названия' }}{% elif model %}Редактирование: {{ model.title or 'Без названия' }}{% else %}Создание объекта{% endif %}{% if is_copy %} <span class="badge bg-warning text-dark ms-2">Копия</span>{% endif %}</h2>
         {% if (building_nav_items or [])|length > 1 %}
         <div class="ms-auto">
             <label for="dashboard-building-nav" class="form-label small text-muted mb-0 me-2">Здание и помещения:</label>
@@ -18,6 +18,7 @@
         {% endif %}
     </div>
 </div>
+
 
 {% if form_errors %}
 <div class="alert alert-danger alert-dismissible fade show mb-3" id="first-error" role="alert">

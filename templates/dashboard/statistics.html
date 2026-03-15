@@ -3,13 +3,9 @@
 {% block title %}Статистика{% endblock %}
 
 {% block content %}
-<div class="page-header d-print-none mb-4">
-    <div class="row align-items-center">
-        <div class="col">
-            <h2 class="page-title">Статистика объявлений</h2>
-            <p class="text-muted mt-1 mb-0">Данные собираются автоматически (планировщик «Сбор статистики»). Активных объектов: {{ count }}</p>
-        </div>
-    </div>
+<div class="mb-4">
+    <h2 class="db-page-title">Статистика объявлений</h2>
+    <p class="db-page-subtitle">Данные собираются автоматически (планировщик «Сбор статистики»). Активных объектов: {{ count }}</p>
 </div>
 
 <div class="row row-deck row-cards mb-4">
@@ -194,15 +190,6 @@
 </div>
 {% endblock %}
 
-{% block head %}
-<style>
-    th.sortable { cursor: pointer; user-select: none; }
-    th.sortable:hover { background: rgba(0,0,0,.04); }
-    th.sortable .sort-arrow::after { content: '\2195'; opacity: .3; margin-left: 4px; }
-    th.sortable.asc .sort-arrow::after { content: '\2191'; opacity: 1; }
-    th.sortable.desc .sort-arrow::after { content: '\2193'; opacity: 1; }
-</style>
-{% endblock %}
 
 {% block tail %}
 <script>
