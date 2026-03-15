@@ -285,10 +285,10 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/favicon.ico")
 async def favicon(request: Request):
     """Отдаём favicon из статики с учётом текущего сайта."""
-    site = getattr(request.state, "site", None) or {}
-    if site.get("id") == "diapazon":
-        return FileResponse("static/diapazon/images/favicon.png")
-    return FileResponse("static/images/favicon.png")
+    site = getattr(request.state, "site", None)
+    if site and getattr(site, "id", None) == "diapazon":
+        return FileResponse("static/diapazon/images/favicon.png", media_type="image/png")
+    return FileResponse("static/images/favicon.png", media_type="image/png")
 
 
 @app.get("/robots.txt", include_in_schema=False)
