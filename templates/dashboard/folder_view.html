@@ -6,19 +6,18 @@
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="/dashboard/folders">Файлы</a></li>
-        <li class="breadcrumb-item"><span class="text-secondary">{{ street_display }}</span></li>
+        <li class="breadcrumb-item"><span class="text-muted">{{ street_display }}</span></li>
         <li class="breadcrumb-item active" aria-current="page">{{ property_obj.title or 'Объект #' ~ property_obj.id }}</li>
     </ol>
 </nav>
 
 <div class="page-header d-print-none mb-4">
-    <div class="page-pretitle">Файлы объекта</div>
     <h2 class="page-title">{{ property_obj.title or 'Объект #' ~ property_obj.id }}</h2>
 </div>
 
 <div class="card mb-4">
     <div class="card-header">
-        <h3 class="card-title"><i class="ti ti-upload me-2" style="opacity:.5;"></i>Загрузить файлы</h3>
+        <h3 class="card-title">Загрузить файлы</h3>
     </div>
     <div class="card-body">
         <form action="/dashboard/folders/{{ property_obj.id }}/upload" method="post" enctype="multipart/form-data" class="row g-3">
@@ -33,7 +32,7 @@
                 <input type="file" name="new_documents" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.odt,.ods,.odp" multiple>
             </div>
             <div class="col-12">
-                <button type="submit" class="btn btn-primary"><i class="ti ti-upload me-1"></i>Загрузить</button>
+                <button type="submit" class="btn btn-primary">Загрузить</button>
             </div>
         </form>
     </div>
@@ -42,7 +41,7 @@
 {% if property_obj.images %}
 <div class="card mb-4">
     <div class="card-header">
-        <h3 class="card-title"><i class="ti ti-photo me-2" style="opacity:.5;"></i>Фото</h3>
+        <h3 class="card-title">Фото</h3>
     </div>
     <div class="card-body">
         <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3" id="photos-container">
@@ -51,7 +50,7 @@
                 <a href="{{ img.image_url if img.image_url and img.image_url.startswith('/') else '/' + (img.image_url or '') }}" target="_blank" rel="noopener" class="d-block mb-2">
                     <img src="{{ img.image_url if img.image_url and img.image_url.startswith('/') else '/' + (img.image_url or '') }}" alt="" class="img-thumbnail w-100" style="height:100px;object-fit:cover;">
                 </a>
-                <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="deletePhoto({{ img.id }})"><i class="ti ti-trash me-1"></i>Удалить</button>
+                <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="deletePhoto({{ img.id }})">Удалить</button>
             </div>
             {% endfor %}
         </div>
@@ -62,7 +61,7 @@
 {% if property_obj.documents %}
 <div class="card mb-4">
     <div class="card-header">
-        <h3 class="card-title"><i class="ti ti-file-text me-2" style="opacity:.5;"></i>Документы</h3>
+        <h3 class="card-title">Документы</h3>
     </div>
     <div class="table-responsive">
         <table class="table table-vcenter card-table">
@@ -79,7 +78,7 @@
                         <a href="{{ doc.document_url if doc.document_url and doc.document_url.startswith('/') else '/' + (doc.document_url or '') }}" target="_blank" rel="noopener">{{ doc.title or 'Документ' }}</a>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteDocument({{ doc.id }})"><i class="ti ti-trash"></i></button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteDocument({{ doc.id }})">Удалить</button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -91,9 +90,8 @@
 
 {% if not property_obj.images and not property_obj.documents %}
 <div class="empty">
-    <i class="ti ti-file-off" style="font-size:3rem;opacity:.2;"></i>
-    <p class="empty-title mt-3">В папке пока нет файлов</p>
-    <p class="empty-subtitle text-secondary">Загрузите фото или документы с помощью формы выше.</p>
+    <p class="empty-title">В папке пока нет файлов</p>
+    <p class="empty-subtitle text-muted">Загрузите фото или документы с помощью формы выше.</p>
 </div>
 {% endif %}
 {% endblock %}
@@ -147,8 +145,7 @@ async function deleteDocument(docId, btn) {
             reader.onload = (function() {
                 return function(e) {
                     var div = document.createElement('div');
-                    div.className = 'border rounded p-1';
-                    div.style.background = 'rgba(255,255,255,.05)';
+                    div.className = 'border rounded p-1 bg-light';
                     var img = document.createElement('img');
                     img.src = e.target.result;
                     img.alt = '';

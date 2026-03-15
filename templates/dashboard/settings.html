@@ -11,13 +11,14 @@
 </nav>
 
 <div class="page-header d-print-none mb-4">
-    <div class="page-pretitle">Конфигурация</div>
     <h2 class="page-title">Настройки</h2>
-    <p class="text-secondary mt-1 mb-0">Контактные данные для сайта и фидов. Если не заданы — используются значения из .env.</p>
+    <p class="text-muted mt-1 mb-0">Контактные данные для сайта и фидов. Если не заданы — используются значения из переменных окружения (.env).</p>
 </div>
 
 {% if success %}
-<div class="alert alert-success" role="alert"><i class="ti ti-check me-2"></i>Настройки сохранены.</div>
+<div class="alert alert-success" role="alert">
+    Настройки сохранены.
+</div>
 {% endif %}
 
 {% if error %}
@@ -25,50 +26,50 @@
 {% endif %}
 
 <div class="card mb-4">
-    <div class="card-header"><h3 class="card-title mb-0"><i class="ti ti-address-book me-2" style="opacity:.5;"></i>Контакты на сайте</h3></div>
+    <div class="card-header"><h3 class="card-title mb-0">Контакты на сайте</h3></div>
     <div class="card-body">
         <form method="post" action="/dashboard/settings" class="row g-3">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
             <div class="col-md-6">
                 <label class="form-label">Телефон</label>
                 <input type="text" name="contact_phone" class="form-control" value="{{ (settings.contact_phone or '') }}" placeholder="+7 (999) 000-00-00">
-                <small class="form-text text-secondary">Отображается в footer, на карточках и FAQ</small>
+                <small class="form-text text-muted">Отображается в footer, на карточках объектов и FAQ</small>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Email</label>
                 <input type="email" name="contact_email" class="form-control" value="{{ (settings.contact_email or '') }}" placeholder="info@vitrina.rent">
             </div>
             <div class="col-md-6">
-                <label class="form-label">Telegram (без @)</label>
+                <label class="form-label">Telegram (имя пользователя без @)</label>
                 <input type="text" name="contact_telegram" class="form-control" value="{{ (settings.contact_telegram or '') }}" placeholder="vitrina_rent">
             </div>
 
-            <div class="col-12"><div class="section-divider"></div></div>
+            <div class="col-12"><hr></div>
 
             <div class="col-12">
-                <div class="form-section-title">Фид Авито</div>
+                <h4 class="mb-2" style="font-size: 1rem;">Фид Авито</h4>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Имя менеджера (ManagerName)</label>
                 <input type="text" name="avito_manager_name" class="form-control" value="{{ (settings.avito_manager_name or '') }}" placeholder="Менеджер Vitrina">
             </div>
             <div class="col-md-6">
-                <label class="form-label">Телефон для Авито (ContactPhone)</label>
+                <label class="form-label">Телефон для объявлений Авито (ContactPhone)</label>
                 <input type="text" name="avito_contact_phone" class="form-control" value="{{ (settings.avito_contact_phone or '') }}" placeholder="+79102535534">
             </div>
-            <div class="col-12 d-flex gap-2">
-                <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i>Сохранить</button>
-                <a href="/dashboard/settings/notifications" class="btn btn-outline-info"><i class="ti ti-bell me-1"></i>Уведомления</a>
-                <a href="/dashboard/settings/password" class="btn btn-outline-secondary"><i class="ti ti-key me-1"></i>Сменить пароль</a>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a href="/dashboard/settings/notifications" class="btn btn-outline-info ms-2">Настройки уведомлений</a>
+                <a href="/dashboard" class="btn btn-outline-secondary ms-2">На главную</a>
             </div>
         </form>
     </div>
 </div>
 
 <div class="card mb-4">
-    <div class="card-header"><h3 class="card-title mb-0"><i class="ti ti-toggle-left me-2" style="opacity:.5;"></i>Управление фидами</h3></div>
+    <div class="card-header"><h3 class="card-title mb-0">Управление фидами</h3></div>
     <div class="card-body">
-        <p class="text-secondary mb-3">Глобальное включение/выключение выгрузки. При выключении фид отдаёт пустой XML.</p>
+        <p class="text-muted mb-3">Глобальное включение/выключение выгрузки объявлений на площадки. При выключении фид отдаёт пустой XML.</p>
         <div class="d-flex align-items-center gap-4 flex-wrap">
             <div class="d-flex align-items-center gap-2">
                 <span class="fw-bold">Авито:</span>
@@ -91,12 +92,12 @@ async function toggleFeed(platform) {
     const btn = document.getElementById('toggle-' + platform);
     btn.disabled = true;
     try {
-        const resp = await fetch('/dashboard/settings/toggle-' + platform, {method: 'POST', headers: csrfHeaders()});
+        const resp = await fetch('/dashboard/settings/toggle-' + platform, {method: 'POST'});
         const data = await resp.json();
         btn.textContent = data.enabled ? 'Включён' : 'Выключен';
         btn.className = 'btn btn-sm ' + (data.enabled ? 'btn-success' : 'btn-outline-secondary');
     } catch (e) {
-        showToast('Ошибка: ' + e.message, 'danger');
+        alert('Ошибка: ' + e.message);
     }
     btn.disabled = false;
 }

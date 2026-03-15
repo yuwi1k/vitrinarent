@@ -4,9 +4,8 @@
 
 {% block content %}
 <div class="page-header d-print-none mb-4">
-    <div class="page-pretitle">Файловый менеджер</div>
     <h2 class="page-title">Файлы</h2>
-    <p class="text-secondary">Папки объектов. Нажмите на папку, чтобы управлять файлами.</p>
+    <p class="text-muted">Папки объектов недвижимости. Нажмите ▸ у родительской папки, чтобы раскрыть дочерние.</p>
 </div>
 
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
@@ -15,14 +14,17 @@
         <div class="card h-100" style="min-height: 140px;">
             <div class="card-body d-flex flex-column justify-content-center position-relative">
                 <a href="/dashboard/folders/{{ parent.id }}" class="text-decoration-none text-reset stretched-link d-flex flex-column align-items-center">
-                    <i class="ti ti-folder" style="font-size:2.5rem;color:#fbbf24;opacity:.8;margin-bottom:.5rem;"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-yellow mb-2" width="48" height="48" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
+                    </svg>
                     <h3 class="card-title mb-0">{{ parent.title or 'Объект #' ~ parent.id }}</h3>
-                    <p class="text-secondary small mb-0">ID: {{ parent.id }}</p>
+                    <p class="text-muted small mb-0">ID: {{ parent.id }}</p>
                 </a>
             </div>
             {% if children|length > 0 %}
             <div class="card-footer border-0 bg-transparent pt-0">
-                <p class="text-secondary small mb-2">Дочерние ({{ children|length }}):</p>
+                <p class="text-muted small mb-2">Дочерние ({{ children|length }}):</p>
                 <div class="d-flex flex-wrap gap-2">
                     {% for ch in children %}
                     <a href="/dashboard/folders/{{ ch.id }}" class="btn btn-sm btn-outline-secondary text-decoration-none">↳ {{ ch.title or '#' ~ ch.id }}</a>
@@ -35,10 +37,9 @@
     {% else %}
     <div class="col-12">
         <div class="empty">
-            <i class="ti ti-folder-off" style="font-size:3rem;opacity:.2;"></i>
-            <p class="empty-title mt-3">Нет папок</p>
-            <p class="empty-subtitle text-secondary">Создайте объекты, чтобы здесь появились папки.</p>
-            <a href="/dashboard/properties/new" class="btn btn-primary"><i class="ti ti-plus me-1"></i>Добавить объект</a>
+            <p class="empty-title">Нет папок</p>
+            <p class="empty-subtitle text-muted">Создайте объекты в разделе «Объекты», чтобы здесь появились папки.</p>
+            <a href="/dashboard/properties/new" class="btn btn-primary">Добавить объект</a>
         </div>
     </div>
     {% endfor %}

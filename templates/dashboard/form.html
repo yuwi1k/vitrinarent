@@ -5,10 +5,7 @@
 {% block content %}
 <div class="page-header d-print-none mb-4">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <div>
-            <div class="page-pretitle">{% if is_copy %}Копирование{% elif model %}Редактирование{% else %}Новый объект{% endif %}</div>
-            <h2 class="page-title mb-0">{% if is_copy %}{{ model.title or 'Без названия' }} <span class="badge bg-warning text-dark ms-2">Копия</span>{% elif model %}{{ model.title or 'Без названия' }}{% else %}Создание объекта{% endif %}</h2>
-        </div>
+        <h2 class="page-title mb-0">{% if is_copy %}Копирование: {{ model.title or 'Без названия' }}{% elif model %}Редактирование: {{ model.title or 'Без названия' }}{% else %}Создание объекта{% endif %}{% if is_copy %} <span class="badge bg-warning text-dark ms-2">Копия</span>{% endif %}</h2>
         {% if (building_nav_items or [])|length > 1 %}
         <div class="ms-auto">
             <label for="dashboard-building-nav" class="form-label small text-muted mb-0 me-2">Здание и помещения:</label>
@@ -37,26 +34,26 @@
     {% if is_copy and model %}<input type="hidden" name="copy_from_id" value="{{ model.id }}">{% endif %}
     <ul class="nav nav-tabs mb-3" data-bs-toggle="tabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <a href="#pane-main" class="nav-link active" data-bs-toggle="tab" role="tab"><i class="ti ti-info-circle"></i>Основное</a>
+            <a href="#pane-main" class="nav-link active" data-bs-toggle="tab" role="tab">Основное</a>
         </li>
         <li class="nav-item" role="presentation">
-            <a href="#pane-commerce" class="nav-link" data-bs-toggle="tab" role="tab"><i class="ti ti-currency-rubel"></i>Коммерция</a>
+            <a href="#pane-commerce" class="nav-link" data-bs-toggle="tab" role="tab">Коммерция</a>
         </li>
         <li class="nav-item" role="presentation">
-            <a href="#pane-media" class="nav-link" data-bs-toggle="tab" role="tab"><i class="ti ti-photo"></i>Медиа</a>
+            <a href="#pane-media" class="nav-link" data-bs-toggle="tab" role="tab">Медиа</a>
         </li>
         {% if avito_api_configured %}
         <li class="nav-item" role="presentation">
-            <a href="#pane-avito" class="nav-link" data-bs-toggle="tab" role="tab"><i class="ti ti-brand-hipchat"></i>Авито</a>
+            <a href="#pane-avito" class="nav-link" data-bs-toggle="tab" role="tab">Авито</a>
         </li>
         {% endif %}
         {% if cian_api_configured %}
         <li class="nav-item" role="presentation">
-            <a href="#pane-cian" class="nav-link" data-bs-toggle="tab" role="tab"><i class="ti ti-building-skyscraper"></i>Циан</a>
+            <a href="#pane-cian" class="nav-link" data-bs-toggle="tab" role="tab">Циан</a>
         </li>
         {% endif %}
         <li class="nav-item" role="presentation">
-            <a href="#pane-settings" class="nav-link" data-bs-toggle="tab" role="tab"><i class="ti ti-settings"></i>Настройки</a>
+            <a href="#pane-settings" class="nav-link" data-bs-toggle="tab" role="tab">Настройки</a>
         </li>
     </ul>
 
@@ -977,40 +974,12 @@
         </div>
     </div>
 
-    <div class="mt-4 d-flex gap-2">
-        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i>{% if is_copy %}Создать копию{% else %}Сохранить{% endif %}</button>
-        <a href="/dashboard/properties" class="btn btn-outline-secondary">Отмена</a>
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">{% if is_copy %}Создать копию{% else %}Сохранить{% endif %}</button>
+        <a href="/dashboard/properties" class="btn btn-outline-secondary ms-2">Отмена</a>
     </div>
 </form>
 <script src="/static/js/dashboard-property-form.js"></script>
-<script>
-function deleteImage(imageId) {
-    if (!confirm('Удалить фото?')) return;
-    fetch('/dashboard/ajax/images/' + imageId, { method: 'DELETE', headers: csrfHeaders() })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.status === 'ok') {
-                var el = document.getElementById('gallery-img-' + imageId);
-                if (el) el.remove();
-                showToast('Фото удалено', 'success');
-            } else { showToast('Ошибка удаления фото', 'danger'); }
-        })
-        .catch(function(e) { showToast('Ошибка сети: ' + e.message, 'danger'); });
-}
-function deleteDocument(docId) {
-    if (!confirm('Удалить документ?')) return;
-    fetch('/dashboard/ajax/documents/' + docId, { method: 'DELETE', headers: csrfHeaders() })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.status === 'ok') {
-                var el = document.getElementById('doc-row-' + docId);
-                if (el) el.remove();
-                showToast('Документ удалён', 'success');
-            } else { showToast('Ошибка удаления документа', 'danger'); }
-        })
-        .catch(function(e) { showToast('Ошибка сети: ' + e.message, 'danger'); });
-}
-</script>
 {% endblock %}
 
 {% block tail %}

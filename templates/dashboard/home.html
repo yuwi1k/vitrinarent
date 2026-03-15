@@ -6,83 +6,83 @@
 <div class="page-header d-print-none mb-4">
     <div class="row align-items-center">
         <div class="col">
-            <div class="page-pretitle">Обзор</div>
             <h2 class="page-title">Панель управления</h2>
+            <p class="text-muted mt-1 mb-0">Сводка и быстрые действия</p>
         </div>
     </div>
 </div>
 
 <div class="row row-deck row-cards mb-4">
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card stat-primary">
+        <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <div class="stat-icon me-3">
-                        <i class="ti ti-building-store"></i>
-                    </div>
+                    <span class="avatar avatar-md bg-primary-lt rounded me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-building-store" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21l18 0" /><path d="M3 7v1a3 3 0 0 0 6 0v-1m0 0v1a3 3 0 0 0 6 0v-1m0 0v1a3 3 0 0 0 6 0v-1m0 0v1a3 3 0 0 0 6 0v-1" /><path d="M3 7l9 -4l9 4" /><path d="M4 21v-10.2a2 2 0 0 1 .211 -.896l2.578 -5.411a1 1 0 0 1 1.227 -.157l1.363 .683" /></svg>
+                    </span>
                     <div>
-                        <div class="stat-label">Всего объектов</div>
-                        <div class="stat-value">{{ total }}</div>
+                        <div class="text-muted small">Всего объектов</div>
+                        <div class="h3 mb-0">{{ total }}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card stat-success">
+        <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <div class="stat-icon me-3">
-                        <i class="ti ti-circle-check"></i>
-                    </div>
+                    <span class="avatar avatar-md bg-green-lt rounded me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                    </span>
                     <div>
-                        <div class="stat-label">Активных</div>
-                        <div class="stat-value">{{ active_count }}</div>
+                        <div class="text-muted small">Активных</div>
+                        <div class="h3 mb-0">{{ active_count }}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card stat-warning">
+        <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <div class="stat-icon me-3">
-                        <i class="ti ti-arrows-split-2"></i>
-                    </div>
+                    <span class="avatar avatar-md bg-yellow-lt rounded me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chart-pie" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 3.2a9 9 0 1 0 10.8 10.8a1 1 0 0 0 -1 -1h-3.8a4.1 4.1 0 1 1 -5 -5v-4a.9 .9 0 0 0 -1 -1.2" /><path d="M15 3.5a9 9 0 0 1 5.5 5.5h-4.5a.9 .9 0 0 1 -1 -1v-4.5" /></svg>
+                    </span>
                     <div>
-                        <div class="stat-label">Аренда / Продажа</div>
-                        <div class="stat-value">{{ rent_count }} <span style="opacity:.4;font-weight:400">/</span> {{ sale_count }}</div>
+                        <div class="text-muted small">Аренда / Продажа</div>
+                        <div class="h3 mb-0">{{ rent_count }} / {{ sale_count }}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card stat-purple">
+        <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <div class="stat-icon me-3">
-                        <i class="ti ti-brand-hipchat"></i>
-                    </div>
+                    <span class="avatar avatar-md bg-purple-lt rounded me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-avito" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="3" /><circle cx="17" cy="7" r="3" /><circle cx="7" cy="17" r="3" /><circle cx="17" cy="17" r="3" /></svg>
+                    </span>
                     <div>
-                        <div class="stat-label">На Авито</div>
-                        <div class="stat-value">{{ avito_published }} <span style="opacity:.4;font-weight:400">/ {{ avito_not_published }}</span></div>
+                        <div class="text-muted small">На Авито / не на Авито</div>
+                        <div class="h3 mb-0">{{ avito_published }} / {{ avito_not_published }}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
-        <div class="card stat-card stat-cyan">
+        <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <div class="stat-icon me-3">
-                        <i class="ti ti-building-skyscraper"></i>
-                    </div>
+                    <span class="avatar avatar-md bg-cyan-lt rounded me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-building-skyscraper" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21l18 0" /><path d="M5 21v-14l8 -4v18" /><path d="M19 21v-10l-6 -4" /><path d="M9 9l0 .01" /><path d="M9 12l0 .01" /><path d="M9 15l0 .01" /><path d="M9 18l0 .01" /></svg>
+                    </span>
                     <div>
-                        <div class="stat-label">На Циан</div>
-                        <div class="stat-value">{{ cian_published }} <span style="opacity:.4;font-weight:400">/ {{ cian_not_published }}</span></div>
+                        <div class="text-muted small">На Циан / не на Циан</div>
+                        <div class="h3 mb-0">{{ cian_published }} / {{ cian_not_published }}</div>
                     </div>
                 </div>
             </div>
@@ -91,124 +91,91 @@
 </div>
 
 <div class="row row-deck row-cards mb-4">
-    <div class="col-lg-6">
+    <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title"><i class="ti ti-plug-connected me-2" style="opacity:.5;"></i>Статус интеграций</h3>
+                <h3 class="card-title">Статус интеграций</h3>
             </div>
             <div class="card-body">
-                <div class="d-flex flex-column gap-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span>Авито API</span>
-                        {% if avito_api_configured %}
-                        <span class="integration-status is-ok"><span class="status-dot dot-green"></span>Настроен</span>
-                        {% else %}
-                        <span class="integration-status is-err"><span class="status-dot dot-red"></span>Не настроен</span>
-                        {% endif %}
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span>Авито Autoload</span>
-                        {% if avito_autoload_configured %}
-                        <span class="integration-status is-ok"><span class="status-dot dot-green"></span>Настроен</span>
-                        {% else %}
-                        <span class="integration-status is-warn"><span class="status-dot dot-yellow"></span>Не настроен</span>
-                        {% endif %}
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span>Циан API</span>
-                        {% if cian_api_configured %}
-                        <span class="integration-status is-ok"><span class="status-dot dot-green"></span>Настроен</span>
-                        {% else %}
-                        <span class="integration-status is-err"><span class="status-dot dot-red"></span>Не настроен</span>
-                        {% endif %}
-                    </div>
+                <div class="d-flex flex-wrap gap-3">
+                    {% if avito_api_configured %}
+                    <span class="badge bg-green-lt fs-6 py-2 px-3">Авито API: настроен</span>
+                    {% else %}
+                    <span class="badge bg-red-lt fs-6 py-2 px-3">Авито API: не настроен — заполните AVITO_API_CLIENT_ID / SECRET в .env</span>
+                    {% endif %}
+                    {% if avito_autoload_configured %}
+                    <span class="badge bg-green-lt fs-6 py-2 px-3">Авито Autoload: настроен</span>
+                    {% else %}
+                    <span class="badge bg-yellow-lt fs-6 py-2 px-3">Авито Autoload: не настроен (AVITO_AUTOLOAD_UPLOAD_URL)</span>
+                    {% endif %}
+                    {% if cian_api_configured %}
+                    <span class="badge bg-green-lt fs-6 py-2 px-3">Циан API: настроен</span>
+                    {% else %}
+                    <span class="badge bg-red-lt fs-6 py-2 px-3">Циан API: не настроен — заполните CIAN_ACCESS_KEY в .env</span>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    {% if no_photo or no_coords or no_address %}
-    <div class="col-lg-6">
+{% if no_photo or no_coords or no_address %}
+<div class="row row-deck row-cards mb-4">
+    <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title"><i class="ti ti-clipboard-check me-2" style="opacity:.5;"></i>Качество данных</h3>
+                <h3 class="card-title">Качество данных</h3>
             </div>
             <div class="card-body">
-                <div class="d-flex flex-column gap-3">
+                <div class="d-flex flex-wrap gap-3">
                     {% if no_photo %}
-                    <div>
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="small">Без фото</span>
-                            <span class="small fw-bold text-orange">{{ no_photo }}</span>
-                        </div>
-                        <div class="quality-bar">
-                            <div class="bar-fill fill-orange" style="width: {{ (no_photo / total * 100) if total > 0 else 0 }}%"></div>
-                        </div>
-                    </div>
+                    <span class="badge bg-orange-lt fs-6 py-2 px-3">Без фото: {{ no_photo }}</span>
                     {% endif %}
                     {% if no_coords %}
-                    <div>
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="small">Без координат</span>
-                            <span class="small fw-bold text-orange">{{ no_coords }}</span>
-                        </div>
-                        <div class="quality-bar">
-                            <div class="bar-fill fill-orange" style="width: {{ (no_coords / total * 100) if total > 0 else 0 }}%"></div>
-                        </div>
-                    </div>
+                    <span class="badge bg-orange-lt fs-6 py-2 px-3">Без координат: {{ no_coords }}</span>
                     {% endif %}
                     {% if no_address %}
-                    <div>
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="small">Без адреса</span>
-                            <span class="small fw-bold text-red">{{ no_address }}</span>
-                        </div>
-                        <div class="quality-bar">
-                            <div class="bar-fill fill-red" style="width: {{ (no_address / total * 100) if total > 0 else 0 }}%"></div>
-                        </div>
-                    </div>
+                    <span class="badge bg-orange-lt fs-6 py-2 px-3">Без адреса: {{ no_address }}</span>
                     {% endif %}
                 </div>
-                <p class="text-secondary small mt-3 mb-0">Объекты без данных хуже отображаются на сайте и в фидах.</p>
+                <p class="text-muted small mt-2 mb-0">Объекты без фото, координат или адреса хуже отображаются на сайте и в фидах.</p>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
+{% endif %}
 
-<div class="row row-deck row-cards">
-    <div class="col-md-4">
-        <a href="/dashboard/properties/new" class="card quick-action-card text-reset">
-            <div class="card-body text-center py-4">
-                <div class="action-icon mx-auto" style="background:rgba(99,102,241,.15);color:#818cf8;">
-                    <i class="ti ti-plus"></i>
-                </div>
-                <h3 class="mb-1">Добавить объект</h3>
-                <p class="text-secondary small mb-0">Создать новую карточку</p>
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Быстрые действия</h3>
             </div>
-        </a>
-    </div>
-    <div class="col-md-4">
-        <a href="/dashboard/properties" class="card quick-action-card text-reset">
-            <div class="card-body text-center py-4">
-                <div class="action-icon mx-auto" style="background:rgba(34,197,94,.15);color:#4ade80;">
-                    <i class="ti ti-list"></i>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <a href="/dashboard/properties/new" class="btn btn-primary w-100 py-3 d-flex align-items-center justify-content-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+                            Добавить объект
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="/dashboard/properties" class="btn btn-outline-primary w-100 py-3 d-flex align-items-center justify-content-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-list me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l11 0" /><path d="M9 12l11 0" /><path d="M9 18l11 0" /><path d="M5 6l0 .01" /><path d="M5 12l0 .01" /><path d="M5 18l0 .01" /></svg>
+                            Список объектов
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="/dashboard/folders" class="btn btn-outline-primary w-100 py-3 d-flex align-items-center justify-content-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-folder me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 19a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h2l2 4h10a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-4a2 2 0 0 1 2 -2h2" /></svg>
+                            Файлы
+                        </a>
+                    </div>
                 </div>
-                <h3 class="mb-1">Список объектов</h3>
-                <p class="text-secondary small mb-0">{{ total }} объектов в каталоге</p>
+                <p class="text-muted small mt-3 mb-0">Фид Авито (кнопка в шапке): в выгрузку попадают только активные корневые объекты; контакты задаются в разделе <a href="/dashboard/settings">Настройки</a> или в .env.</p>
             </div>
-        </a>
-    </div>
-    <div class="col-md-4">
-        <a href="/dashboard/folders" class="card quick-action-card text-reset">
-            <div class="card-body text-center py-4">
-                <div class="action-icon mx-auto" style="background:rgba(245,158,11,.15);color:#fbbf24;">
-                    <i class="ti ti-folder"></i>
-                </div>
-                <h3 class="mb-1">Файлы</h3>
-                <p class="text-secondary small mb-0">Фото и документы</p>
-            </div>
-        </a>
+        </div>
     </div>
 </div>
 {% endblock %}
+

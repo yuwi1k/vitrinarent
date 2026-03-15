@@ -6,118 +6,79 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Дашборд{% endblock %} — Vitrina</title>
   <link rel="shortcut icon" href="/static/images/favicon.png">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-  <link rel="stylesheet" href="/static/css/dashboard.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
   {% block head %}{% endblock %}
 </head>
 
-<body class="d-flex flex-column" data-bs-theme="dark">
+<body>
   <div class="page">
-    <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
-      <div class="container-fluid">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
-          aria-controls="sidebar-menu" aria-expanded="false" aria-label="Меню">
+    <header class="navbar navbar-expand-md navbar-light d-print-none">
+      <div class="container-xl">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu"
+          aria-controls="navbar-menu" aria-expanded="false" aria-label="Переключить меню">
           <span class="navbar-toggler-icon"></span>
         </button>
         <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
           <a href="/dashboard">Vitrina</a>
         </h1>
-        <div class="collapse navbar-collapse" id="sidebar-menu">
-          <ul class="navbar-nav pt-lg-3">
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <div class="nav-item dropdown">
+            <a href="#" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">Экспорт и синхронизация</a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <h6 class="dropdown-header">Авито</h6>
+              <a class="dropdown-item" href="/dashboard/export/avito" download="avito_feed.xml">Скачать фид</a>
+              <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/export/avito-autoload-new" data-success="Автозагрузка запущена">Отправить новых на Авито</button>
+              <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/avito/sync" data-success="Статусы синхронизированы: {value}" data-success-field="updated">Синхронизировать статусы</button>
+              <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/avito.xml">Скопировать URL фида</button>
+              <div class="dropdown-divider"></div>
+              <h6 class="dropdown-header">Циан</h6>
+              <a class="dropdown-item" href="/dashboard/export/cian" download="cian_feed.xml">Скачать фид</a>
+              <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/cian/sync" data-success="Статусы синхронизированы: {value}" data-success-field="updated">Синхронизировать статусы</button>
+              <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/cian.xml">Скопировать URL фида</button>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="/dashboard/export/csv">Экспорт CSV</a>
+              <a class="dropdown-item" href="/dashboard/settings">Настройки</a>
+            </div>
+          </div>
+          <a href="/dashboard/logout" class="btn btn-outline-danger btn-sm">Выйти</a>
+        </div>
+        <div class="collapse navbar-collapse" id="navbar-menu">
+          <ul class="navbar-nav">
             <li class="nav-item">
-              <a class="nav-link {% if request.url.path == '/dashboard' %}active{% endif %}" href="/dashboard">
-                <span class="nav-link-icon"><i class="ti ti-layout-dashboard"></i></span>
-                <span class="nav-link-title">Главная</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {% if request.url.path.startswith('/dashboard/properties') %}active{% endif %}" href="/dashboard/properties">
-                <span class="nav-link-icon"><i class="ti ti-building"></i></span>
-                <span class="nav-link-title">Объекты</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {% if request.url.path.startswith('/dashboard/folders') %}active{% endif %}" href="/dashboard/folders">
-                <span class="nav-link-icon"><i class="ti ti-folder"></i></span>
-                <span class="nav-link-title">Файлы</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {% if request.url.path.startswith('/dashboard/promotion') %}active{% endif %}" href="/dashboard/promotion">
-                <span class="nav-link-icon"><i class="ti ti-rocket"></i></span>
-                <span class="nav-link-title">Продвижение</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {% if request.url.path.startswith('/dashboard/messages') %}active{% endif %}" href="/dashboard/messages">
-                <span class="nav-link-icon"><i class="ti ti-message-circle"></i></span>
-                <span class="nav-link-title">Сообщения</span>
-              </a>
+              <a class="nav-link" href="/">На сайт</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if request.url.path == '/dashboard/statistics' %}active{% endif %}" href="/dashboard/statistics">
-                <span class="nav-link-icon"><i class="ti ti-chart-bar"></i></span>
-                <span class="nav-link-title">Статистика</span>
-              </a>
+              <a class="nav-link {% if request.url.path == '/dashboard' %}active{% endif %}"
+                href="/dashboard">Главная</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if request.url.path == '/dashboard/feed-errors' %}active{% endif %}" href="/dashboard/feed-errors">
-                <span class="nav-link-icon"><i class="ti ti-alert-triangle"></i></span>
-                <span class="nav-link-title">Ошибки фидов</span>
-              </a>
+              <a class="nav-link {% if request.url.path.startswith('/dashboard/properties') %}active{% endif %}"
+                href="/dashboard/properties">Объекты</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if request.url.path == '/dashboard/scheduler' %}active{% endif %}" href="/dashboard/scheduler">
-                <span class="nav-link-icon"><i class="ti ti-clock"></i></span>
-                <span class="nav-link-title">Планировщик</span>
-              </a>
-            </li>
-
-            <li class="nav-item mt-auto pt-3">
-              <div class="dropend sidebar-export-section">
-                <a href="#" class="nav-link" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button">
-                  <span class="nav-link-icon"><i class="ti ti-cloud-upload"></i></span>
-                  <span class="nav-link-title">Экспорт</span>
-                </a>
-                <div class="dropdown-menu">
-                  <h6 class="dropdown-header">Авито</h6>
-                  <a class="dropdown-item" href="/dashboard/export/avito" download="avito_feed.xml"><i class="ti ti-download me-2"></i>Скачать фид</a>
-                  <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/export/avito-autoload-new" data-success="Автозагрузка запущена"><i class="ti ti-send me-2"></i>Отправить новых</button>
-                  <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/avito/sync" data-success="Статусы синхронизированы: {value}" data-success-field="updated"><i class="ti ti-refresh me-2"></i>Синхронизировать</button>
-                  <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/avito.xml"><i class="ti ti-link me-2"></i>Скопировать URL</button>
-                  <div class="dropdown-divider"></div>
-                  <h6 class="dropdown-header">Циан</h6>
-                  <a class="dropdown-item" href="/dashboard/export/cian" download="cian_feed.xml"><i class="ti ti-download me-2"></i>Скачать фид</a>
-                  <button type="button" class="dropdown-item ajax-action-btn" data-url="/dashboard/cian/sync" data-success="Статусы синхронизированы: {value}" data-success-field="updated"><i class="ti ti-refresh me-2"></i>Синхронизировать</button>
-                  <button type="button" class="dropdown-item copy-feed-url-btn" data-feed-path="/cian.xml"><i class="ti ti-link me-2"></i>Скопировать URL</button>
-                  <div class="dropdown-divider"></div>
-                  <a class="dropdown-item" href="/dashboard/export/csv"><i class="ti ti-file-spreadsheet me-2"></i>Экспорт CSV</a>
-                </div>
-              </div>
+              <a class="nav-link {% if request.url.path.startswith('/dashboard/promotion') %}active{% endif %}"
+                href="/dashboard/promotion">Продвижение</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if request.url.path.startswith('/dashboard/settings') %}active{% endif %}" href="/dashboard/settings">
-                <span class="nav-link-icon"><i class="ti ti-settings"></i></span>
-                <span class="nav-link-title">Настройки</span>
-              </a>
+              <a class="nav-link {% if request.url.path.startswith('/dashboard/messages') %}active{% endif %}"
+                href="/dashboard/messages">Сообщения</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="/" target="_blank">
-                <span class="nav-link-icon"><i class="ti ti-external-link"></i></span>
-                <span class="nav-link-title">На сайт</span>
-              </a>
+              <a class="nav-link {% if request.url.path == '/dashboard/statistics' %}active{% endif %}"
+                href="/dashboard/statistics">Статистика</a>
             </li>
-            <li class="nav-item sidebar-footer pt-2">
-              <a class="nav-link text-danger" href="/dashboard/logout">
-                <span class="nav-link-icon"><i class="ti ti-logout"></i></span>
-                <span class="nav-link-title">Выйти</span>
-              </a>
+            <li class="nav-item">
+              <a class="nav-link {% if request.url.path == '/dashboard/feed-errors' %}active{% endif %}"
+                href="/dashboard/feed-errors">Ошибки фидов</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.url.path == '/dashboard/scheduler' %}active{% endif %}"
+                href="/dashboard/scheduler">Планировщик</a>
             </li>
           </ul>
         </div>
       </div>
-    </aside>
+    </header>
     <div class="page-wrapper">
       <div class="page-body">
         <div class="container-xl">
@@ -134,8 +95,8 @@
       </div>
     </div>
   </div>
-  <div id="toast-container" class="position-fixed bottom-0 end-0 p-3 toast-container-custom"></div>
-  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index:11080"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
   <script>
     window.__CSRF_TOKEN = '{{ csrf_token(request) }}';
     function csrfHeaders(extra) {
@@ -144,14 +105,18 @@
       return h;
     }
 
+    /**
+     * showToast(message, type, delay)
+     * type: 'success' | 'danger' | 'warning' | 'info'
+     */
     function showToast(message, type, delay) {
       type = type || 'info';
       delay = delay || 5000;
       var icons = {
-        success: '<i class="ti ti-check me-2"></i>',
-        danger:  '<i class="ti ti-alert-triangle me-2"></i>',
-        warning: '<i class="ti ti-alert-circle me-2"></i>',
-        info:    '<i class="ti ti-info-circle me-2"></i>'
+        success: '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M5 12l5 5l10 -10"/></svg>',
+        danger: '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M12 9v2m0 4v.01"/><path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.84 2.75"/></svg>',
+        warning: '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M12 9v2m0 4v.01"/><path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.84 2.75"/></svg>',
+        info: '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>'
       };
       var bgClass = 'bg-' + type;
       var container = document.getElementById('toast-container');
@@ -178,6 +143,10 @@
       showToast('Ошибка JS: ' + msg, 'danger');
     };
 
+    /**
+     * Вспомогательная функция для AJAX-кнопок: показывает спиннер, делает fetch, показывает toast.
+     * btn — HTMLElement кнопки, url — URL, opts — {method, onSuccess(data), successMsg, errorMsg}
+     */
     function fetchWithToast(btn, url, opts) {
       opts = opts || {};
       var method = opts.method || 'GET';
@@ -235,6 +204,7 @@
           });
         });
       });
+
     })();
   </script>
   {% block tail %}{% endblock %}

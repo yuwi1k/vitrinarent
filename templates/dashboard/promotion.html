@@ -3,116 +3,107 @@
 
 {% block content %}
 <div class="page-header d-print-none mb-3">
-    <div class="row align-items-center">
-        <div class="col-auto">
-            <div class="page-pretitle">Маркетинг</div>
-            <h2 class="page-title">Продвижение объявлений</h2>
-        </div>
+  <div class="row align-items-center">
+    <div class="col-auto">
+      <h2 class="page-title">Продвижение объявлений</h2>
     </div>
+  </div>
 </div>
 
 <div class="card mb-4">
-    <div class="card-header"><h3 class="card-title"><i class="ti ti-brand-hipchat me-2" style="opacity:.5;"></i>Авито VAS</h3></div>
-    {% if properties %}
-    <div class="table-responsive">
-        <table class="table table-vcenter card-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Название</th>
-                    <th>AvitoId</th>
-                    <th>Статус</th>
-                    <th>VAS-услуга</th>
-                    <th class="w-1"></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for prop in properties %}
-                {% set ad = (prop.avito_data or {}) %}
-                <tr>
-                    <td class="text-secondary">{{ prop.id }}</td>
-                    <td class="fw-medium"><a href="/dashboard/properties/edit/{{ prop.id }}" class="text-reset">{{ prop.title or '—' }}</a></td>
-                    <td>{{ ad.get('AvitoId', '—') if ad is mapping else '—' }}</td>
-                    <td>
-                        {% set avs = ad.get('AvitoStatus', '') if ad is mapping else '' %}
-                        {% if avs == 'active' %}
-                        <span class="d-inline-flex align-items-center"><span class="status-dot dot-green"></span><span class="small">Активно</span></span>
-                        {% elif avs %}
-                        <span class="d-inline-flex align-items-center"><span class="status-dot dot-yellow"></span><span class="small">{{ avs }}</span></span>
-                        {% else %}
-                        <span class="text-secondary">—</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% set has_avito_id = ad.get('AvitoId') if ad is mapping else false %}
-                        <select class="form-select form-select-sm vas-select" data-prop-id="{{ prop.id }}" {% if not has_avito_id %}disabled{% endif %}>
-                            <option value="">— выбрать —</option>
-                            {% for slug, label in vas_options %}
-                            <option value="{{ slug }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-primary vas-apply-btn" data-prop-id="{{ prop.id }}" {% if not has_avito_id %}disabled{% endif %}><i class="ti ti-check me-1"></i>Применить</button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="card-body text-center text-secondary py-4">
-        <i class="ti ti-rocket-off" style="font-size:2rem;opacity:.3;"></i>
-        <p class="mt-2 mb-0">Нет активных объектов</p>
-    </div>
-    {% endif %}
+  <div class="card-header"><h3 class="card-title">Авито VAS</h3></div>
+  {% if properties %}
+  <div class="table-responsive">
+    <table class="table table-vcenter card-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Название</th>
+          <th>AvitoId</th>
+          <th>Статус</th>
+          <th>VAS-услуга</th>
+          <th class="w-1"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for prop in properties %}
+        {% set ad = (prop.avito_data or {}) %}
+        <tr>
+          <td class="text-muted">{{ prop.id }}</td>
+          <td><a href="/dashboard/properties/edit/{{ prop.id }}">{{ prop.title or '—' }}</a></td>
+          <td>{{ ad.get('AvitoId', '—') if ad is mapping else '—' }}</td>
+          <td>
+            {% set avs = ad.get('AvitoStatus', '') if ad is mapping else '' %}
+            {% if avs == 'active' %}<span class="badge bg-green">Активно</span>
+            {% elif avs %}<span class="badge bg-secondary">{{ avs }}</span>
+            {% else %}<span class="text-muted">—</span>{% endif %}
+          </td>
+          <td>
+            {% set has_avito_id = ad.get('AvitoId') if ad is mapping else false %}
+            <select class="form-select form-select-sm vas-select" data-prop-id="{{ prop.id }}" {% if not has_avito_id %}disabled{% endif %}>
+              <option value="">— выбрать —</option>
+              {% for slug, label in vas_options %}
+              <option value="{{ slug }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td>
+            <button type="button" class="btn btn-sm btn-primary vas-apply-btn" data-prop-id="{{ prop.id }}" {% if not has_avito_id %}disabled{% endif %}>Применить</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card-body text-center text-muted py-4">Нет активных объектов</div>
+  {% endif %}
 </div>
 
 <div class="card">
-    <div class="card-header"><h3 class="card-title"><i class="ti ti-building-skyscraper me-2" style="opacity:.5;"></i>Циан — управление ставками</h3></div>
-    <div class="card-body text-center text-secondary py-4">
-        <i class="ti ti-clock" style="font-size:2rem;opacity:.3;"></i>
-        <p class="mt-2 mb-0">Управление ставками аукциона CIAN будет добавлено в следующем обновлении.</p>
-    </div>
+  <div class="card-header"><h3 class="card-title">Циан — управление ставками</h3></div>
+  <div class="card-body text-center text-muted py-4">
+    Управление ставками аукциона CIAN будет добавлено в следующем обновлении.
+  </div>
 </div>
 {% endblock %}
 
 {% block tail %}
 <script>
 (function () {
-    document.querySelectorAll('.vas-apply-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var propId = btn.getAttribute('data-prop-id');
-            var select = document.querySelector('.vas-select[data-prop-id="' + propId + '"]');
-            var vasSlug = select ? select.value : '';
-            if (!vasSlug) { showToast('Выберите VAS-услугу', 'warning'); return; }
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-            var body = new URLSearchParams();
-            body.append('property_id', propId);
-            body.append('vas_slug', vasSlug);
-            fetch('/dashboard/promotion/avito/apply-vas', {
-                method: 'POST',
-                headers: csrfHeaders({'Content-Type': 'application/x-www-form-urlencoded'}),
-                body: body.toString(),
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="ti ti-check me-1"></i>Применить';
-                if (data.ok) {
-                    showToast('VAS применён для объекта #' + propId, 'success');
-                } else {
-                    showToast('Ошибка: ' + (data.error || 'unknown'), 'danger');
-                }
-            })
-            .catch(function () {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="ti ti-check me-1"></i>Применить';
-                showToast('Ошибка сети', 'danger');
-            });
-        });
+  document.querySelectorAll('.vas-apply-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var propId = btn.getAttribute('data-prop-id');
+      var select = document.querySelector('.vas-select[data-prop-id="' + propId + '"]');
+      var vasSlug = select ? select.value : '';
+      if (!vasSlug) { alert('Выберите VAS-услугу'); return; }
+      btn.disabled = true;
+      btn.textContent = '...';
+      var body = new URLSearchParams();
+      body.append('property_id', propId);
+      body.append('vas_slug', vasSlug);
+      fetch('/dashboard/promotion/avito/apply-vas', {
+        method: 'POST',
+        headers: csrfHeaders({'Content-Type': 'application/x-www-form-urlencoded'}),
+        body: body.toString(),
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        btn.disabled = false;
+        btn.textContent = 'Применить';
+        if (data.ok) {
+          showToast('VAS применён для объекта #' + propId, 'success');
+        } else {
+          showToast('Ошибка: ' + (data.error || 'unknown'), 'danger');
+        }
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.textContent = 'Применить';
+        showToast('Ошибка сети', 'danger');
+      });
     });
+  });
 })();
 </script>
 {% endblock %}
