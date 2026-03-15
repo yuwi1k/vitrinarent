@@ -201,9 +201,7 @@ body.db-body {
 
 .db-main {
   flex: 1;
-  padding: 1.5rem;
-  max-width: 1400px;
-  width: 100%;
+  padding: 1.5rem 2rem;
 }
 
 .db-overlay {
@@ -1303,7 +1301,7 @@ th.sortable.desc .sort-arrow::after {
   }
 
   .db-main {
-    padding: 1rem;
+    padding: 1rem 1.25rem;
   }
 
   .db-filter-bar {
