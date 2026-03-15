@@ -56,6 +56,7 @@ SITES: dict[str, SiteConfig] = {
             {"url": "/", "label": "Главная", "id": "home"},
             {"url": "/search", "label": "Каталог", "id": "search"},
             {"url": "/map", "label": "Карта", "id": "map"},
+            {"url": "/faq", "label": "FAQ", "id": "faq"},
             {"url": "/about", "label": "О компании", "id": "about"},
             {"url": "/contacts", "label": "Контакты", "id": "contacts"},
         ],
