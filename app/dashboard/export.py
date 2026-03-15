@@ -30,7 +30,7 @@ router = APIRouter()
 async def export_avito_feed(db: AsyncSession = Depends(get_db)):
     stmt = (
         select(Property)
-        .where(Property.is_active.is_(True))
+        .where(Property.is_active.is_(True), Property.publish_on_avito.is_(True))
         .options(selectinload(Property.images))
         .order_by(Property.id.asc())
     )
@@ -48,7 +48,7 @@ async def export_avito_feed(db: AsyncSession = Depends(get_db)):
 async def export_avito_feed_new(db: AsyncSession = Depends(get_db)):
     stmt = (
         select(Property)
-        .where(Property.is_active.is_(True))
+        .where(Property.is_active.is_(True), Property.publish_on_avito.is_(True))
         .options(selectinload(Property.images))
         .order_by(Property.id.asc())
     )
@@ -170,7 +170,7 @@ async def export_cian_feed(db: AsyncSession = Depends(get_db)):
     """Скачать XML-фид для выгрузки на Циан (коммерческая недвижимость)."""
     stmt = (
         select(Property)
-        .where(Property.is_active.is_(True))
+        .where(Property.is_active.is_(True), Property.publish_on_cian.is_(True))
         .options(selectinload(Property.images))
         .order_by(Property.id.asc())
     )

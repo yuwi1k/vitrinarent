@@ -344,6 +344,56 @@ body.db-body {
   height: 16px;
 }
 
+/* ═══════════════════ EXPAND BUTTON ═══════════════════ */
+.db-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 5px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+.db-expand-btn:hover {
+  background: var(--db-accent-light);
+  border-color: var(--db-accent);
+  color: var(--db-accent);
+}
+.db-expand-btn .expand-chevron {
+  transition: transform 0.25s ease;
+}
+.db-expand-btn[aria-expanded="true"] .expand-chevron {
+  transform: rotate(90deg);
+}
+.db-expand-btn .expand-count {
+  background: #e2e8f0;
+  color: #475569;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  min-width: 18px;
+  text-align: center;
+}
+.db-expand-btn:hover .expand-count {
+  background: rgba(67, 97, 238, 0.15);
+  color: var(--db-accent);
+}
+.child-rows-wrapper .db-table {
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.child-rows-wrapper td:first-child {
+  padding-left: 2rem;
+}
+
 /* ═══════════════════ BUTTONS ═══════════════════ */
 .btn {
   border-radius: 8px;

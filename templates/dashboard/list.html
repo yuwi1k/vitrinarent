@@ -99,8 +99,9 @@
                 <tr class="parent-row">
                     <td>
                         {% if children|length > 0 %}
-                        <button type="button" class="db-action-btn p-0 border-0 bg-transparent me-1" data-bs-toggle="collapse" data-bs-target="#children-{{ parent.id }}" aria-expanded="true" title="Показать/скрыть ({{ children|length }})">
-                            <span class="expand-icon" style="font-size:.75rem;color:#94a3b8;">▾</span>
+                        <button type="button" class="db-expand-btn" data-bs-toggle="collapse" data-bs-target="#children-{{ parent.id }}" aria-expanded="false" title="Помещения ({{ children|length }})">
+                            <svg class="expand-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" fill="none"><path d="M9 6l6 6l-6 6"/></svg>
+                            <span class="expand-count">{{ children|length }}</span>
                         </button>
                         {% endif %}
                         <input type="checkbox" name="ids" value="{{ parent.id }}" class="form-check-input row-select">
@@ -185,7 +186,7 @@
                 {% if children|length > 0 %}
                 <tr class="child-rows-wrapper">
                     <td colspan="10" style="padding:0;border:0;">
-                        <div class="collapse show" id="children-{{ parent.id }}">
+                        <div class="collapse" id="children-{{ parent.id }}">
                             <table class="db-table" style="background:#fafbfc;">
                                 <tbody>
                                     {% for ch in children %}
@@ -330,14 +331,19 @@ async function toggleFeedFlag(btn) {
     try {
         var resp = await fetch('/dashboard/properties/' + id + '/toggle-feed', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: csrfHeaders({'Content-Type': 'application/json'}),
             body: JSON.stringify({field: field})
         });
+        if (!resp.ok) {
+            var errData = await resp.json().catch(function() { return {}; });
+            throw new Error(errData.detail || errData.error || 'HTTP ' + resp.status);
+        }
         var data = await resp.json();
         var label = field === 'publish_on_avito' ? 'Avito' : 'Циан';
         btn.className = 'db-pill-toggle ' + (data.enabled ? 'active' : 'inactive');
         btn.innerHTML = '<span class="pill-dot"></span>' + label;
         btn.title = (data.enabled ? 'Выключить' : 'Включить') + ' ' + label;
+        showToast(label + (data.enabled ? ' включён' : ' выключен'), data.enabled ? 'success' : 'warning');
     } catch (e) {
         showToast('Ошибка: ' + e.message, 'danger');
     }
