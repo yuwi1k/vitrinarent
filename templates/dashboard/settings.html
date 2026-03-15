@@ -3,103 +3,139 @@
 {% block title %}Настройки{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/dashboard">Главная</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Настройки</li>
-    </ol>
-</nav>
-
 <div class="mb-4">
     <h2 class="db-page-title">Настройки</h2>
-    <p class="db-page-subtitle">Контактные данные для сайта и фидов. Если не заданы — используются значения из переменных окружения (.env).</p>
+    <p class="db-page-subtitle">Контактные данные для сайта и фидов. Если не заданы — используются значения из .env.</p>
 </div>
 
 {% if success %}
-<div class="alert alert-success" role="alert">
-    Настройки сохранены.
-</div>
+<div class="alert alert-success" role="alert">Настройки сохранены.</div>
 {% endif %}
-
 {% if error %}
 <div class="alert alert-danger" role="alert">{{ error }}</div>
 {% endif %}
 
-<div class="card mb-4">
-    <div class="card-header"><h3 class="card-title mb-0">Контакты на сайте</h3></div>
-    <div class="card-body">
-        <form method="post" action="/dashboard/settings" class="row g-3">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
-            <div class="col-md-6">
-                <label class="form-label">Телефон</label>
-                <input type="text" name="contact_phone" class="form-control" value="{{ (settings.contact_phone or '') }}" placeholder="+7 (999) 000-00-00">
-                <small class="form-text text-muted">Отображается в footer, на карточках объектов и FAQ</small>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Email</label>
-                <input type="email" name="contact_email" class="form-control" value="{{ (settings.contact_email or '') }}" placeholder="info@vitrina.rent">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Telegram (имя пользователя без @)</label>
-                <input type="text" name="contact_telegram" class="form-control" value="{{ (settings.contact_telegram or '') }}" placeholder="vitrina_rent">
-            </div>
+<form method="post" action="/dashboard/settings">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
 
-            <div class="col-12"><hr></div>
-
-            <div class="col-12">
-                <h4 class="mb-2" style="font-size: 1rem;">Фид Авито</h4>
+    <div class="db-settings-card">
+        <div class="db-settings-card-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none"><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"/></svg>
+            <h3>Контакты на сайте</h3>
+        </div>
+        <div class="db-settings-card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Телефон</label>
+                    <input type="text" name="contact_phone" class="form-control" value="{{ (settings.contact_phone or '') }}" placeholder="+7 (999) 000-00-00">
+                    <small class="form-text" style="color:#94a3b8;">Отображается в footer, на карточках и FAQ</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="contact_email" class="form-control" value="{{ (settings.contact_email or '') }}" placeholder="info@vitrina.rent">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Telegram (без @)</label>
+                    <input type="text" name="contact_telegram" class="form-control" value="{{ (settings.contact_telegram or '') }}" placeholder="vitrina_rent">
+                </div>
             </div>
-            <div class="col-md-6">
-                <label class="form-label">Имя менеджера (ManagerName)</label>
-                <input type="text" name="avito_manager_name" class="form-control" value="{{ (settings.avito_manager_name or '') }}" placeholder="Менеджер Vitrina">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Телефон для объявлений Авито (ContactPhone)</label>
-                <input type="text" name="avito_contact_phone" class="form-control" value="{{ (settings.avito_contact_phone or '') }}" placeholder="+79102535534">
-            </div>
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">Сохранить</button>
-                <a href="/dashboard/settings/notifications" class="btn btn-outline-info ms-2">Настройки уведомлений</a>
-                <a href="/dashboard" class="btn btn-outline-secondary ms-2">На главную</a>
-            </div>
-        </form>
+        </div>
     </div>
-</div>
 
-<div class="card mb-4">
-    <div class="card-header"><h3 class="card-title mb-0">Управление фидами</h3></div>
-    <div class="card-body">
-        <p class="text-muted mb-3">Глобальное включение/выключение выгрузки объявлений на площадки. При выключении фид отдаёт пустой XML.</p>
-        <div class="d-flex align-items-center gap-4 flex-wrap">
-            <div class="d-flex align-items-center gap-2">
-                <span class="fw-bold">Авито:</span>
-                <button id="toggle-avito" class="btn btn-sm {{ 'btn-success' if avito_feed_enabled else 'btn-outline-secondary' }}" onclick="toggleFeed('avito')">
-                    {{ 'Включён' if avito_feed_enabled else 'Выключен' }}
-                </button>
+    <div class="db-settings-card">
+        <div class="db-settings-card-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none"><path d="M18 8a3 3 0 0 1 0 6"/><path d="M10 8v11a1 1 0 0 1 -1 1h-1a1 1 0 0 1 -1 -1v-5"/><path d="M12 8h0l4.524 -3.77a.9 .9 0 0 1 1.476 .692v12.156a.9 .9 0 0 1 -1.476 .692l-4.524 -3.77h-8a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h8"/></svg>
+            <h3>Фид Авито</h3>
+        </div>
+        <div class="db-settings-card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Имя менеджера (ManagerName)</label>
+                    <input type="text" name="avito_manager_name" class="form-control" value="{{ (settings.avito_manager_name or '') }}" placeholder="Менеджер Vitrina">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Телефон для Авито (ContactPhone)</label>
+                    <input type="text" name="avito_contact_phone" class="form-control" value="{{ (settings.avito_contact_phone or '') }}" placeholder="+79102535534">
+                </div>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="fw-bold">Циан:</span>
-                <button id="toggle-cian" class="btn btn-sm {{ 'btn-success' if cian_feed_enabled else 'btn-outline-secondary' }}" onclick="toggleFeed('cian')">
-                    {{ 'Включён' if cian_feed_enabled else 'Выключен' }}
-                </button>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-4">
+        <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" class="me-1"><path d="M5 12l5 5l10 -10"/></svg>
+            Сохранить
+        </button>
+    </div>
+</form>
+
+<div class="db-settings-card">
+    <div class="db-settings-card-header">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 11l5 5l5 -5"/><path d="M12 4l0 12"/></svg>
+        <h3>Управление фидами</h3>
+    </div>
+    <div class="db-settings-card-body">
+        <p style="font-size:.8125rem;color:#64748b;margin-bottom:1rem;">Глобальное включение/выключение выгрузки. При выключении фид отдаёт пустой XML.</p>
+        <div class="d-flex flex-wrap gap-4">
+            <div class="d-flex align-items-center gap-3">
+                <label class="db-switch" style="cursor:pointer;" onclick="toggleFeed('avito')">
+                    <input type="checkbox" id="toggle-avito-input" {% if avito_feed_enabled %}checked{% endif %} readonly>
+                    <span class="db-switch-track"></span>
+                    <span class="db-switch-label">Авито</span>
+                </label>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <label class="db-switch" style="cursor:pointer;" onclick="toggleFeed('cian')">
+                    <input type="checkbox" id="toggle-cian-input" {% if cian_feed_enabled %}checked{% endif %} readonly>
+                    <span class="db-switch-track"></span>
+                    <span class="db-switch-label">Циан</span>
+                </label>
             </div>
         </div>
     </div>
 </div>
 
+<div class="row g-3">
+    <div class="col-md-4">
+        <a href="/dashboard/settings/password" class="db-link-card">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none"><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z"/><path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"/><path d="M8 11v-4a4 4 0 1 1 8 0v4"/></svg>
+            <div>
+                <div class="db-link-card-text">Сменить пароль</div>
+                <div class="db-link-card-desc">Пароль администратора</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="/dashboard/settings/notifications" class="db-link-card">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none"><path d="M10 5a2 2 0 0 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6"/><path d="M9 17v1a3 3 0 0 0 6 0v-1"/></svg>
+            <div>
+                <div class="db-link-card-text">Уведомления</div>
+                <div class="db-link-card-desc">Telegram-уведомления</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="/" class="db-link-card" target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none"><path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"/><path d="M11 13l9 -9"/><path d="M15 4h5v5"/></svg>
+            <div>
+                <div class="db-link-card-text">Перейти на сайт</div>
+                <div class="db-link-card-desc">Открыть в новой вкладке</div>
+            </div>
+        </a>
+    </div>
+</div>
+
 <script>
 async function toggleFeed(platform) {
-    const btn = document.getElementById('toggle-' + platform);
-    btn.disabled = true;
+    var input = document.getElementById('toggle-' + platform + '-input');
     try {
-        const resp = await fetch('/dashboard/settings/toggle-' + platform, {method: 'POST'});
-        const data = await resp.json();
-        btn.textContent = data.enabled ? 'Включён' : 'Выключен';
-        btn.className = 'btn btn-sm ' + (data.enabled ? 'btn-success' : 'btn-outline-secondary');
+        var resp = await fetch('/dashboard/settings/toggle-' + platform, {method: 'POST'});
+        var data = await resp.json();
+        input.checked = data.enabled;
+        showToast(platform.charAt(0).toUpperCase() + platform.slice(1) + ' фид ' + (data.enabled ? 'включён' : 'выключен'), 'success');
     } catch (e) {
-        alert('Ошибка: ' + e.message);
+        showToast('Ошибка: ' + e.message, 'danger');
     }
-    btn.disabled = false;
 }
 </script>
 {% endblock %}

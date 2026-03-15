@@ -6,6 +6,7 @@
 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
     <div>
         <h2 class="db-page-title">Объекты недвижимости</h2>
+        <p class="db-page-subtitle">{{ total }} объектов в базе</p>
     </div>
     <a href="/dashboard/properties/new" class="btn btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
@@ -13,103 +14,84 @@
     </a>
 </div>
 
-<form method="get" action="/dashboard/properties" class="card mb-4">
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label small text-muted">Поиск</label>
-                <input type="text" name="q" class="form-control" placeholder="Название или адрес" value="{{ q or '' }}" aria-label="Поиск по названию или адресу">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small text-muted">ID или slug</label>
-                <input type="text" name="id_or_slug" class="form-control" placeholder="Напр. 5 или url-slug" value="{{ id_or_slug or '' }}" aria-label="Фильтр по ID или slug">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small text-muted">Тип сделки</label>
-                <select name="deal_type" class="form-select" aria-label="Тип сделки">
-                    <option value="Все" {% if (deal_type or 'Все') == 'Все' %}selected{% endif %}>Все</option>
-                    <option value="Аренда" {% if deal_type == 'Аренда' %}selected{% endif %}>Аренда</option>
-                    <option value="Продажа" {% if deal_type == 'Продажа' %}selected{% endif %}>Продажа</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small text-muted">Категория</label>
-                <select name="category" class="form-select" aria-label="Категория">
-                    <option value="Все" {% if (category or 'Все') == 'Все' %}selected{% endif %}>Все</option>
-                    <option value="Офис" {% if category == 'Офис' %}selected{% endif %}>Офис</option>
-                    <option value="Торговая площадь" {% if category == 'Торговая площадь' %}selected{% endif %}>Торговая площадь</option>
-                    <option value="Свободного назначения" {% if category == 'Свободного назначения' %}selected{% endif %}>Свободного назначения</option>
-                    <option value="Промышленное" {% if category == 'Промышленное' %}selected{% endif %}>Промышленное</option>
-                    <option value="Склад" {% if category == 'Склад' %}selected{% endif %}>Склад</option>
-                    <option value="ГАБ" {% if category == 'ГАБ' %}selected{% endif %}>ГАБ</option>
-                    <option value="Здание" {% if category == 'Здание' %}selected{% endif %}>Здание</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small text-muted">Статус</label>
-                <select name="is_active" class="form-select" aria-label="Статус">
-                    <option value="all" {% if (is_active or 'all') == 'all' %}selected{% endif %}>Все</option>
-                    <option value="1" {% if is_active == '1' %}selected{% endif %}>Активные</option>
-                    <option value="0" {% if is_active == '0' %}selected{% endif %}>Скрытые</option>
-                </select>
-            </div>
-            <div class="col-md-1 d-flex align-items-end">
-                <button type="submit" class="btn btn-outline-primary w-100">Применить</button>
-            </div>
-        </div>
-        <div class="row g-3 mt-1">
-            <div class="col-md-3">
-                <label class="form-label small text-muted">Сортировка</label>
-                <div class="d-flex gap-2">
-                    <select name="sort_by" class="form-select form-select-sm" aria-label="Поле сортировки">
-                        <option value="id" {% if (sort_by or 'id') == 'id' %}selected{% endif %}>ID</option>
-                        <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Цена</option>
-                        <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Название</option>
-                    </select>
-                    <select name="order" class="form-select form-select-sm w-auto" aria-label="Направление">
-                        <option value="desc" {% if (order or 'desc') == 'desc' %}selected{% endif %}>↓ Убыв.</option>
-                        <option value="asc" {% if order == 'asc' %}selected{% endif %}>↑ Возр.</option>
-                    </select>
-                </div>
-            </div>
+<form method="get" action="/dashboard/properties" class="db-filter-bar">
+    <div class="db-filter-group" style="flex:2;min-width:200px;">
+        <label>Поиск</label>
+        <input type="text" name="q" class="form-control" placeholder="Название или адрес…" value="{{ q or '' }}">
+    </div>
+    <div class="db-filter-group" style="flex:1;min-width:140px;">
+        <label>ID / Slug</label>
+        <input type="text" name="id_or_slug" class="form-control" placeholder="5 или url-slug" value="{{ id_or_slug or '' }}">
+    </div>
+    <div class="db-filter-group" style="flex:1;min-width:120px;">
+        <label>Тип сделки</label>
+        <select name="deal_type" class="form-select">
+            <option value="Все" {% if (deal_type or 'Все') == 'Все' %}selected{% endif %}>Все</option>
+            <option value="Аренда" {% if deal_type == 'Аренда' %}selected{% endif %}>Аренда</option>
+            <option value="Продажа" {% if deal_type == 'Продажа' %}selected{% endif %}>Продажа</option>
+        </select>
+    </div>
+    <div class="db-filter-group" style="flex:1;min-width:140px;">
+        <label>Категория</label>
+        <select name="category" class="form-select">
+            <option value="Все" {% if (category or 'Все') == 'Все' %}selected{% endif %}>Все</option>
+            <option value="Офис" {% if category == 'Офис' %}selected{% endif %}>Офис</option>
+            <option value="Торговая площадь" {% if category == 'Торговая площадь' %}selected{% endif %}>Торговая площадь</option>
+            <option value="Свободного назначения" {% if category == 'Свободного назначения' %}selected{% endif %}>Свободного назначения</option>
+            <option value="Промышленное" {% if category == 'Промышленное' %}selected{% endif %}>Промышленное</option>
+            <option value="Склад" {% if category == 'Склад' %}selected{% endif %}>Склад</option>
+            <option value="ГАБ" {% if category == 'ГАБ' %}selected{% endif %}>ГАБ</option>
+            <option value="Здание" {% if category == 'Здание' %}selected{% endif %}>Здание</option>
+        </select>
+    </div>
+    <div class="db-filter-group" style="flex:1;min-width:110px;">
+        <label>Статус</label>
+        <select name="is_active" class="form-select">
+            <option value="all" {% if (is_active or 'all') == 'all' %}selected{% endif %}>Все</option>
+            <option value="1" {% if is_active == '1' %}selected{% endif %}>Активные</option>
+            <option value="0" {% if is_active == '0' %}selected{% endif %}>Скрытые</option>
+        </select>
+    </div>
+    <div class="db-filter-group" style="flex:1;min-width:180px;">
+        <label>Сортировка</label>
+        <div class="d-flex gap-1">
+            <select name="sort_by" class="form-select" style="flex:1;">
+                <option value="id" {% if (sort_by or 'id') == 'id' %}selected{% endif %}>ID</option>
+                <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Цена</option>
+                <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Название</option>
+            </select>
+            <select name="order" class="form-select" style="width:80px;flex:none;">
+                <option value="desc" {% if (order or 'desc') == 'desc' %}selected{% endif %}>↓</option>
+                <option value="asc" {% if order == 'asc' %}selected{% endif %}>↑</option>
+            </select>
         </div>
     </div>
+    <button type="submit" class="btn btn-primary db-filter-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
+        Найти
+    </button>
 </form>
 
 <form id="bulk-form" method="post" action="/dashboard/properties/bulk">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
-    {% if properties %}
-    <div class="card mb-3">
-        <div class="card-body py-2">
-            <div class="d-flex align-items-center flex-wrap gap-2">
-                <span class="text-muted small me-2">Массовые действия:</span>
-                <button type="submit" name="action" value="activate" class="btn btn-sm btn-outline-success">Опубликовать</button>
-                <button type="submit" name="action" value="deactivate" class="btn btn-sm btn-outline-warning">Снять с публикации</button>
-                <button type="button" class="btn btn-sm btn-outline-danger" id="btn-bulk-delete">
-                    Удалить выбранные
-                </button>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 
 <div class="card">
     <div class="table-responsive">
-        <table class="table table-vcenter card-table table-striped">
+        <table class="db-table">
             <thead>
                 <tr>
-                    <th class="w-1">
-                        <input type="checkbox" id="select-all" class="form-check-input" aria-label="Выбрать все на странице">
+                    <th style="width:50px;">
+                        <input type="checkbox" id="select-all" class="form-check-input" aria-label="Выбрать все">
                     </th>
-                    <th>ID</th>
-                    <th>Фото</th>
+                    <th style="width:50px;">ID</th>
+                    <th style="width:60px;">Фото</th>
                     <th>Название</th>
                     <th>Тип</th>
                     <th>Цена</th>
                     <th>Статус</th>
                     <th>Просмотры</th>
                     <th>Контакты</th>
-                    <th class="w-1">Действия</th>
+                    <th style="width:110px;">Действия</th>
                 </tr>
             </thead>
             <tbody>
@@ -117,52 +99,61 @@
                 <tr class="parent-row">
                     <td>
                         {% if children|length > 0 %}
-                        <button type="button" class="btn btn-sm btn-outline-secondary p-1 me-1" data-bs-toggle="collapse" data-bs-target="#children-{{ parent.id }}" aria-expanded="true" aria-controls="children-{{ parent.id }}" title="Показать/скрыть дочерние ({{ children|length }})">
-                            <span class="expand-icon">▾</span>
+                        <button type="button" class="db-action-btn p-0 border-0 bg-transparent me-1" data-bs-toggle="collapse" data-bs-target="#children-{{ parent.id }}" aria-expanded="true" title="Показать/скрыть ({{ children|length }})">
+                            <span class="expand-icon" style="font-size:.75rem;color:#94a3b8;">▾</span>
                         </button>
                         {% endif %}
                         <input type="checkbox" name="ids" value="{{ parent.id }}" class="form-check-input row-select">
                     </td>
-                    <td class="text-muted">{{ parent.id }}</td>
+                    <td style="color:#94a3b8;font-size:.8125rem;">{{ parent.id }}</td>
                     <td>
                         {% if parent.main_image %}
-                        <img src="{{ parent.main_image if parent.main_image.startswith('/') else '/' + parent.main_image }}" alt="" class="rounded" style="width:48px;height:48px;object-fit:cover;">
+                        <img src="{{ parent.main_image if parent.main_image.startswith('/') else '/' + parent.main_image }}" alt="" class="db-prop-thumb">
                         {% else %}
-                        <span class="avatar avatar-sm bg-secondary rounded">—</span>
+                        <div class="db-prop-thumb-placeholder">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"><path d="M15 8h.01"/><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z"/><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"/><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"/></svg>
+                        </div>
                         {% endif %}
                     </td>
-                    <td>{{ parent.title or '—' }}</td>
-                    <td><span class="badge bg-azure-lt">{{ parent.deal_type or '—' }}</span> {{ parent.category or '' }}</td>
-                    <td>{{ "{:,.0f}".format(parent.price).replace(',', ' ') }} ₽</td>
+                    <td>
+                        <span style="font-weight:500;">{{ parent.title or '—' }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-azure-lt" style="font-weight:500;">{{ parent.deal_type or '—' }}</span>
+                        <span style="color:#64748b;font-size:.8125rem;">{{ parent.category or '' }}</span>
+                    </td>
+                    <td style="font-weight:600;">{{ "{:,.0f}".format(parent.price).replace(',', ' ') }} ₽</td>
                     <td>
                         {% if parent.is_active %}
-                        <span class="badge bg-green text-white">Активен</span>
+                        <span class="db-status-dot dot-green">Активен</span>
                         {% else %}
-                        <span class="badge bg-red text-white">Скрыт</span>
+                        <span class="db-status-dot dot-red">Скрыт</span>
                         {% endif %}
-                        <button type="button"
-                            class="badge border-0 feed-toggle {{ 'bg-purple-lt' if parent.publish_on_avito else 'bg-secondary-lt' }}"
-                            data-id="{{ parent.id }}" data-field="publish_on_avito"
-                            onclick="toggleFeedFlag(this)"
-                            title="Нажмите, чтобы {{ 'выключить' if parent.publish_on_avito else 'включить' }} Авито">
-                            Avito {{ '✓' if parent.publish_on_avito else '✗' }}
-                        </button>
-                        <button type="button"
-                            class="badge border-0 feed-toggle {{ 'bg-purple-lt' if parent.publish_on_cian else 'bg-secondary-lt' }}"
-                            data-id="{{ parent.id }}" data-field="publish_on_cian"
-                            onclick="toggleFeedFlag(this)"
-                            title="Нажмите, чтобы {{ 'выключить' if parent.publish_on_cian else 'включить' }} Циан">
-                            Циан {{ '✓' if parent.publish_on_cian else '✗' }}
-                        </button>
+                        <div class="mt-1 d-flex gap-1 flex-wrap">
+                            <button type="button"
+                                class="db-pill-toggle {{ 'active' if parent.publish_on_avito else 'inactive' }}"
+                                data-id="{{ parent.id }}" data-field="publish_on_avito"
+                                onclick="toggleFeedFlag(this)"
+                                title="{{ 'Выключить' if parent.publish_on_avito else 'Включить' }} Авито">
+                                <span class="pill-dot"></span>Avito
+                            </button>
+                            <button type="button"
+                                class="db-pill-toggle {{ 'active' if parent.publish_on_cian else 'inactive' }}"
+                                data-id="{{ parent.id }}" data-field="publish_on_cian"
+                                onclick="toggleFeedFlag(this)"
+                                title="{{ 'Выключить' if parent.publish_on_cian else 'Включить' }} Циан">
+                                <span class="pill-dot"></span>Циан
+                            </button>
+                        </div>
                         {% set cian = parent.cian_data or {} %}
                         {% if cian.get("CianStatus") == "published" %}
-                        <span class="badge bg-green-lt">опубликовано</span>
+                        <span class="badge bg-green-lt mt-1" style="font-size:.65rem;">опубликовано</span>
                         {% elif cian.get("CianStatus") == "inactive" %}
-                        <span class="badge bg-yellow-lt">снято</span>
+                        <span class="badge bg-yellow-lt mt-1" style="font-size:.65rem;">снято</span>
                         {% elif cian.get("CianStatus") == "refusedByModerator" %}
-                        <span class="badge bg-red-lt">отказ</span>
+                        <span class="badge bg-red-lt mt-1" style="font-size:.65rem;">отказ</span>
                         {% elif cian.get("CianStatus") == "removedByModerator" %}
-                        <span class="badge bg-red-lt">снято мод.</span>
+                        <span class="badge bg-red-lt mt-1" style="font-size:.65rem;">снято мод.</span>
                         {% endif %}
                     </td>
                     <td>
@@ -178,81 +169,87 @@
                         {% else %}—{% endif %}
                     </td>
                     <td>
-                        <div class="btn-list flex-nowrap">
-                            <a href="/dashboard/properties/edit/{{ parent.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
-                            <a href="/dashboard/properties/copy/{{ parent.id }}" class="btn btn-sm btn-outline-secondary" title="Копировать">Копировать</a>
-                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="submitDelete({{ parent.id }}, {{ children|length }})">Удалить</button>
+                        <div class="db-table-actions">
+                            <a href="/dashboard/properties/edit/{{ parent.id }}" class="db-action-btn" title="Редактировать">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"/></svg>
+                            </a>
+                            <a href="/dashboard/properties/copy/{{ parent.id }}" class="db-action-btn" title="Копировать">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z"/><path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"/></svg>
+                            </a>
+                            <button type="button" class="db-action-btn db-action-danger" onclick="submitDelete({{ parent.id }}, {{ children|length }})" title="Удалить">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg>
+                            </button>
                         </div>
                     </td>
                 </tr>
                 {% if children|length > 0 %}
                 <tr class="child-rows-wrapper">
-                    <td colspan="10" class="p-0 border-0">
+                    <td colspan="10" style="padding:0;border:0;">
                         <div class="collapse show" id="children-{{ parent.id }}">
-                            <table class="table table-sm table-striped mb-0 bg-light">
+                            <table class="db-table" style="background:#fafbfc;">
                                 <tbody>
                                     {% for ch in children %}
                                     <tr>
-                                        <td class="w-1"><input type="checkbox" name="ids" value="{{ ch.id }}" class="form-check-input row-select"></td>
-                                        <td class="text-muted">{{ ch.id }}</td>
-                                        <td>
+                                        <td style="width:50px;"><input type="checkbox" name="ids" value="{{ ch.id }}" class="form-check-input row-select"></td>
+                                        <td style="width:50px;color:#94a3b8;font-size:.8125rem;">{{ ch.id }}</td>
+                                        <td style="width:60px;">
                                             {% if ch.main_image %}
-                                            <img src="{{ ch.main_image if ch.main_image.startswith('/') else '/' + ch.main_image }}" alt="" class="rounded" style="width:40px;height:40px;object-fit:cover;">
+                                            <img src="{{ ch.main_image if ch.main_image.startswith('/') else '/' + ch.main_image }}" alt="" class="db-prop-thumb" style="width:40px;height:40px;">
                                             {% else %}
-                                            <span class="avatar avatar-sm bg-secondary rounded">—</span>
+                                            <div class="db-prop-thumb-placeholder" style="width:40px;height:40px;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"><path d="M15 8h.01"/><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z"/><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"/><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"/></svg>
+                                            </div>
                                             {% endif %}
                                         </td>
-                                        <td><span class="text-muted small">↳</span> {{ ch.title or '—' }}</td>
-                                        <td><span class="badge bg-azure-lt">{{ ch.deal_type or '—' }}</span> {{ ch.category or '' }}</td>
-                                        <td>{{ "{:,.0f}".format(ch.price).replace(',', ' ') }} ₽</td>
+                                        <td><span style="color:#94a3b8;margin-right:.25rem;">↳</span> {{ ch.title or '—' }}</td>
+                                        <td><span class="badge bg-azure-lt">{{ ch.deal_type or '—' }}</span> <span style="color:#64748b;font-size:.8125rem;">{{ ch.category or '' }}</span></td>
+                                        <td style="font-weight:600;">{{ "{:,.0f}".format(ch.price).replace(',', ' ') }} ₽</td>
                                         <td>
                                             {% if ch.is_active %}
-                                            <span class="badge bg-green text-white">Активен</span>
+                                            <span class="db-status-dot dot-green">Активен</span>
                                             {% else %}
-                                            <span class="badge bg-red text-white">Скрыт</span>
+                                            <span class="db-status-dot dot-red">Скрыт</span>
                                             {% endif %}
-                                            <button type="button"
-                                                class="badge border-0 feed-toggle {{ 'bg-purple-lt' if ch.publish_on_avito else 'bg-secondary-lt' }}"
-                                                data-id="{{ ch.id }}" data-field="publish_on_avito"
-                                                onclick="toggleFeedFlag(this)"
-                                                title="Нажмите, чтобы {{ 'выключить' if ch.publish_on_avito else 'включить' }} Авито">
-                                                Avito {{ '✓' if ch.publish_on_avito else '✗' }}
-                                            </button>
-                                            <button type="button"
-                                                class="badge border-0 feed-toggle {{ 'bg-purple-lt' if ch.publish_on_cian else 'bg-secondary-lt' }}"
-                                                data-id="{{ ch.id }}" data-field="publish_on_cian"
-                                                onclick="toggleFeedFlag(this)"
-                                                title="Нажмите, чтобы {{ 'выключить' if ch.publish_on_cian else 'включить' }} Циан">
-                                                Циан {{ '✓' if ch.publish_on_cian else '✗' }}
-                                            </button>
+                                            <div class="mt-1 d-flex gap-1 flex-wrap">
+                                                <button type="button"
+                                                    class="db-pill-toggle {{ 'active' if ch.publish_on_avito else 'inactive' }}"
+                                                    data-id="{{ ch.id }}" data-field="publish_on_avito"
+                                                    onclick="toggleFeedFlag(this)"
+                                                    title="{{ 'Выключить' if ch.publish_on_avito else 'Включить' }} Авито">
+                                                    <span class="pill-dot"></span>Avito
+                                                </button>
+                                                <button type="button"
+                                                    class="db-pill-toggle {{ 'active' if ch.publish_on_cian else 'inactive' }}"
+                                                    data-id="{{ ch.id }}" data-field="publish_on_cian"
+                                                    onclick="toggleFeedFlag(this)"
+                                                    title="{{ 'Выключить' if ch.publish_on_cian else 'Включить' }} Циан">
+                                                    <span class="pill-dot"></span>Циан
+                                                </button>
+                                            </div>
                                             {% set cian_ch = ch.cian_data or {} %}
                                             {% if cian_ch.get("CianStatus") == "published" %}
-                                            <span class="badge bg-green-lt">опубликовано</span>
+                                            <span class="badge bg-green-lt mt-1" style="font-size:.65rem;">опубликовано</span>
                                             {% elif cian_ch.get("CianStatus") == "inactive" %}
-                                            <span class="badge bg-yellow-lt">снято</span>
+                                            <span class="badge bg-yellow-lt mt-1" style="font-size:.65rem;">снято</span>
                                             {% elif cian_ch.get("CianStatus") == "refusedByModerator" %}
-                                            <span class="badge bg-red-lt">отказ</span>
+                                            <span class="badge bg-red-lt mt-1" style="font-size:.65rem;">отказ</span>
                                             {% elif cian_ch.get("CianStatus") == "removedByModerator" %}
-                                            <span class="badge bg-red-lt">снято мод.</span>
+                                            <span class="badge bg-red-lt mt-1" style="font-size:.65rem;">снято мод.</span>
                                             {% endif %}
                                         </td>
+                                        <td>{% set sd_ch = ch.stats_data or {} %}{% if sd_ch and sd_ch is mapping %}{{ (sd_ch.get("avito_views", 0) or 0) + (sd_ch.get("cian_views", 0) or 0) }}{% else %}—{% endif %}</td>
+                                        <td>{% set sd_ch = ch.stats_data or {} %}{% if sd_ch and sd_ch is mapping %}{{ (sd_ch.get("avito_contacts", 0) or 0) + (sd_ch.get("cian_contacts", 0) or 0) }}{% else %}—{% endif %}</td>
                                         <td>
-                                            {% set sd_ch = ch.stats_data or {} %}
-                                            {% if sd_ch and sd_ch is mapping %}
-                                            {{ (sd_ch.get("avito_views", 0) or 0) + (sd_ch.get("cian_views", 0) or 0) }}
-                                            {% else %}—{% endif %}
-                                        </td>
-                                        <td>
-                                            {% set sd_ch = ch.stats_data or {} %}
-                                            {% if sd_ch and sd_ch is mapping %}
-                                            {{ (sd_ch.get("avito_contacts", 0) or 0) + (sd_ch.get("cian_contacts", 0) or 0) }}
-                                            {% else %}—{% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="btn-list flex-nowrap">
-                                                <a href="/dashboard/properties/edit/{{ ch.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
-                                                <a href="/dashboard/properties/copy/{{ ch.id }}" class="btn btn-sm btn-outline-secondary">Копировать</a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="submitDelete({{ ch.id }}, 0)">Удалить</button>
+                                            <div class="db-table-actions">
+                                                <a href="/dashboard/properties/edit/{{ ch.id }}" class="db-action-btn" title="Редактировать">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"/></svg>
+                                                </a>
+                                                <a href="/dashboard/properties/copy/{{ ch.id }}" class="db-action-btn" title="Копировать">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z"/><path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"/></svg>
+                                                </a>
+                                                <button type="button" class="db-action-btn db-action-danger" onclick="submitDelete({{ ch.id }}, 0)" title="Удалить">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -265,14 +262,64 @@
                 {% endif %}
                 {% else %}
                 <tr>
-                    <td colspan="10" class="text-center text-muted py-4">Нет объектов. <a href="/dashboard/properties/new">Добавить первый</a>.</td>
+                    <td colspan="10">
+                        <div class="db-empty-state">
+                            <div class="db-empty-state-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"><path d="M3 21l18 0"/><path d="M9 8l1 0"/><path d="M9 12l1 0"/><path d="M9 16l1 0"/><path d="M14 8l1 0"/><path d="M14 12l1 0"/><path d="M14 16l1 0"/><path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16"/></svg>
+                            </div>
+                            <div class="db-empty-state-title">Нет объектов</div>
+                            <div class="db-empty-state-text">Добавьте первый объект для начала работы</div>
+                            <a href="/dashboard/properties/new" class="btn btn-primary">Добавить объект</a>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+{% if properties %}
+<div class="db-bulk-bar" id="bulk-bar" style="display:none;">
+    <span style="font-size:.8125rem;opacity:.7;">Массовые действия:</span>
+    <button type="submit" name="action" value="activate" class="btn btn-sm btn-success">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" class="me-1"><path d="M5 12l5 5l10 -10"/></svg>
+        Опубликовать
+    </button>
+    <button type="submit" name="action" value="deactivate" class="btn btn-sm btn-warning">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" class="me-1"><path d="M3 3l18 18"/><path d="M10.584 10.587a2 2 0 0 0 2.828 2.83"/><path d="M9.363 5.365a9.466 9.466 0 0 1 2.637 -.365c4 0 7.333 2.333 10 7c-.778 1.361 -1.612 2.524 -2.503 3.488m-2.14 1.861c-1.631 1.1 -3.415 1.651 -5.357 1.651c-4 0 -7.333 -2.333 -10 -7c1.369 -2.395 2.913 -4.175 4.632 -5.341"/></svg>
+        Снять
+    </button>
+    <button type="button" class="btn btn-sm btn-danger" id="btn-bulk-delete">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" class="me-1"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg>
+        Удалить
+    </button>
+</div>
+{% endif %}
 </form>
+
+{% if total_pages > 1 %}
+<nav class="db-pagination">
+    <span class="page-count">Всего: {{ total }}</span>
+    <ul class="pagination m-0">
+        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+            <a class="page-link" href="?page={{ page - 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M15 6l-6 6l6 6"/></svg>
+            </a>
+        </li>
+        {% for p in pages %}
+        <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="?page={{ p }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}">{{ p }}</a></li>
+        {% endfor %}
+        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+            <a class="page-link" href="?page={{ page + 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M9 6l6 6l-6 6"/></svg>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% else %}
+<p class="text-center mt-3" style="font-size:.8125rem;color:#94a3b8;">Всего: {{ total }}</p>
+{% endif %}
 
 <script>
 var CSRF_TOKEN = "{{ csrf_token(request) }}";
@@ -288,11 +335,11 @@ async function toggleFeedFlag(btn) {
         });
         var data = await resp.json();
         var label = field === 'publish_on_avito' ? 'Avito' : 'Циан';
-        btn.textContent = label + ' ' + (data.enabled ? '✓' : '✗');
-        btn.className = 'badge border-0 feed-toggle ' + (data.enabled ? 'bg-purple-lt' : 'bg-secondary-lt');
-        btn.title = 'Нажмите, чтобы ' + (data.enabled ? 'выключить' : 'включить') + ' ' + label;
+        btn.className = 'db-pill-toggle ' + (data.enabled ? 'active' : 'inactive');
+        btn.innerHTML = '<span class="pill-dot"></span>' + label;
+        btn.title = (data.enabled ? 'Выключить' : 'Включить') + ' ' + label;
     } catch (e) {
-        alert('Ошибка: ' + e.message);
+        showToast('Ошибка: ' + e.message, 'danger');
     }
     btn.disabled = false;
 }
@@ -300,29 +347,21 @@ function submitDelete(propertyId, childrenCount) {
     childrenCount = childrenCount || 0;
     if (childrenCount > 0) {
         var msg = 'У этого объекта есть ' + childrenCount + ' дочерних. Удалить их тоже?';
-        if (!confirm(msg + '\n\n«ОК» — удалить родителя и дочерние.\n«Отмена» — удалить только родителя, дочерние останутся в списке.')) {
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/dashboard/properties/delete/' + propertyId + '?delete_children=0';
-        var token = document.createElement('input');
-        token.type = 'hidden';
-        token.name = '_csrf_token';
-        token.value = CSRF_TOKEN;
-        form.appendChild(token);
-        document.body.appendChild(form);
-        form.submit();
+        if (!confirm(msg + '\n\n«ОК» — удалить родителя и дочерние.\n«Отмена» — удалить только родителя.')) {
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/dashboard/properties/delete/' + propertyId + '?delete_children=0';
+            var token = document.createElement('input');
+            token.type = 'hidden'; token.name = '_csrf_token'; token.value = CSRF_TOKEN;
+            form.appendChild(token); document.body.appendChild(form); form.submit();
             return;
         }
         var form = document.createElement('form');
         form.method = 'POST';
         form.action = '/dashboard/properties/delete/' + propertyId + '?delete_children=1';
         var token = document.createElement('input');
-        token.type = 'hidden';
-        token.name = '_csrf_token';
-        token.value = CSRF_TOKEN;
-        form.appendChild(token);
-        document.body.appendChild(form);
-        form.submit();
+        token.type = 'hidden'; token.name = '_csrf_token'; token.value = CSRF_TOKEN;
+        form.appendChild(token); document.body.appendChild(form); form.submit();
         return;
     }
     if (!confirm('Удалить объект?')) return;
@@ -330,37 +369,46 @@ function submitDelete(propertyId, childrenCount) {
     form.method = 'POST';
     form.action = '/dashboard/properties/delete/' + propertyId;
     var token = document.createElement('input');
-    token.type = 'hidden';
-    token.name = '_csrf_token';
-    token.value = CSRF_TOKEN;
-    form.appendChild(token);
-    document.body.appendChild(form);
-    form.submit();
+    token.type = 'hidden'; token.name = '_csrf_token'; token.value = CSRF_TOKEN;
+    form.appendChild(token); document.body.appendChild(form); form.submit();
 }
-var bulkDeleteBtn = document.getElementById('btn-bulk-delete');
-if (bulkDeleteBtn) {
-    bulkDeleteBtn.addEventListener('click', function() {
-        var parentRows = document.querySelectorAll('tr.parent-row');
-        var ids = [];
-        parentRows.forEach(function(tr) {
-            var cb = tr.querySelector('input.row-select[name="ids"]');
-            if (cb && cb.checked) ids.push(cb.value);
-        });
-        if (ids.length === 0) {
-            showToast('Выберите хотя бы один объект (корневой) для удаления.', 'warning');
-            return;
-        }
-        window.location.href = '/dashboard/properties/bulk-delete-confirm?ids=' + ids.join(',');
-    });
-}
+
 (function() {
     var selectAll = document.getElementById('select-all');
     var rowChecks = document.querySelectorAll('.row-select');
+    var bulkBar = document.getElementById('bulk-bar');
+
+    function updateBulkBar() {
+        if (!bulkBar) return;
+        var any = false;
+        rowChecks.forEach(function(c) { if (c.checked) any = true; });
+        bulkBar.style.display = any ? 'flex' : 'none';
+    }
+
     if (selectAll && rowChecks.length) {
         selectAll.addEventListener('change', function() {
             rowChecks.forEach(function(c) { c.checked = selectAll.checked; });
+            updateBulkBar();
+        });
+        rowChecks.forEach(function(c) { c.addEventListener('change', updateBulkBar); });
+    }
+
+    var bulkDeleteBtn = document.getElementById('btn-bulk-delete');
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.addEventListener('click', function() {
+            var ids = [];
+            document.querySelectorAll('tr.parent-row').forEach(function(tr) {
+                var cb = tr.querySelector('input.row-select[name="ids"]');
+                if (cb && cb.checked) ids.push(cb.value);
+            });
+            if (ids.length === 0) {
+                showToast('Выберите хотя бы один объект для удаления.', 'warning');
+                return;
+            }
+            window.location.href = '/dashboard/properties/bulk-delete-confirm?ids=' + ids.join(',');
         });
     }
+
     document.querySelectorAll('.collapse').forEach(function(el) {
         el.addEventListener('show.bs.collapse', function() {
             var btn = document.querySelector('[data-bs-target="#' + el.id + '"]');
@@ -373,23 +421,4 @@ if (bulkDeleteBtn) {
     });
 })();
 </script>
-
-{% if total_pages > 1 %}
-<div class="d-flex align-items-center mt-3 flex-wrap gap-2">
-    <p class="text-muted small me-2 mb-0">Всего: {{ total }}</p>
-    <ul class="pagination m-0">
-        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-            <a class="page-link" href="?page={{ page - 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}">Назад</a>
-        </li>
-        {% for p in pages %}
-        <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="?page={{ p }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}">{{ p }}</a></li>
-        {% endfor %}
-        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-            <a class="page-link" href="?page={{ page + 1 }}&q={{ (q or '')|urlencode }}&deal_type={{ (deal_type or 'Все')|urlencode }}&category={{ (category or 'Все')|urlencode }}&is_active={{ (is_active or 'all')|urlencode }}&sort_by={{ (sort_by or 'id')|urlencode }}&order={{ (order or 'desc')|urlencode }}&id_or_slug={{ (id_or_slug or '')|urlencode }}">Вперёд</a>
-        </li>
-    </ul>
-</div>
-{% else %}
-<p class="text-muted small mt-3">Всего: {{ total }}</p>
-{% endif %}
 {% endblock %}

@@ -4,62 +4,94 @@
 {% block content %}
 <div class="mb-4">
     <h2 class="db-page-title">Сообщения</h2>
+    <p class="db-page-subtitle">Чат с покупателями через Авито и Циан</p>
 </div>
 
-<ul class="nav nav-tabs mb-3" role="tablist">
-  <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-avito" role="tab">Авито</a></li>
-  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-cian" role="tab">Циан</a></li>
+<ul class="nav db-tabs mb-0" role="tablist">
+  <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-avito" role="tab">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none"><path d="M18 8a3 3 0 0 1 0 6"/><path d="M10 8v11a1 1 0 0 1 -1 1h-1a1 1 0 0 1 -1 -1v-5"/><path d="M12 8h0l4.524 -3.77a.9 .9 0 0 1 1.476 .692v12.156a.9 .9 0 0 1 -1.476 .692l-4.524 -3.77h-8a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h8"/></svg>
+    Авито
+  </a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-cian" role="tab">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none"><path d="M3 21l18 0"/><path d="M5 21v-14l8 -4v18"/><path d="M19 21v-10l-6 -4"/><path d="M9 9l0 .01"/><path d="M9 12l0 .01"/><path d="M9 15l0 .01"/><path d="M9 18l0 .01"/></svg>
+    Циан
+  </a></li>
 </ul>
 
 <div class="tab-content">
   <div class="tab-pane active" id="tab-avito" role="tabpanel">
     {% if avito_error %}
-    <div class="alert alert-danger">Ошибка Авито API: {{ avito_error }}</div>
+    <div class="alert alert-danger mt-3">Ошибка Авито API: {{ avito_error }}</div>
     {% elif avito_chats %}
-    <div class="row">
+    <div class="row mt-3">
       <div class="col-md-5">
-        <div class="list-group" id="avito-chats-list" style="max-height:600px;overflow-y:auto;">
-          {% for chat in avito_chats %}
-          <a href="#" class="list-group-item list-group-item-action avito-chat-item" data-chat-id="{{ chat.id }}">
-            <div class="d-flex w-100 justify-content-between">
-              <h6 class="mb-1">{{ chat.users[0].name if chat.users else 'Чат #' ~ chat.id }}</h6>
-              <small class="text-muted chat-ts" data-ts="{{ chat.updated | default('') }}"></small>
-            </div>
-            {% if chat.context and chat.context.value and chat.context.value.title %}
-            <p class="mb-1 small fw-semibold text-truncate" style="color:#206bc4;">{{ chat.context.value.title }}</p>
-            {% endif %}
-            <p class="mb-0 text-muted small text-truncate">{{ chat.last_message.content.text if chat.last_message and chat.last_message.content else "—" }}</p>
-            {% if chat.unread_count %}
-            <span class="badge bg-primary rounded-pill">{{ chat.unread_count }}</span>
-            {% endif %}
-          </a>
-          {% endfor %}
+        <div class="card" style="max-height:600px;overflow-y:auto;">
+          <div class="list-group list-group-flush" id="avito-chats-list">
+            {% for chat in avito_chats %}
+            <a href="#" class="list-group-item list-group-item-action avito-chat-item" data-chat-id="{{ chat.id }}" style="padding:.875rem 1rem;">
+              <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                <span style="font-weight:600;font-size:.875rem;">{{ chat.users[0].name if chat.users else 'Чат #' ~ chat.id }}</span>
+                <small style="color:#94a3b8;font-size:.75rem;" class="chat-ts" data-ts="{{ chat.updated | default('') }}"></small>
+              </div>
+              {% if chat.context and chat.context.value and chat.context.value.title %}
+              <p class="mb-1 text-truncate" style="font-size:.8125rem;color:#4361ee;font-weight:500;">{{ chat.context.value.title }}</p>
+              {% endif %}
+              <p class="mb-0 text-truncate" style="font-size:.8125rem;color:#94a3b8;">{{ chat.last_message.content.text if chat.last_message and chat.last_message.content else "—" }}</p>
+              {% if chat.unread_count %}
+              <span class="badge bg-primary rounded-pill" style="position:absolute;top:.75rem;right:.75rem;">{{ chat.unread_count }}</span>
+              {% endif %}
+            </a>
+            {% endfor %}
+          </div>
         </div>
       </div>
       <div class="col-md-7">
         <div class="card" id="avito-chat-detail" style="display:none;">
           <div class="card-header"><strong id="avito-chat-title">Чат</strong></div>
-          <div class="card-body" id="avito-messages-container" style="max-height:400px;overflow-y:auto;"></div>
-          <div class="card-footer">
+          <div class="card-body" id="avito-messages-container" style="max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;"></div>
+          <div class="card-footer" style="border-top:1px solid #f1f5f9;">
             <form id="avito-send-form" class="d-flex gap-2">
-              <input type="text" class="form-control" id="avito-msg-input" placeholder="Написать сообщение..." required>
-              <button type="submit" class="btn btn-primary">Отправить</button>
+              <input type="text" class="form-control" id="avito-msg-input" placeholder="Написать сообщение…" required>
+              <button type="submit" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M10 14l11 -11"/><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"/></svg>
+              </button>
             </form>
           </div>
         </div>
-        <div id="avito-chat-placeholder" class="text-center text-muted py-5">Выберите чат для просмотра</div>
+        <div id="avito-chat-placeholder" class="card">
+            <div class="db-empty-state">
+                <div class="db-empty-state-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12"/></svg>
+                </div>
+                <div class="db-empty-state-title">Выберите чат</div>
+                <div class="db-empty-state-text">Нажмите на чат в списке слева</div>
+            </div>
+        </div>
       </div>
     </div>
     {% else %}
-    <div class="card"><div class="card-body text-center text-muted py-4">Нет чатов Авито</div></div>
+    <div class="card mt-3">
+        <div class="db-empty-state">
+            <div class="db-empty-state-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12"/></svg>
+            </div>
+            <div class="db-empty-state-title">Нет чатов Авито</div>
+            <div class="db-empty-state-text">Сообщения появятся когда покупатели напишут</div>
+        </div>
+    </div>
     {% endif %}
   </div>
 
   <div class="tab-pane" id="tab-cian" role="tabpanel">
-    <div class="card"><div class="card-body text-center text-muted py-4">
-      <p>API сообщений Циан недоступен в текущей версии.</p>
-      <p class="small">Для работы с сообщениями используйте <a href="https://www.cian.ru/cabinet/" target="_blank">личный кабинет Циан</a>.</p>
-    </div></div>
+    <div class="card mt-3">
+        <div class="db-empty-state">
+            <div class="db-empty-state-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"><path d="M3 21l18 0"/><path d="M5 21v-14l8 -4v18"/><path d="M19 21v-10l-6 -4"/></svg>
+            </div>
+            <div class="db-empty-state-title">API сообщений Циан недоступен</div>
+            <div class="db-empty-state-text">Используйте <a href="https://www.cian.ru/cabinet/" target="_blank">личный кабинет Циан</a></div>
+        </div>
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -90,8 +122,8 @@
       currentChatId = item.getAttribute('data-chat-id');
       document.getElementById('avito-chat-placeholder').style.display = 'none';
       document.getElementById('avito-chat-detail').style.display = 'block';
-      var userName = item.querySelector('h6').textContent;
-      var adTitle = item.querySelector('.fw-semibold');
+      var userName = item.querySelector('span[style*="font-weight:600"]').textContent;
+      var adTitle = item.querySelector('p[style*="color:#4361ee"]');
       document.getElementById('avito-chat-title').textContent = userName + (adTitle ? ' — ' + adTitle.textContent : '');
       document.querySelectorAll('.avito-chat-item').forEach(function (el) { el.classList.remove('active'); });
       item.classList.add('active');
@@ -108,14 +140,14 @@
         if (!data.ok) { container.innerHTML = '<div class="text-danger">Ошибка: ' + (data.error || 'unknown') + '</div>'; return; }
         var html = '';
         (data.messages || []).slice().reverse().forEach(function (msg) {
-          var align = msg.direction === 'out' ? 'text-end' : 'text-start';
-          var bg = msg.direction === 'out' ? 'bg-primary text-white' : 'bg-light';
-          html += '<div class="mb-2 ' + align + '"><span class="d-inline-block px-3 py-2 rounded ' + bg + '">' + (msg.content && msg.content.text || '—') + '</span><br><small class="text-muted">' + formatTs(msg.created) + '</small></div>';
+          var align = msg.direction === 'out' ? 'align-self-end' : 'align-self-start';
+          var cls = msg.direction === 'out' ? 'out' : 'in';
+          html += '<div class="' + align + '"><div class="db-chat-bubble ' + cls + '">' + (msg.content && msg.content.text || '—') + '</div><div class="db-chat-time" style="text-align:' + (msg.direction === 'out' ? 'right' : 'left') + ';">' + formatTs(msg.created) + '</div></div>';
         });
-        container.innerHTML = html || '<div class="text-muted text-center py-3">Нет сообщений</div>';
+        container.innerHTML = html || '<div class="text-center py-3" style="color:#94a3b8;">Нет сообщений</div>';
         container.scrollTop = container.scrollHeight;
       })
-      .catch(function (err) { container.innerHTML = '<div class="text-danger">Ошибка загрузки</div>'; });
+      .catch(function () { container.innerHTML = '<div class="text-danger">Ошибка загрузки</div>'; });
   }
 
   var sendForm = document.getElementById('avito-send-form');
@@ -130,8 +162,8 @@
       method: 'POST', headers: csrfHeaders({'Content-Type': 'application/x-www-form-urlencoded'}), body: body.toString(),
     }).then(function (r) { return r.json(); }).then(function (data) {
       if (data.ok) { input.value = ''; loadMessages(currentChatId); }
-      else { alert('Ошибка: ' + (data.error || 'unknown')); }
-    }).catch(function () { alert('Ошибка отправки'); });
+      else { showToast('Ошибка: ' + (data.error || 'unknown'), 'danger'); }
+    }).catch(function () { showToast('Ошибка отправки', 'danger'); });
   });
 })();
 </script>

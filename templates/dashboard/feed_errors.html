@@ -5,65 +5,56 @@
 {% block content %}
 <div class="mb-4">
     <h2 class="db-page-title">Ошибки выгрузки фидов</h2>
+    <p class="db-page-subtitle">Объекты с ошибками при генерации фидов Авито и Циан</p>
 </div>
 
 {% if errors %}
-<div class="card">
-    <div class="table-responsive">
-        <table class="table table-vcenter card-table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Название</th>
-                    <th>Ошибки Авито</th>
-                    <th>Ошибки Циан</th>
-                    <th class="w-1">Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in errors %}
-                <tr>
-                    <td class="text-muted">{{ item.property.id }}</td>
-                    <td>{{ item.property.title or '—' }}</td>
-                    <td>
-                        {% if item.avito_errors %}
-                        <ul class="list-unstyled mb-0">
-                            {% for e in item.avito_errors %}
-                            <li class="text-danger small">{{ e if e is string else e.get("message", e) if e is mapping else e }}</li>
-                            {% endfor %}
-                        </ul>
-                        {% else %}
-                        <span class="text-muted">—</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if item.cian_errors %}
-                        <ul class="list-unstyled mb-0">
-                            {% for e in item.cian_errors %}
-                            <li class="text-danger small">{{ e if e is string else e }}</li>
-                            {% endfor %}
-                        </ul>
-                        {% else %}
-                        <span class="text-muted">—</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="/dashboard/properties/edit/{{ item.property.id }}" class="btn btn-sm btn-outline-primary">Редактировать</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="d-flex flex-column gap-3">
+    {% for item in errors %}
+    <div class="db-error-card">
+        <div class="db-error-card-header">
+            <div>
+                <span class="db-error-card-title">{{ item.property.title or '—' }}</span>
+                <span class="db-error-card-id ms-2">ID: {{ item.property.id }}</span>
+            </div>
+            <a href="/dashboard/properties/edit/{{ item.property.id }}" class="btn btn-sm btn-outline-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" class="me-1"><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"/></svg>
+                Исправить
+            </a>
+        </div>
+        <div class="row g-3">
+            {% if item.avito_errors %}
+            <div class="col-md-6">
+                <div style="font-size:.75rem;font-weight:600;text-transform:uppercase;color:#94a3b8;margin-bottom:.375rem;">Авито</div>
+                <ul class="db-error-list">
+                    {% for e in item.avito_errors %}
+                    <li>{{ e if e is string else e.get("message", e) if e is mapping else e }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            {% if item.cian_errors %}
+            <div class="col-md-6">
+                <div style="font-size:.75rem;font-weight:600;text-transform:uppercase;color:#94a3b8;margin-bottom:.375rem;">Циан</div>
+                <ul class="db-error-list">
+                    {% for e in item.cian_errors %}
+                    <li>{{ e if e is string else e }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
     </div>
+    {% endfor %}
 </div>
 {% else %}
 <div class="card">
-    <div class="card-body text-center py-5">
-        <div class="text-success mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg" width="40" height="40" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M5 12l5 5l10 -10"/></svg>
+    <div class="db-empty-state">
+        <div class="db-empty-state-icon" style="background:rgba(34,197,94,0.1);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" stroke-width="2" stroke="#22c55e" fill="none"><path d="M5 12l5 5l10 -10"/></svg>
         </div>
-        <h3 class="text-success">Ошибок нет</h3>
-        <p class="text-muted">Все активные объекты выгружены без ошибок.</p>
+        <div class="db-empty-state-title" style="color:#22c55e;">Ошибок нет</div>
+        <div class="db-empty-state-text">Все активные объекты выгружены без ошибок</div>
     </div>
 </div>
 {% endif %}
