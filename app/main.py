@@ -273,7 +273,7 @@ class StaticCacheMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         path = request.url.path
         if path.startswith("/static/"):
-            response.headers["Cache-Control"] = "public, max-age=2592000, immutable"
+            response.headers["Cache-Control"] = "public, max-age=3600, must-revalidate"
         elif path in ("/robots.txt", "/sitemap.xml"):
             response.headers["Cache-Control"] = "public, max-age=3600"
         return response
