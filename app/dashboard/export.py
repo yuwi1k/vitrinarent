@@ -14,6 +14,7 @@ from fastapi.responses import Response, JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.database import get_db
 from app.dashboard.common import check_admin, templates
@@ -137,9 +138,7 @@ async def avito_sync_autoload_statuses(db: AsyncSession = Depends(get_db)):
         if not prop:
             not_found += 1
             continue
-        data = getattr(prop, "avito_data", None) or {}
-        if not isinstance(data, dict):
-            data = {}
+        data = dict(getattr(prop, "avito_data", None) or {})
         avito_id = item.get("avito_id")
         if avito_id is not None:
             data["AvitoId"] = str(avito_id)
@@ -150,7 +149,15 @@ async def avito_sync_autoload_statuses(db: AsyncSession = Depends(get_db)):
         avito_status = item.get("avito_status")
         if avito_status:
             data["AvitoStatus"] = avito_status
+        item_errors = item.get("errors") or []
+        item_warnings = item.get("warnings") or []
+        autoload_errors = item_errors + item_warnings
+        if autoload_errors:
+            data["AutoloadErrors"] = autoload_errors
+        elif "AutoloadErrors" in data:
+            del data["AutoloadErrors"]
         prop.avito_data = data
+        flag_modified(prop, "avito_data")
         updated += 1
 
     await db.commit()
@@ -252,9 +259,7 @@ async def cian_sync_offer_statuses(db: AsyncSession = Depends(get_db)):
         if not prop:
             not_found += 1
             continue
-        data = getattr(prop, "cian_data", None) or {}
-        if not isinstance(data, dict):
-            data = {}
+        data = dict(getattr(prop, "cian_data", None) or {})
         cian_id = ann.get("id")
         if cian_id is not None:
             data["CianOfferId"] = str(cian_id)
@@ -262,6 +267,7 @@ async def cian_sync_offer_statuses(db: AsyncSession = Depends(get_db)):
         if status:
             data["CianStatus"] = status
         prop.cian_data = data
+        flag_modified(prop, "cian_data")
         updated += 1
 
     await db.commit()

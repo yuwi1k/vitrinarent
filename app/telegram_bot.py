@@ -51,6 +51,28 @@ class TelegramNotifier:
         text = f"🔴 <b>Ошибка планировщика</b>\nЗадача: {job_name}\n{error}"
         await self.send_message(text)
 
+    async def send_feed_upload_result(
+        self, platform: str, total: int, success: bool, details: str = "",
+    ) -> None:
+        if success:
+            text = f"✅ <b>Автозагрузка {platform}</b>\nОбъектов в фиде: {total}"
+            if details:
+                text += f"\n{details}"
+        else:
+            text = f"❌ <b>Автозагрузка {platform} — ошибка</b>\n{details}"
+        await self.send_message(text)
+
+    async def send_sync_result(
+        self, platform: str, updated: int, total_items: int, errors: int = 0,
+    ) -> None:
+        text = (
+            f"🔄 <b>Синхронизация {platform}</b>\n"
+            f"Обновлено: {updated} из {total_items}"
+        )
+        if errors:
+            text += f"\n⚠️ С ошибками: {errors}"
+        await self.send_message(text)
+
     async def send_stats_report(self, report: dict, scenarios: list) -> None:
         """Универсальный рендер отчёта — формат берётся из scenarios."""
         header = "📊 <b>Отчёт по статистике объектов</b>\n"

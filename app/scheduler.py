@@ -9,6 +9,7 @@ _MSK = timezone(timedelta(hours=3))
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.avito_client import AvitoAutoloadClient
 from app.cian_client import CianApiClient
@@ -61,9 +62,14 @@ class SchedulerService:
             msg = f"Uploaded feed ({len(properties)} props, {len(xml_bytes)} bytes). API: {resp.get('status_code')}"
             logger.info("scheduler: upload_avito_feed OK — %s", msg)
             self._record("upload_avito_feed", "ok", msg, t0)
+            await notifier.send_feed_upload_result(
+                "Avito", len(properties), True,
+                f"API ответ: {resp.get('status_code')}",
+            )
         except Exception as exc:
             logger.exception("scheduler: upload_avito_feed FAILED")
             self._record("upload_avito_feed", "error", str(exc), t0)
+            await notifier.send_feed_upload_result("Avito", 0, False, str(exc))
             await notifier.send_scheduler_error("upload_avito_feed", str(exc))
 
     async def job_sync_avito_statuses(self) -> None:
@@ -91,9 +97,7 @@ class SchedulerService:
                     if not prop:
                         not_found += 1
                         continue
-                    data = getattr(prop, "avito_data", None) or {}
-                    if not isinstance(data, dict):
-                        data = {}
+                    data = dict(getattr(prop, "avito_data", None) or {})
                     avito_id = item.get("avito_id")
                     if avito_id is not None:
                         data["AvitoId"] = str(avito_id)
@@ -112,12 +116,18 @@ class SchedulerService:
                     elif "AutoloadErrors" in data:
                         del data["AutoloadErrors"]
                     prop.avito_data = data
+                    flag_modified(prop, "avito_data")
                     updated += 1
                 await db.commit()
 
+            error_count = sum(
+                1 for i in items
+                if (i.get("errors") or []) + (i.get("warnings") or [])
+            )
             msg = f"items={len(items)} updated={updated} skipped={skipped} not_found={not_found}"
             logger.info("scheduler: sync_avito_statuses OK — %s", msg)
             self._record("sync_avito_statuses", "ok", msg, t0)
+            await notifier.send_sync_result("Avito", updated, len(items), error_count)
         except Exception as exc:
             logger.exception("scheduler: sync_avito_statuses FAILED")
             self._record("sync_avito_statuses", "error", str(exc), t0)
@@ -165,9 +175,7 @@ class SchedulerService:
                     if not prop:
                         not_found += 1
                         continue
-                    data = getattr(prop, "cian_data", None) or {}
-                    if not isinstance(data, dict):
-                        data = {}
+                    data = dict(getattr(prop, "cian_data", None) or {})
                     cian_id = ann.get("id")
                     if cian_id is not None:
                         data["CianOfferId"] = str(cian_id)
@@ -175,12 +183,14 @@ class SchedulerService:
                     if status:
                         data["CianStatus"] = status
                     prop.cian_data = data
+                    flag_modified(prop, "cian_data")
                     updated += 1
                 await db.commit()
 
             msg = f"offers={len(all_announcements)} updated={updated} skipped={skipped} not_found={not_found}"
             logger.info("scheduler: sync_cian_statuses OK — %s", msg)
             self._record("sync_cian_statuses", "ok", msg, t0)
+            await notifier.send_sync_result("Циан", updated, len(all_announcements))
         except Exception as exc:
             logger.exception("scheduler: sync_cian_statuses FAILED")
             self._record("sync_cian_statuses", "error", str(exc), t0)
@@ -238,13 +248,12 @@ class SchedulerService:
                         prop_obj = row.scalar_one_or_none()
                         if not prop_obj:
                             continue
-                        sd = prop_obj.stats_data or {}
-                        if not isinstance(sd, dict):
-                            sd = {}
+                        sd = dict(prop_obj.stats_data or {})
                         sd["avito_views"] = item_stats.get("views", 0)
                         sd["avito_contacts"] = item_stats.get("uniq_contacts", 0)
                         sd["avito_favorites"] = item_stats.get("favorites", 0)
                         prop_obj.stats_data = sd
+                        flag_modified(prop_obj, "stats_data")
                         avito_updated += 1
 
                 cian_client = CianApiClient()
@@ -266,14 +275,13 @@ class SchedulerService:
                             prop_obj = row.scalar_one_or_none()
                             if not prop_obj:
                                 continue
-                            sd = prop_obj.stats_data or {}
-                            if not isinstance(sd, dict):
-                                sd = {}
+                            sd = dict(prop_obj.stats_data or {})
                             ann_stats = ann.get("stats") or {}
                             total_stats = ann_stats.get("total") if isinstance(ann_stats.get("total"), dict) else {}
                             sd["cian_views"] = total_stats.get("views", 0) if total_stats else 0
                             sd["cian_contacts"] = total_stats.get("phoneShows", 0) if total_stats else 0
                             prop_obj.stats_data = sd
+                            flag_modified(prop_obj, "stats_data")
                             cian_updated += 1
                         total_count = result_data.get("totalCount")
                         if total_count is not None and cian_page * 100 >= total_count:
@@ -394,11 +402,10 @@ class SchedulerService:
                         prop = row.scalar_one_or_none()
                         if not prop:
                             continue
-                        cd = prop.cian_data or {}
-                        if not isinstance(cd, dict):
-                            cd = {}
+                        cd = dict(prop.cian_data or {})
                         cd["ImportErrors"] = [str(e) for e in offer_errors]
                         prop.cian_data = cd
+                        flag_modified(prop, "cian_data")
                         cian_error_count += 1
                     await db.commit()
             except Exception:

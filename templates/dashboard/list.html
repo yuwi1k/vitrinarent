@@ -146,16 +146,34 @@
                                 <span class="pill-dot"></span>Циан
                             </button>
                         </div>
+                        {% set avd = parent.avito_data or {} %}
                         {% set cian = parent.cian_data or {} %}
-                        {% if cian.get("CianStatus") == "published" %}
-                        <span class="badge bg-green-lt mt-1" style="font-size:.65rem;">опубликовано</span>
-                        {% elif cian.get("CianStatus") == "inactive" %}
-                        <span class="badge bg-yellow-lt mt-1" style="font-size:.65rem;">снято</span>
-                        {% elif cian.get("CianStatus") == "refusedByModerator" %}
-                        <span class="badge bg-red-lt mt-1" style="font-size:.65rem;">отказ</span>
-                        {% elif cian.get("CianStatus") == "removedByModerator" %}
-                        <span class="badge bg-red-lt mt-1" style="font-size:.65rem;">снято мод.</span>
-                        {% endif %}
+                        <div class="mt-1 d-flex flex-column gap-1" style="font-size:.65rem;">
+                            {% if avd is mapping and avd.get("AvitoId") %}
+                            <span class="badge bg-green-lt" title="Avito ID: {{ avd.get('AvitoId') }}">
+                                Avito: {{ avd.get("AvitoStatus", "—") }}
+                            </span>
+                            {% elif parent.publish_on_avito and parent.is_active %}
+                            <span class="badge bg-secondary-lt">Avito: ожидание</span>
+                            {% endif %}
+                            {% if cian.get("CianOfferId") %}
+                            <span class="badge bg-green-lt" title="Cian ID: {{ cian.get('CianOfferId') }}">
+                                Циан: {{ cian.get("CianStatus", "—") }}
+                            </span>
+                            {% elif parent.publish_on_cian and parent.is_active %}
+                            <span class="badge bg-secondary-lt">Циан: ожидание</span>
+                            {% endif %}
+                            {% if avd is mapping and avd.get("AutoloadErrors") %}
+                            <span class="badge bg-red-lt" title="{{ avd.get('AutoloadErrors')|join(', ') }}">
+                                ⚠ Avito ошибки ({{ avd.get('AutoloadErrors')|length }})
+                            </span>
+                            {% endif %}
+                            {% if cian is mapping and cian.get("ImportErrors") %}
+                            <span class="badge bg-red-lt" title="{{ cian.get('ImportErrors')|join(', ') }}">
+                                ⚠ Циан ошибки ({{ cian.get('ImportErrors')|length }})
+                            </span>
+                            {% endif %}
+                        </div>
                     </td>
                     <td>
                         {% set sd = parent.stats_data or {} %}
