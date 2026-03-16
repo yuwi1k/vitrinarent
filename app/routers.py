@@ -5,6 +5,7 @@ import json
 import logging
 import math
 import os
+import time
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -51,7 +52,7 @@ def _site_ctx(request: Request) -> dict:
         "site_name": site.name,
         "site_title_suffix": site.title_suffix,
         "site_logo": site.logo_text,
-        "site_css": site.css_file,
+        "site_css": f"{site.css_file}?v={int(time.time()) // 3600}",
         "site_contacts": site.contacts,
         "show_contacts": site.show_contacts,
         "nav_items": site.nav_items,

@@ -2664,6 +2664,41 @@ body.map-page {
   .map-canvas { order: 0; }
 }
 
+/* Mobile filter toggle button */
+.mobile-filter-toggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.625rem 1rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--color-separator);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .mobile-filter-toggle:hover { background: var(--color-surface-hover); }
+  .mobile-filter-toggle.active { border-color: var(--color-blue); color: var(--color-blue); }
+  .mobile-filter-toggle svg { flex-shrink: 0; }
+
+  .search-sidebar {
+    display: none !important;
+  }
+  .search-sidebar.mobile-open {
+    display: block !important;
+  }
+}
+
 @media (max-width: 768px) {
   .container { padding: 0 1.25rem; }
 
