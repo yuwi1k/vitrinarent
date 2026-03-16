@@ -183,7 +183,7 @@ def generate_avito_feed_full(properties: List) -> bytes:
             _add("PercentOfTrade", _avito("PercentOfTrade"))
             _add("CeilingHeight", _avito("CeilingHeight") or (str(prop.ceiling_height) if getattr(prop, "ceiling_height", None) is not None else ""))
             etree.SubElement(ad, "Decoration").text = deco
-            _add("PowerGridCapacity", _avito("PowerGridCapacity") or (str(prop.power_kw) if getattr(prop, "power_kw", None) is not None else ""))
+            _add("PowerGridCapacity", _avito("PowerGridCapacity") or (str(int(prop.power_kw)) if getattr(prop, "power_kw", None) is not None else ""))
             _add("PowerGridAdditionally", _avito("PowerGridAdditionally"))
             _add("Heating", _avito("Heating") or (getattr(prop, "heating_type", None) or "").strip())
             _add("ReadinessStatus", _avito("ReadinessStatus"))
@@ -219,7 +219,7 @@ def generate_avito_feed_full(properties: List) -> bytes:
             _add("SquareAdditionally", _avito("SquareAdditionally"))
             _add("CeilingHeight", _avito("CeilingHeight") or (str(prop.ceiling_height) if getattr(prop, "ceiling_height", None) is not None else ""))
             etree.SubElement(ad, "Decoration").text = deco
-            _add("PowerGridCapacity", _avito("PowerGridCapacity") or (str(prop.power_kw) if getattr(prop, "power_kw", None) is not None else ""))
+            _add("PowerGridCapacity", _avito("PowerGridCapacity") or (str(int(prop.power_kw)) if getattr(prop, "power_kw", None) is not None else ""))
             _add("PowerGridAdditionally", _avito("PowerGridAdditionally"))
             _add("NumTax", _avito("NumTax"))
             _add("GuaranteeLetter", _avito("GuaranteeLetter"))
