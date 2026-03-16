@@ -42,17 +42,15 @@ async def dashboard_home(
     rent_count = rent_r.scalar() or 0
     sale_r = await db.execute(select(func.count(Property.id)).where(Property.deal_type == "Продажа"))
     sale_count = sale_r.scalar() or 0
-    avito_feed_r = await db.execute(
-        select(Property.avito_data).where(
-            Property.is_active.is_(True), Property.publish_on_avito.is_(True),
-        )
+    avito_rows_r = await db.execute(
+        select(Property.avito_data).where(Property.is_active.is_(True))
     )
-    avito_feed_rows = avito_feed_r.scalars().all()
+    avito_rows = avito_rows_r.scalars().all()
     avito_published = 0
-    for data in avito_feed_rows:
+    for data in avito_rows:
         if isinstance(data, dict) and data.get("AvitoId"):
             avito_published += 1
-    avito_not_published = max(0, len(avito_feed_rows) - avito_published)
+    avito_not_published = max(0, active_count - avito_published)
 
     no_photo_r = await db.execute(
         select(func.count(Property.id)).where(
@@ -68,17 +66,15 @@ async def dashboard_home(
     )
     no_coords = no_coords_r.scalar() or 0
 
-    cian_feed_r = await db.execute(
-        select(Property.cian_data).where(
-            Property.is_active.is_(True), Property.publish_on_cian.is_(True),
-        )
+    cian_rows_r = await db.execute(
+        select(Property.cian_data).where(Property.is_active.is_(True))
     )
-    cian_feed_rows = cian_feed_r.scalars().all()
+    cian_rows = cian_rows_r.scalars().all()
     cian_published = 0
-    for data in cian_feed_rows:
+    for data in cian_rows:
         if isinstance(data, dict) and data.get("CianOfferId"):
             cian_published += 1
-    cian_not_published = max(0, len(cian_feed_rows) - cian_published)
+    cian_not_published = max(0, active_count - cian_published)
 
     no_address_r = await db.execute(
         select(func.count(Property.id)).where(
