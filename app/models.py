@@ -27,6 +27,9 @@ class Property(Base):
     # Показывать на главной (ровно 3 объекта), порядок: меньше main_page_order — выше в списке
     show_on_main = Column(Boolean, default=False)
     main_page_order = Column(Integer, nullable=True)
+
+    # Порядок в каталоге: меньше sort_order — выше в списке (0 = по умолчанию)
+    sort_order = Column(Integer, default=0, server_default="0", nullable=False, index=True)
     
     # Поля для агентства
     deal_type = Column(String, default="Аренда", index=True) 

@@ -1070,3 +1070,43 @@ async def toggle_property_feed(
     setattr(prop, field, new_val)
     await db.commit()
     return JSONResponse({"id": id, "field": field, "enabled": new_val})
+
+
+@router.post("/properties/reorder", dependencies=[Depends(check_admin)])
+async def reorder_properties(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Изменить sort_order объекта: {id, direction: 'up'|'down'} или {order: [{id, sort_order}, ...]}."""
+    from fastapi.responses import JSONResponse
+
+    body = await request.json()
+
+    if "order" in body:
+        for item in body["order"]:
+            pid = item.get("id")
+            so = item.get("sort_order", 0)
+            if pid is not None:
+                await db.execute(
+                    update(Property).where(Property.id == int(pid)).values(sort_order=int(so))
+                )
+        await db.commit()
+        return JSONResponse({"ok": True})
+
+    prop_id = body.get("id")
+    direction = body.get("direction")
+    if not prop_id or direction not in ("up", "down"):
+        return JSONResponse({"error": "invalid params"}, status_code=400)
+
+    result = await db.execute(select(Property).where(Property.id == int(prop_id)))
+    prop = result.scalar_one_or_none()
+    if not prop:
+        return JSONResponse({"error": "not found"}, status_code=404)
+
+    current = prop.sort_order or 0
+    if direction == "up":
+        prop.sort_order = max(0, current - 10)
+    else:
+        prop.sort_order = current + 10
+    await db.commit()
+    return JSONResponse({"ok": True, "id": prop_id, "sort_order": prop.sort_order})

@@ -149,18 +149,19 @@ async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
 
 
 def _search_order_by(stmt, sort: Optional[str]):
-    """Применяет сортировку к запросу поиска."""
+    """Применяет сортировку к запросу поиска. sort_order всегда первый приоритет."""
+    primary = Property.sort_order.asc()
     if sort == "price_asc":
-        return stmt.order_by(Property.price.asc(), Property.id.desc())
+        return stmt.order_by(primary, Property.price.asc(), Property.id.desc())
     if sort == "price_desc":
-        return stmt.order_by(Property.price.desc(), Property.id.desc())
+        return stmt.order_by(primary, Property.price.desc(), Property.id.desc())
     if sort == "area_asc":
-        return stmt.order_by(Property.area.asc(), Property.id.desc())
+        return stmt.order_by(primary, Property.area.asc(), Property.id.desc())
     if sort == "area_desc":
-        return stmt.order_by(Property.area.desc(), Property.id.desc())
+        return stmt.order_by(primary, Property.area.desc(), Property.id.desc())
     if sort == "date_asc":
-        return stmt.order_by(Property.id.asc())
-    return stmt.order_by(Property.id.desc())
+        return stmt.order_by(primary, Property.id.asc())
+    return stmt.order_by(primary, Property.id.desc())
 
 
 @router.get("/search")

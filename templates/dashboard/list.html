@@ -91,6 +91,7 @@
                     <th>Статус</th>
                     <th>Просмотры</th>
                     <th>Контакты</th>
+                    <th style="width:90px;">Порядок</th>
                     <th style="width:110px;">Действия</th>
                 </tr>
             </thead>
@@ -187,6 +188,17 @@
                         {{ (sd.get("avito_contacts", 0) or 0) + (sd.get("cian_contacts", 0) or 0) }}
                         {% else %}—{% endif %}
                     </td>
+                    <td class="sort-order-cell">
+                        <div class="d-flex align-items-center gap-1">
+                            <button type="button" class="db-sort-btn" onclick="reorderProp({{ parent.id }}, 'up')" title="Вверх">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" fill="none"><path d="M12 5l0 14"/><path d="M18 11l-6-6"/><path d="M6 11l6-6"/></svg>
+                            </button>
+                            <input type="number" class="sort-order-input" value="{{ parent.sort_order or 0 }}" data-id="{{ parent.id }}" onchange="setSortOrder(this)" title="Позиция в каталоге (меньше = выше)">
+                            <button type="button" class="db-sort-btn" onclick="reorderProp({{ parent.id }}, 'down')" title="Вниз">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" fill="none"><path d="M12 5l0 14"/><path d="M18 13l-6 6"/><path d="M6 13l6 6"/></svg>
+                            </button>
+                        </div>
+                    </td>
                     <td>
                         <div class="db-table-actions">
                             <a href="/dashboard/properties/edit/{{ parent.id }}" class="db-action-btn" title="Редактировать">
@@ -203,7 +215,7 @@
                 </tr>
                 {% if children|length > 0 %}
                 <tr class="child-rows-wrapper">
-                    <td colspan="10" style="padding:0;border:0;">
+                    <td colspan="11" style="padding:0;border:0;">
                         <div class="collapse" id="children-{{ parent.id }}">
                             <table class="db-table" style="background:#fafbfc;">
                                 <tbody>
@@ -366,6 +378,37 @@ async function toggleFeedFlag(btn) {
         showToast('Ошибка: ' + e.message, 'danger');
     }
     btn.disabled = false;
+}
+async function reorderProp(id, direction) {
+    try {
+        var resp = await fetch('/dashboard/properties/reorder', {
+            method: 'POST',
+            headers: csrfHeaders({'Content-Type': 'application/json'}),
+            body: JSON.stringify({id: id, direction: direction})
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        var data = await resp.json();
+        var inp = document.querySelector('.sort-order-input[data-id="' + id + '"]');
+        if (inp) inp.value = data.sort_order;
+        showToast('Порядок обновлён', 'success');
+    } catch (e) {
+        showToast('Ошибка: ' + e.message, 'danger');
+    }
+}
+async function setSortOrder(inp) {
+    var id = inp.getAttribute('data-id');
+    var val = parseInt(inp.value) || 0;
+    try {
+        var resp = await fetch('/dashboard/properties/reorder', {
+            method: 'POST',
+            headers: csrfHeaders({'Content-Type': 'application/json'}),
+            body: JSON.stringify({order: [{id: parseInt(id), sort_order: val}]})
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        showToast('Порядок сохранён', 'success');
+    } catch (e) {
+        showToast('Ошибка: ' + e.message, 'danger');
+    }
 }
 function submitDelete(propertyId, childrenCount) {
     childrenCount = childrenCount || 0;
