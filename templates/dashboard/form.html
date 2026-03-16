@@ -101,7 +101,12 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Описание</label>
-                        <textarea name="description" class="form-control" rows="4">{{ model.description or '' }}</textarea>
+                        <div class="btn-toolbar mb-1 gap-1" id="desc-toolbar">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-tag="b" title="Жирный (Ctrl+B)"><b>Ж</b></button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-tag="i" title="Курсив (Ctrl+I)"><i>К</i></button>
+                        </div>
+                        <textarea name="description" id="field-description" class="form-control" rows="6">{{ model.description or '' }}</textarea>
+                        <small class="text-muted">Поддерживается: &lt;b&gt;жирный&lt;/b&gt;, &lt;i&gt;курсив&lt;/i&gt;. Переносы строк сохраняются. Форматирование работает на сайте, Avito и ЦИАН.</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label required">Адрес</label>
@@ -1452,6 +1457,52 @@
     }
 
     initSortable();
+})();
+
+// --- Description toolbar (bold/italic) ---
+(function() {
+    var textarea = document.getElementById('field-description');
+    var toolbar = document.getElementById('desc-toolbar');
+    if (!textarea || !toolbar) return;
+
+    toolbar.addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-tag]');
+        if (!btn) return;
+        e.preventDefault();
+        var tag = btn.dataset.tag;
+        var start = textarea.selectionStart;
+        var end = textarea.selectionEnd;
+        var text = textarea.value;
+        var selected = text.substring(start, end);
+        var open = '<' + tag + '>';
+        var close = '</' + tag + '>';
+
+        if (selected && selected.startsWith(open) && selected.endsWith(close)) {
+            var unwrapped = selected.slice(open.length, -close.length);
+            textarea.value = text.substring(0, start) + unwrapped + text.substring(end);
+            textarea.selectionStart = start;
+            textarea.selectionEnd = start + unwrapped.length;
+        } else {
+            var wrapped = open + selected + close;
+            textarea.value = text.substring(0, start) + wrapped + text.substring(end);
+            textarea.selectionStart = start + open.length;
+            textarea.selectionEnd = end + open.length;
+        }
+        textarea.focus();
+    });
+
+    textarea.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+            var tag = null;
+            if (e.key === 'b' || e.key === 'B') tag = 'b';
+            if (e.key === 'i' || e.key === 'I') tag = 'i';
+            if (tag) {
+                e.preventDefault();
+                var btn = toolbar.querySelector('[data-tag="' + tag + '"]');
+                if (btn) btn.click();
+            }
+        }
+    });
 })();
 </script>
 {% endblock %}

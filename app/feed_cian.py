@@ -24,6 +24,14 @@ def _cdata_safe(s: str) -> str:
     return (s or "").replace("]]>", "]]]]><![CDATA[>")
 
 
+def _prepare_description(text: str) -> str:
+    """Convert newlines to <br> for feed descriptions (CIAN supports HTML in CDATA)."""
+    s = (text or "").strip()
+    if not s:
+        return "Описание отсутствует"
+    return s.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "<br>\n")
+
+
 def _get_cian_contacts() -> tuple[str, str]:
     """(manager_name, contact_phone) для фида Циан."""
     try:
@@ -196,11 +204,12 @@ def generate_cian_feed(properties: list) -> bytes:
 
         etree.SubElement(obj, "ExternalId").text = str(prop.id)
 
-        desc = (getattr(prop, "description", None) or "Описание отсутствует").strip()
-        if len(desc) < 15:
-            desc = desc + " " + "Коммерческое помещение." * 2
+        desc_raw = (getattr(prop, "description", None) or "Описание отсутствует").strip()
+        if len(desc_raw) < 15:
+            desc_raw = desc_raw + " " + "Коммерческое помещение." * 2
+        desc = _prepare_description(desc_raw[:3000])
         desc_el = etree.fromstring(
-            f"<Description><![CDATA[{_cdata_safe(desc[:3000])}]]></Description>"
+            f"<Description><![CDATA[{_cdata_safe(desc)}]]></Description>"
         )
         obj.append(desc_el)
 

@@ -42,6 +42,14 @@ def _cdata_safe(s: str) -> str:
     return (s or "").replace("]]>", "]]]]><![CDATA[>")
 
 
+def _prepare_description(text: str) -> str:
+    """Convert newlines to <br> for feed descriptions (Avito supports HTML in CDATA)."""
+    s = (text or "").strip()
+    if not s:
+        return "Описание отсутствует"
+    return s.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "<br>\n")
+
+
 def generate_avito_feed(properties: list) -> bytes:
     """Упрощённый XML-фид для публичного /avito.xml (базовые поля)."""
     root = etree.Element("Ads", formatVersion="3", target="Avito.ru")
@@ -56,7 +64,7 @@ def generate_avito_feed(properties: list) -> bytes:
         etree.SubElement(ad, "OperationType").text = operation_type
         etree.SubElement(ad, "Price").text = str(prop.price or 0)
         etree.SubElement(ad, "Title").text = ((prop.title or "Объект").strip() or "Объект")[:50]
-        etree.SubElement(ad, "Description").text = (prop.description or "Описание отсутствует").strip()
+        etree.SubElement(ad, "Description").text = _prepare_description(prop.description)
         etree.SubElement(ad, "Address").text = (prop.address or "Москва").strip() or "Москва"
         etree.SubElement(ad, "Square").text = str(prop.area or 0)
         etree.SubElement(ad, "ContactPhone").text = contact_phone
@@ -118,7 +126,7 @@ def generate_avito_feed_full(properties: List) -> bytes:
         _add("AvitoId", _avito("AvitoId"))
         etree.SubElement(ad, "ManagerName").text = manager_name
         etree.SubElement(ad, "ContactPhone").text = contact_phone
-        _desc_text = (getattr(prop, "description", None) or "Описание отсутствует").strip()
+        _desc_text = _prepare_description(getattr(prop, "description", None))
         desc_elem = etree.fromstring(
             "<Description><![CDATA[" + _cdata_safe(_desc_text) + "]]></Description>"
         )
