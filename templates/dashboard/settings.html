@@ -5,7 +5,7 @@
 {% block content %}
 <div class="mb-4">
     <h2 class="db-page-title">Настройки</h2>
-    <p class="db-page-subtitle">Контактные данные для сайта и фидов. Если не заданы — используются значения из .env.</p>
+    <p class="db-page-subtitle">Контактные данные для фидов. Если не заданы — используются значения из .env.</p>
 </div>
 
 {% if success %}
@@ -17,30 +17,6 @@
 
 <form method="post" action="/dashboard/settings">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token(request) }}">
-
-    <div class="db-settings-card">
-        <div class="db-settings-card-header">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none"><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"/></svg>
-            <h3>Контакты на сайте</h3>
-        </div>
-        <div class="db-settings-card-body">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Телефон</label>
-                    <input type="text" name="contact_phone" class="form-control" value="{{ (settings.contact_phone or '') }}" placeholder="+7 (999) 000-00-00">
-                    <small class="form-text" style="color:#94a3b8;">Отображается в footer, на карточках и FAQ</small>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="contact_email" class="form-control" value="{{ (settings.contact_email or '') }}" placeholder="info@vitrina.rent">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Telegram (без @)</label>
-                    <input type="text" name="contact_telegram" class="form-control" value="{{ (settings.contact_telegram or '') }}" placeholder="vitrina_rent">
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div class="db-settings-card">
         <div class="db-settings-card-header">
