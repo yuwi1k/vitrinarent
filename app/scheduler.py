@@ -231,11 +231,20 @@ class SchedulerService:
                         item_ids = [aid for _, aid in batch]
                         try:
                             resp = await avito_client.get_items_stats(user_id, item_ids)
-                            items_list = resp.get("items") or (resp.get("result", {}).get("items") or [])
+                            items_list = resp.get("result", {}).get("items") or resp.get("items") or []
                             for item in items_list:
                                 avito_item_id = item.get("item_id") or item.get("itemId")
-                                if avito_item_id:
-                                    stats_map[int(avito_item_id)] = item
+                                if not avito_item_id:
+                                    continue
+                                periods = item.get("stats") or []
+                                total_views = sum(p.get("uniqViews", 0) for p in periods)
+                                total_contacts = sum(p.get("uniqContacts", 0) for p in periods)
+                                total_favorites = sum(p.get("uniqFavorites", 0) for p in periods)
+                                stats_map[int(avito_item_id)] = {
+                                    "views": total_views,
+                                    "contacts": total_contacts,
+                                    "favorites": total_favorites,
+                                }
                         except Exception:
                             logger.warning("scheduler: collect_statistics — Avito stats batch failed", exc_info=True)
                         if i + batch_size < len(avito_ids):
@@ -251,7 +260,7 @@ class SchedulerService:
                             continue
                         sd = dict(prop_obj.stats_data or {})
                         sd["avito_views"] = item_stats.get("views", 0)
-                        sd["avito_contacts"] = item_stats.get("uniq_contacts", 0)
+                        sd["avito_contacts"] = item_stats.get("contacts", 0)
                         sd["avito_favorites"] = item_stats.get("favorites", 0)
                         prop_obj.stats_data = sd
                         flag_modified(prop_obj, "stats_data")

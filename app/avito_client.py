@@ -131,14 +131,28 @@ class AvitoAutoloadClient:
         data = resp.json()
         return str(data.get("id", ""))
 
-    async def get_items_stats(self, user_id: str, item_ids: list[int]) -> Dict[str, Any]:
-        """POST /core/v1/accounts/{user_id}/stats/items — statistics for items."""
+    async def get_items_stats(
+        self, user_id: str, item_ids: list[int],
+        date_from: str = "", date_to: str = "",
+    ) -> Dict[str, Any]:
+        """POST /stats/v1/accounts/{user_id}/items — statistics for items."""
+        from datetime import datetime, timedelta
+        if not date_to:
+            date_to = datetime.now().strftime("%Y-%m-%d")
+        if not date_from:
+            date_from = (datetime.now() - timedelta(days=270)).strftime("%Y-%m-%d")
         token = await self._get_access_token(scope="stats:read")
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-        body = {"itemIds": item_ids}
+        body = {
+            "dateFrom": date_from,
+            "dateTo": date_to,
+            "fields": ["uniqViews", "uniqContacts", "uniqFavorites"],
+            "itemIds": item_ids,
+            "periodGrouping": "month",
+        }
         resp = await self._request_with_retry(
             "post",
-            f"{self.base_url}/core/v1/accounts/{user_id}/stats/items",
+            f"{self.base_url}/stats/v1/accounts/{user_id}/items",
             headers=headers, json=body, timeout=30.0,
         )
         resp.raise_for_status()
