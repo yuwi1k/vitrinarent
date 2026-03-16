@@ -10,6 +10,7 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 import bleach
+from markupsafe import Markup
 from fastapi import APIRouter, Request, Depends, HTTPException, Query, Response
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -70,15 +71,18 @@ ALLOWED_TAGS = ["p", "br", "strong", "b", "em", "i", "u", "ul", "ol", "li", "a",
 ALLOWED_ATTRS = {"a": ["href", "title", "target", "rel"]}
 
 
-def _sanitize_html(value: Optional[str]) -> str:
+def _sanitize_html(value: Optional[str]) -> Markup:
     if not value or not value.strip():
-        return ""
-    return bleach.clean(
-        value,
+        return Markup("")
+    text = value.replace("\r\n", "\n").replace("\r", "\n")
+    text = text.replace("\n", "<br>\n")
+    cleaned = bleach.clean(
+        text,
         tags=ALLOWED_TAGS,
         attributes=ALLOWED_ATTRS,
         strip=True,
     )
+    return Markup(cleaned)
 
 
 templates.env.filters["sanitize_html"] = _sanitize_html
