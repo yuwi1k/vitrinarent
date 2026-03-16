@@ -13,10 +13,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
-# Статика и шаблоны ожидаются в /app (static/, templates/, app/, migrations/)
+RUN adduser --disabled-password --gecos "" --home /app appuser
+
+COPY --chown=appuser:appuser . .
 
 EXPOSE 8000
 
-# Миграции нужно выполнить отдельно (или в entrypoint). Запуск приложения:
+USER appuser
+
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

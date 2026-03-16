@@ -122,7 +122,7 @@
   <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU{% if yandex_maps_api_key %}&apikey={{ yandex_maps_api_key }}{% endif %}&load=package.full" async></script>
   <script>
   (function() {
-    var props = {{ map_properties_json | safe }};
+    var props = {{ map_properties | default([]) | tojson }};
     if (!Array.isArray(props)) props = [];
 
     var activeCategory = '';

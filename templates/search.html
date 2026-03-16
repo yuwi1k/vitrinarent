@@ -436,7 +436,7 @@
     if (!mapBtn || !mapContainer) return;
 
     var mapLoaded = false;
-    var mapProperties = {{ (map_properties_json | default('[]')) | safe }};
+    var mapProperties = {{ map_properties | default([]) | tojson }};
     if (!Array.isArray(mapProperties)) mapProperties = [];
 
     function esc(s) {

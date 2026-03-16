@@ -167,10 +167,15 @@ async def lifespan(application: FastAPI):
     stop_scheduler()
 
 
+_docs_enabled = os.getenv("ENVIRONMENT", "").lower() != "production"
+
 app = FastAPI(
     title="Vitrina Real Estate",
     description="Внутренний каталог коммерческой недвижимости",
     lifespan=lifespan,
+    docs_url="/docs" if _docs_enabled else None,
+    redoc_url="/redoc" if _docs_enabled else None,
+    openapi_url="/openapi.json" if _docs_enabled else None,
 )
 
 
@@ -239,8 +244,9 @@ async def health_readiness():
         async with AsyncSessionLocal() as session:
             await session.execute(text("SELECT 1"))
     except Exception as e:
+        logger.warning("Health readiness check failed: %s", e)
         return JSONResponse(
-            {"status": "error", "detail": str(e)},
+            {"status": "error"},
             status_code=503,
         )
     return {"status": "ok"}

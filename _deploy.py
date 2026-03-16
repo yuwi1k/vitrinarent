@@ -18,16 +18,18 @@ else:
     exit(1)
 
 cmds = [
-    # Check order from the actual search page
-    "cd /root/vitrinarent && curl -s http://localhost:8000/search -H 'Host: aodiapazon.ru' | grep -oP 'building-group__title.*?</h3>' | head -10",
-    # Check DB order
-    "cd /root/vitrinarent && docker compose exec -T -e PGPASSWORD=postgres db psql -U postgres -d vitrina_db -c \"SELECT id, sort_order, parent_id, substring(title for 40) as title FROM properties ORDER BY sort_order, id DESC;\"",
-    # Check logs for errors
-    "cd /root/vitrinarent && docker compose logs app --tail 5 2>&1 | grep -i error || echo 'no errors'",
+    # Reset password again
+    "cd /root/vitrinarent && docker compose exec -T db psql -U postgres -c \"ALTER USER postgres WITH PASSWORD 'postgres';\"",
+    # Restart app
+    "cd /root/vitrinarent && docker compose restart app",
+    "sleep 5",
+    "cd /root/vitrinarent && curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/",
+    # Check actual page order
+    "cd /root/vitrinarent && curl -s http://localhost:8000/search -H 'Host: aodiapazon.ru' | grep -oP 'building-group__title.*?</h3>'",
 ]
 for cmd in cmds:
     print(f"\n>>> {cmd}")
-    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=30)
+    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=60)
     out = stdout.read().decode("utf-8", errors="replace")
     print(out)
     err = stderr.read().decode("utf-8", errors="replace")
@@ -35,4 +37,4 @@ for cmd in cmds:
         print("STDERR:", err[:300])
 
 ssh.close()
-print("Done!")
+print("\nDone!")
