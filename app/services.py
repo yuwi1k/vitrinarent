@@ -53,18 +53,15 @@ def group_properties_by_building(
             else:
                 standalones.append(prop)
 
-    groups: List[Dict[str, Any]] = []
-    seen_building_ids: set = set()
+    root_props = [p for p in properties if p.parent_id is None]
 
-    for prop in properties:
-        if prop.parent_id is not None:
-            bid = prop.parent_id
-            if bid in seen_building_ids:
-                continue
-            seen_building_ids.add(bid)
-            data = building_map.get(bid)
-            if not data:
-                continue
+    orphan_building_ids = set(building_map.keys()) - {p.id for p in root_props}
+
+    groups: List[Dict[str, Any]] = []
+
+    for prop in root_props:
+        if prop.id in building_map:
+            data = building_map[prop.id]
             building = data["building"]
             matched = data["units"]
             all_active = [c for c in (building.children or []) if c.is_active] if building else []
@@ -76,26 +73,25 @@ def group_properties_by_building(
                 "total_units": len(all_active),
             })
         else:
-            if prop.id in building_map:
-                if prop.id in seen_building_ids:
-                    continue
-                seen_building_ids.add(prop.id)
-                data = building_map[prop.id]
-                building = data["building"]
-                matched = data["units"]
-                all_active = [c for c in (building.children or []) if c.is_active] if building else []
-                units = matched if (has_active_filters and matched) else all_active
-                groups.append({
-                    "type": "building",
-                    "building": building,
-                    "units": units,
-                    "total_units": len(all_active),
-                })
-            else:
-                groups.append({
-                    "type": "standalone",
-                    "property": prop,
-                })
+            groups.append({
+                "type": "standalone",
+                "property": prop,
+            })
+
+    for bid in orphan_building_ids:
+        data = building_map[bid]
+        building = data["building"]
+        if not building:
+            continue
+        matched = data["units"]
+        all_active = [c for c in (building.children or []) if c.is_active] if building else []
+        units = matched if (has_active_filters and matched) else all_active
+        groups.append({
+            "type": "building",
+            "building": building,
+            "units": units,
+            "total_units": len(all_active),
+        })
 
     return groups
 
