@@ -55,7 +55,7 @@ def generate_avito_feed(properties: list) -> bytes:
         operation_type = "Сдам" if (getattr(prop, "deal_type", None) or "").strip() == "Аренда" else "Продам"
         etree.SubElement(ad, "OperationType").text = operation_type
         etree.SubElement(ad, "Price").text = str(prop.price or 0)
-        etree.SubElement(ad, "Title").text = (prop.title or "Объект").strip() or "Объект"
+        etree.SubElement(ad, "Title").text = ((prop.title or "Объект").strip() or "Объект")[:50]
         etree.SubElement(ad, "Description").text = (prop.description or "Описание отсутствует").strip()
         etree.SubElement(ad, "Address").text = (prop.address or "Москва").strip() or "Москва"
         etree.SubElement(ad, "Square").text = str(prop.area or 0)
@@ -145,7 +145,7 @@ def generate_avito_feed_full(properties: List) -> bytes:
             etree.SubElement(ad, "Latitude").text = str(prop.latitude)
         _add("ContactMethod", _avito("ContactMethod"))
         etree.SubElement(ad, "Category").text = "Коммерческая недвижимость"
-        etree.SubElement(ad, "Title").text = (getattr(prop, "title", None) or "Объект недвижимости").strip() or "Объект недвижимости"
+        etree.SubElement(ad, "Title").text = ((getattr(prop, "title", None) or "Объект недвижимости").strip() or "Объект недвижимости")[:50]
         etree.SubElement(ad, "Price").text = str(int(prop.price) if prop.price is not None else 0)
         _add("InternetCalls", _avito("InternetCalls"))
         _add("CallsDevices", _avito("CallsDevices"))

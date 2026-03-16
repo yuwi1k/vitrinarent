@@ -166,5 +166,36 @@ window.CIAN_CATEGORIES = {
         form.querySelector('select[name="deal_type"]').addEventListener('change', toggleAvitoByDealType);
         toggleAvitoByDealType();
     }
+
+})();
+
+(function() {
+    var titleInput = document.getElementById('field-title');
+    var titleCounter = document.getElementById('title-counter');
+    var titleHint = document.getElementById('title-hint');
+    if (!titleInput || !titleCounter) return;
+
+    var AVITO_MAX = 50;
+    var CIAN_MAX = 33;
+    var CIAN_MIN = 8;
+    function updateTitleCounter() {
+        var len = titleInput.value.length;
+        titleCounter.textContent = len + ' / ' + AVITO_MAX;
+        titleInput.classList.remove('is-invalid');
+        titleCounter.className = 'text-muted';
+        if (titleHint) titleHint.className = 'text-muted';
+        if (len > AVITO_MAX) {
+            titleCounter.className = 'text-danger fw-semibold';
+            titleInput.classList.add('is-invalid');
+        } else if (len > CIAN_MAX) {
+            titleCounter.className = 'text-warning';
+            if (titleHint) titleHint.className = 'text-warning';
+        } else if (len > 0 && len < CIAN_MIN) {
+            titleCounter.className = 'text-warning';
+            if (titleHint) titleHint.className = 'text-warning';
+        }
+    }
+    titleInput.addEventListener('input', updateTitleCounter);
+    updateTitleCounter();
 })();
 

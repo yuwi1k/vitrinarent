@@ -348,6 +348,8 @@ async def create_property(
         except (TypeError, ValueError):
             parent_id_val = None
 
+    title = (title or "").strip()[:50]
+
     slug_val_input = (slug or "").strip() or slugify(title or "object", allow_unicode=False) or "object"
     slug_val = await _ensure_unique_slug(db, slug_val_input)
 
@@ -674,6 +676,8 @@ async def update_property(
             parent_id_val = int(parent_id)
         except (TypeError, ValueError):
             parent_id_val = None
+
+    title = (title or "").strip()[:50]
 
     result = await db.execute(select(Property).where(Property.id == id))
     prop = result.scalar_one_or_none()
