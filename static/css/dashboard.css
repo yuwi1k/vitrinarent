@@ -345,32 +345,13 @@ body.db-body {
 }
 
 /* ═══════════════════ SORT ORDER ═══════════════════ */
-.db-sort-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #64748b;
-  cursor: pointer;
-  transition: all .15s ease;
-  padding: 0;
-}
-.db-sort-btn:hover {
-  background: #f1f5f9;
-  color: var(--db-accent);
-  border-color: var(--db-accent);
-}
 .sort-order-input {
-  width: 48px;
+  width: 52px;
   text-align: center;
-  padding: 0.2rem 0.25rem;
+  padding: 0.3rem 0.25rem;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #334155;
   background: #f8fafc;
@@ -385,6 +366,7 @@ body.db-body {
   outline: none;
   border-color: var(--db-accent);
   background: #fff;
+  box-shadow: 0 0 0 2px rgba(59,130,246,.15);
 }
 
 /* ═══════════════════ EXPAND BUTTON ═══════════════════ */

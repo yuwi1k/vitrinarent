@@ -1,25 +1,39 @@
-import paramiko
+import paramiko, time
 
 HOST = "109.120.152.56"
 PASSWORD = "MLDBVqwH1De1ZoTo"
 
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect(HOST, username="root", password=PASSWORD)
+for attempt in range(5):
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(HOST, username="root", password=PASSWORD, timeout=15, banner_timeout=15)
+        break
+    except Exception as e:
+        print(f"Attempt {attempt+1} failed: {e}")
+        time.sleep(5)
+else:
+    print("All SSH attempts failed")
+    exit(1)
 
 cmds = [
-    "cd /root/vitrinarent && git pull origin main",
-    "cd /root/vitrinarent && docker compose down app && docker compose up -d app",
+    # Reset postgres password
+    "cd /root/vitrinarent && docker compose exec -T db psql -U postgres -c \"ALTER USER postgres WITH PASSWORD 'postgres';\"",
+    # Drop suspicious role
+    "cd /root/vitrinarent && docker compose exec -T db psql -U postgres -c \"DROP ROLE IF EXISTS priv_esc;\"",
+    # Restart app
+    "cd /root/vitrinarent && docker compose restart app",
     "sleep 5",
     "cd /root/vitrinarent && curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/",
 ]
 for cmd in cmds:
     print(f"\n>>> {cmd}")
-    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=120)
-    print(stdout.read().decode())
-    err = stderr.read().decode()
+    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=60)
+    out = stdout.read().decode("utf-8", errors="replace")
+    print(out)
+    err = stderr.read().decode("utf-8", errors="replace")
     if err.strip():
-        print(err)
+        print("STDERR:", err[:500])
 
 ssh.close()
-print("\nDone!")
+print("Done!")

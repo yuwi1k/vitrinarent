@@ -189,15 +189,7 @@
                         {% else %}—{% endif %}
                     </td>
                     <td class="sort-order-cell">
-                        <div class="d-flex align-items-center gap-1">
-                            <button type="button" class="db-sort-btn" onclick="reorderProp({{ parent.id }}, 'up')" title="Вверх">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" fill="none"><path d="M12 5l0 14"/><path d="M18 11l-6-6"/><path d="M6 11l6-6"/></svg>
-                            </button>
-                            <input type="number" class="sort-order-input" value="{{ parent.sort_order or 0 }}" data-id="{{ parent.id }}" onchange="setSortOrder(this)" title="Позиция в каталоге (меньше = выше)">
-                            <button type="button" class="db-sort-btn" onclick="reorderProp({{ parent.id }}, 'down')" title="Вниз">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" fill="none"><path d="M12 5l0 14"/><path d="M18 13l-6 6"/><path d="M6 13l6 6"/></svg>
-                            </button>
-                        </div>
+                        <input type="number" class="sort-order-input" value="{{ parent.sort_order or 0 }}" data-id="{{ parent.id }}" onchange="setSortOrder(this)" title="Позиция в каталоге (1 = первый)">
                     </td>
                     <td>
                         <div class="db-table-actions">
@@ -379,22 +371,6 @@ async function toggleFeedFlag(btn) {
     }
     btn.disabled = false;
 }
-async function reorderProp(id, direction) {
-    try {
-        var resp = await fetch('/dashboard/properties/reorder', {
-            method: 'POST',
-            headers: csrfHeaders({'Content-Type': 'application/json'}),
-            body: JSON.stringify({id: id, direction: direction})
-        });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        var data = await resp.json();
-        var inp = document.querySelector('.sort-order-input[data-id="' + id + '"]');
-        if (inp) inp.value = data.sort_order;
-        showToast('Порядок обновлён', 'success');
-    } catch (e) {
-        showToast('Ошибка: ' + e.message, 'danger');
-    }
-}
 async function setSortOrder(inp) {
     var id = inp.getAttribute('data-id');
     var val = parseInt(inp.value) || 0;
@@ -402,10 +378,10 @@ async function setSortOrder(inp) {
         var resp = await fetch('/dashboard/properties/reorder', {
             method: 'POST',
             headers: csrfHeaders({'Content-Type': 'application/json'}),
-            body: JSON.stringify({order: [{id: parseInt(id), sort_order: val}]})
+            body: JSON.stringify({id: parseInt(id), sort_order: val})
         });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        showToast('Порядок сохранён', 'success');
+        showToast('Позиция сохранена: ' + val, 'success');
     } catch (e) {
         showToast('Ошибка: ' + e.message, 'danger');
     }
