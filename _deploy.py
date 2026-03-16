@@ -1,4 +1,5 @@
-import paramiko, time
+import paramiko, time, sys, io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 HOST = "109.120.152.56"
 PASSWORD = "MLDBVqwH1De1ZoTo"
@@ -17,23 +18,13 @@ else:
     exit(1)
 
 cmds = [
-    # Reset postgres password
-    "cd /root/vitrinarent && docker compose exec -T db psql -U postgres -c \"ALTER USER postgres WITH PASSWORD 'postgres';\"",
-    # Drop suspicious role
-    "cd /root/vitrinarent && docker compose exec -T db psql -U postgres -c \"DROP ROLE IF EXISTS priv_esc;\"",
-    # Restart app
-    "cd /root/vitrinarent && docker compose restart app",
-    "sleep 5",
-    "cd /root/vitrinarent && curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/",
+    "cd /root/vitrinarent && docker compose exec -T -e PGPASSWORD=postgres db psql -U postgres -d vitrina_db -c \"SELECT id, sort_order, substring(title for 45) as title FROM properties WHERE parent_id IS NULL ORDER BY sort_order, id DESC;\"",
 ]
 for cmd in cmds:
     print(f"\n>>> {cmd}")
-    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=60)
+    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=30)
     out = stdout.read().decode("utf-8", errors="replace")
     print(out)
-    err = stderr.read().decode("utf-8", errors="replace")
-    if err.strip():
-        print("STDERR:", err[:500])
 
 ssh.close()
 print("Done!")
