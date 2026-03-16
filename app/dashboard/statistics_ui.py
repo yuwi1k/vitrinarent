@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.dashboard.common import check_admin, templates
 from app.database import get_db
 from app.models import Property
+from app.scheduler import get_scheduler_status
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -79,9 +80,21 @@ async def statistics_page(request: Request, db: AsyncSession = Depends(get_db)):
         if totals["total_views"] > 0 else 0.0
     )
 
+    sched = get_scheduler_status()
+    collect_result = sched.get("results", {}).get("collect_statistics", {})
+    last_collected = collect_result.get("last_run", "")
+    if last_collected:
+        try:
+            from datetime import datetime
+            dt = datetime.fromisoformat(last_collected)
+            last_collected = dt.strftime("%d.%m.%Y %H:%M")
+        except Exception:
+            pass
+
     return templates.TemplateResponse("dashboard/statistics.html", {
         "request": request,
         "rows": rows,
         "totals": totals,
         "count": len(rows),
+        "last_collected": last_collected,
     })

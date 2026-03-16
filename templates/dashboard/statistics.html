@@ -3,9 +3,15 @@
 {% block title %}Статистика{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <h2 class="db-page-title">Статистика объявлений</h2>
-    <p class="db-page-subtitle">Данные собираются автоматически (планировщик «Сбор статистики»). Активных объектов: {{ count }}</p>
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+    <div>
+        <h2 class="db-page-title">Статистика объявлений</h2>
+        <p class="db-page-subtitle">Обновляется каждый час. Активных объектов: {{ count }}{% if last_collected %} · Обновлено: {{ last_collected }}{% endif %}</p>
+    </div>
+    <button type="button" class="btn btn-sm btn-outline-primary" id="btn-refresh-stats" onclick="refreshStats()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" class="me-1"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>
+        Обновить сейчас
+    </button>
 </div>
 
 <div class="row row-deck row-cards mb-4">
@@ -193,6 +199,27 @@
 
 {% block tail %}
 <script>
+async function refreshStats() {
+    var btn = document.getElementById('btn-refresh-stats');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Обновление…';
+    try {
+        var resp = await fetch('/dashboard/scheduler/run/collect_statistics', {method: 'POST', headers: csrfHeaders()});
+        var data = await resp.json();
+        if (data.ok) {
+            showToast('Сбор статистики запущен. Страница обновится через 15 сек.', 'success');
+            setTimeout(function() { location.reload(); }, 15000);
+        } else {
+            showToast('Ошибка: ' + (data.error || 'unknown'), 'danger');
+            btn.disabled = false;
+            btn.innerHTML = 'Обновить сейчас';
+        }
+    } catch(e) {
+        showToast('Ошибка: ' + e.message, 'danger');
+        btn.disabled = false;
+        btn.innerHTML = 'Обновить сейчас';
+    }
+}
 (function() {
     var table = document.getElementById('stats-table');
     if (!table) return;

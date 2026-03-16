@@ -297,6 +297,22 @@ class SchedulerService:
 
                 await db.commit()
 
+            msg = f"avito_updated={avito_updated} cian_updated={cian_updated}"
+            logger.info("scheduler: collect_statistics OK — %s", msg)
+            self._record("collect_statistics", "ok", msg, t0)
+        except Exception as exc:
+            logger.exception("scheduler: collect_statistics FAILED")
+            self._record("collect_statistics", "error", str(exc), t0)
+            await notifier.send_scheduler_error("collect_statistics", str(exc))
+
+    async def job_daily_digest(self) -> None:
+        self._mark_running("daily_digest")
+        t0 = time.monotonic()
+        try:
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(Property).where(Property.is_active.is_(True)))
+                props = result.scalars().all()
+
             total_views = sum(
                 ((p.stats_data or {}).get("avito_views", 0) + (p.stats_data or {}).get("cian_views", 0))
                 for p in props if isinstance(p.stats_data, dict)
@@ -367,13 +383,13 @@ class SchedulerService:
             if any(report[k] for k in report):
                 await notifier.send_stats_report(report, scenarios)
 
-            msg = f"avito_updated={avito_updated} cian_updated={cian_updated} views={total_views} contacts={total_contacts}"
-            logger.info("scheduler: collect_statistics OK — %s", msg)
-            self._record("collect_statistics", "ok", msg, t0)
+            msg = f"views={total_views} contacts={total_contacts}"
+            logger.info("scheduler: daily_digest OK — %s", msg)
+            self._record("daily_digest", "ok", msg, t0)
         except Exception as exc:
-            logger.exception("scheduler: collect_statistics FAILED")
-            self._record("collect_statistics", "error", str(exc), t0)
-            await notifier.send_scheduler_error("collect_statistics", str(exc))
+            logger.exception("scheduler: daily_digest FAILED")
+            self._record("daily_digest", "error", str(exc), t0)
+            await notifier.send_scheduler_error("daily_digest", str(exc))
 
     async def job_check_errors_and_notify(self) -> None:
         self._mark_running("check_errors_and_notify")
@@ -473,12 +489,17 @@ def start_scheduler() -> AsyncIOScheduler:
     )
     _scheduler.add_job(
         scheduler_service.job_collect_statistics,
-        "cron", hour=3, minute=0, id="collect_statistics",
+        "interval", hours=1, id="collect_statistics",
         name="Collect statistics",
     )
     _scheduler.add_job(
+        scheduler_service.job_daily_digest,
+        "cron", hour=9, minute=0, id="daily_digest",
+        name="Daily digest",
+    )
+    _scheduler.add_job(
         scheduler_service.job_check_errors_and_notify,
-        "cron", hour=3, minute=30, id="check_errors_and_notify",
+        "interval", hours=3, start_date=offset_30m, id="check_errors_and_notify",
         name="Check errors and notify",
     )
 
