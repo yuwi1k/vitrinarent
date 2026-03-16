@@ -30,6 +30,7 @@ services:
       - ./static:/app/static
       - ./templates:/app/templates
       - ./app:/app/app
+      - ./data:/app/data
       - ./google-service-account.json:/app/google-service-account.json:ro
 
   backup:
