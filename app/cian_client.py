@@ -106,6 +106,12 @@ class CianApiClient:
             "get", f"{self.base_url}/v1/get-last-order-info",
             headers=self._headers(), timeout=30.0,
         )
+        if r_info.status_code == 400:
+            body = r_info.json()
+            msg = (body.get("result") or {}).get("message", "")
+            if "не найден" in msg.lower() or "заказ" in msg.lower():
+                logger.info("CIAN: no active orders — %s", msg)
+                return {"result": {"offers": []}}
         r_info.raise_for_status()
         info_data = r_info.json()
         order_id = (info_data.get("result") or {}).get("orderId")
@@ -116,6 +122,12 @@ class CianApiClient:
             "get", f"{self.base_url}/v1/get-order",
             headers=self._headers(), params={"orderId": order_id}, timeout=30.0,
         )
+        if r.status_code == 400:
+            body = r.json()
+            msg = (body.get("result") or {}).get("message", "")
+            if "не найден" in msg.lower() or "заказ" in msg.lower():
+                logger.info("CIAN: order not found — %s", msg)
+                return {"result": {"offers": []}}
         r.raise_for_status()
         return r.json()
 
