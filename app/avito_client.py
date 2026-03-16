@@ -156,6 +156,23 @@ class AvitoAutoloadClient:
         resp.raise_for_status()
         return resp.json()
 
+    async def update_item_price(self, item_id: int, price: int) -> Dict[str, Any]:
+        """POST /core/v1/items/{item_id}/update_price — обновить цену объявления на Авито."""
+        token = await self._get_access_token()
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        url = f"{self.base_url}/core/v1/items/{item_id}/update_price"
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(url, json={"price": price}, headers=headers)
+        if resp.status_code >= 400:
+            detail = resp.text[:500]
+            try:
+                detail = str(resp.json())
+            except Exception:
+                pass
+            logger.warning("Avito update_price failed for item %s: HTTP %s — %s", item_id, resp.status_code, detail)
+            raise RuntimeError(f"Avito update_price HTTP {resp.status_code}: {detail}")
+        return resp.json()
+
     async def get_autoload_item_info(self, user_id: str, ad_id: int) -> Dict[str, Any]:
         """GET /autoload/v1/accounts/{user_id}/items/{ad_id}/ — item autoload details and errors."""
         token = await self._get_access_token(scope="autoload:reports")

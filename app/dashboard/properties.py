@@ -760,6 +760,8 @@ async def update_property(
         except (json.JSONDecodeError, TypeError):
             cian_data_val = None
 
+    old_price = prop.price
+
     prop.title = title or ""
     prop.slug = slug_val
     prop.description = description or None
@@ -881,6 +883,20 @@ async def update_property(
         await notify_url_changed(prop.slug or str(prop.id))
     except Exception as e:
         logger.warning("Indexing notification failed: %s", e)
+
+    if price and price != old_price and prop.publish_on_avito:
+        avito_data = prop.avito_data or {}
+        avito_id = avito_data.get("AvitoId") if isinstance(avito_data, dict) else None
+        if avito_id:
+            try:
+                from app.avito_client import AvitoAutoloadClient
+                avito_client = AvitoAutoloadClient()
+                await avito_client.update_item_price(int(avito_id), price)
+                add_flash(request, f"Объект сохранён. Цена обновлена на Авито ({old_price} → {price} ₽).", "success")
+            except Exception as exc:
+                logger.warning("Avito price update failed for item %s: %s", avito_id, exc)
+                add_flash(request, f"Объект сохранён, но не удалось обновить цену на Авито: {exc}", "warning")
+            return RedirectResponse(url="/dashboard/properties", status_code=303)
 
     add_flash(request, "Объект сохранён.", "success")
     return RedirectResponse(url="/dashboard/properties", status_code=303)
