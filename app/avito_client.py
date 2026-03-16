@@ -140,7 +140,7 @@ class AvitoAutoloadClient:
         if not date_to:
             date_to = datetime.now().strftime("%Y-%m-%d")
         if not date_from:
-            date_from = (datetime.now() - timedelta(days=270)).strftime("%Y-%m-%d")
+            date_from = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
         token = await self._get_access_token(scope="stats:read")
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         body = {
@@ -150,11 +150,9 @@ class AvitoAutoloadClient:
             "itemIds": item_ids,
             "periodGrouping": "month",
         }
-        resp = await self._request_with_retry(
-            "post",
-            f"{self.base_url}/stats/v1/accounts/{user_id}/items",
-            headers=headers, json=body, timeout=30.0,
-        )
+        url = f"{self.base_url}/stats/v1/accounts/{user_id}/items"
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(url, json=body, headers=headers)
         resp.raise_for_status()
         return resp.json()
 
