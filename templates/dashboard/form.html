@@ -185,10 +185,14 @@
                         <select name="avito_object_type" class="form-select">
                             <option value="">— по категории —</option>
                             <option value="Офисное помещение" {% if (model.avito_object_type or '') == 'Офисное помещение' %}selected{% endif %}>Офисное помещение</option>
+                            <option value="Помещение свободного назначения" {% if (model.avito_object_type or '') == 'Помещение свободного назначения' %}selected{% endif %}>Помещение свободного назначения</option>
                             <option value="Торговое помещение" {% if (model.avito_object_type or '') == 'Торговое помещение' %}selected{% endif %}>Торговое помещение</option>
                             <option value="Складское помещение" {% if (model.avito_object_type or '') == 'Складское помещение' %}selected{% endif %}>Складское помещение</option>
+                            <option value="Производственное помещение" {% if (model.avito_object_type or '') == 'Производственное помещение' %}selected{% endif %}>Производственное помещение</option>
+                            <option value="Помещение общественного питания" {% if (model.avito_object_type or '') == 'Помещение общественного питания' %}selected{% endif %}>Помещение общественного питания</option>
+                            <option value="Гостиница" {% if (model.avito_object_type or '') == 'Гостиница' %}selected{% endif %}>Гостиница</option>
+                            <option value="Автосервис" {% if (model.avito_object_type or '') == 'Автосервис' %}selected{% endif %}>Автосервис</option>
                             <option value="Здание" {% if (model.avito_object_type or '') == 'Здание' %}selected{% endif %}>Здание</option>
-                            <option value="Помещение свободного назначения" {% if (model.avito_object_type or '') == 'Помещение свободного назначения' %}selected{% endif %}>Помещение свободного назначения</option>
                         </select>
                         <small class="text-muted">Если не выбрано, в фиде Авито подставляется тип по категории.</small>
                     </div>
