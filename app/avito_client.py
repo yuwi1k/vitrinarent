@@ -132,14 +132,14 @@ class AvitoAutoloadClient:
         return str(data.get("id", ""))
 
     async def get_items_stats(self, user_id: str, item_ids: list[int]) -> Dict[str, Any]:
-        """GET /core/v1/accounts/{user_id}/items/stats/ — statistics for items."""
+        """POST /core/v1/accounts/{user_id}/stats/items — statistics for items."""
         token = await self._get_access_token(scope="stats:read")
-        headers = {"Authorization": f"Bearer {token}"}
-        params = {"itemIds": ",".join(str(i) for i in item_ids)}
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        body = {"itemIds": item_ids}
         resp = await self._request_with_retry(
-            "get",
-            f"{self.base_url}/core/v1/accounts/{user_id}/items/stats/",
-            headers=headers, params=params, timeout=30.0,
+            "post",
+            f"{self.base_url}/core/v1/accounts/{user_id}/stats/items",
+            headers=headers, json=body, timeout=30.0,
         )
         resp.raise_for_status()
         return resp.json()

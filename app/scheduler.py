@@ -231,8 +231,9 @@ class SchedulerService:
                         item_ids = [aid for _, aid in batch]
                         try:
                             resp = await avito_client.get_items_stats(user_id, item_ids)
-                            for item in (resp.get("result", {}).get("items") or []):
-                                avito_item_id = item.get("item_id")
+                            items_list = resp.get("items") or (resp.get("result", {}).get("items") or [])
+                            for item in items_list:
+                                avito_item_id = item.get("item_id") or item.get("itemId")
                                 if avito_item_id:
                                     stats_map[int(avito_item_id)] = item
                         except Exception:
