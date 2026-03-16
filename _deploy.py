@@ -18,18 +18,24 @@ else:
     exit(1)
 
 cmds = [
-    # Reset password again
-    "cd /root/vitrinarent && docker compose exec -T db psql -U postgres -c \"ALTER USER postgres WITH PASSWORD 'postgres';\"",
-    # Restart app
-    "cd /root/vitrinarent && docker compose restart app",
-    "sleep 5",
-    "cd /root/vitrinarent && curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/",
-    # Check actual page order
-    "cd /root/vitrinarent && curl -s http://localhost:8000/search -H 'Host: aodiapazon.ru' | grep -oP 'building-group__title.*?</h3>'",
+    # Check security headers
+    "curl -sI https://aodiapazon.ru/ 2>/dev/null | grep -iE 'strict-transport|x-frame|x-content-type|referrer-policy|permissions-policy'",
+    # Check /docs disabled
+    "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/docs",
+    # Check /openapi.json disabled
+    "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/openapi.json",
+    # Check health endpoint doesn't leak details
+    "cd /root/vitrinarent && docker compose exec -T app python -c 'import requests; print(requests.get(\"http://localhost:8000/health/readiness\").json())' 2>&1 || curl -s http://localhost:8000/health/readiness",
+    # Check ENVIRONMENT
+    "cd /root/vitrinarent && grep ENVIRONMENT .env",
+    # Check DB port not exposed
+    "cd /root/vitrinarent && docker compose ps --format '{{.Ports}}' db 2>/dev/null || docker compose ps db",
+    # Check container user
+    "cd /root/vitrinarent && docker compose exec -T app whoami",
 ]
 for cmd in cmds:
     print(f"\n>>> {cmd}")
-    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=60)
+    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=30)
     out = stdout.read().decode("utf-8", errors="replace")
     print(out)
     err = stderr.read().decode("utf-8", errors="replace")
@@ -37,4 +43,4 @@ for cmd in cmds:
         print("STDERR:", err[:300])
 
 ssh.close()
-print("\nDone!")
+print("Done!")

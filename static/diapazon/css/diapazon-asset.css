@@ -2779,9 +2779,9 @@ body.map-page {
   .footer-tagline { white-space: normal; text-align: center; }
   .footer-nav { justify-content: center; flex-wrap: wrap; gap: 0.75rem; }
 
-  .lightbox__nav { width: 40px; height: 40px; }
-  .lightbox__nav--prev { left: 0.625rem; }
-  .lightbox__nav--next { right: 0.625rem; }
+  .lightbox__nav { width: 32px; height: 32px; opacity: 0.5; }
+  .lightbox__nav--prev { left: 0.25rem; }
+  .lightbox__nav--next { right: 0.25rem; }
 
   .prop-cta__actions { flex-direction: column; }
 
