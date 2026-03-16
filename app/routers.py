@@ -21,7 +21,7 @@ from sqlalchemy.orm import joinedload, selectinload
 from app.config import PAGE_SIZE_PUBLIC
 from app.database import get_db
 from app.models import Property
-from app.feed import generate_avito_feed
+from app.feed import generate_avito_feed_full
 from app.feed_cian import generate_cian_feed
 from app.feed_jcat import generate_jcat_feed
 from app.services import build_search_query, group_properties_by_building, BUILDING_PREVIEW_COUNT
@@ -521,7 +521,7 @@ async def get_avito_feed_route(db: AsyncSession = Depends(get_db)):
     )
     result = await db.execute(stmt)
     properties = result.scalars().all()
-    xml_content = generate_avito_feed(properties)
+    xml_content = generate_avito_feed_full(properties)
     return Response(content=xml_content, media_type="application/xml")
 
 
