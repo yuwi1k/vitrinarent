@@ -98,13 +98,23 @@ class CianApiClient:
         return r.json()
 
     async def get_order_report(self) -> Dict[str, Any]:
-        """GET /v1/get-order — feed import report with errors."""
+        """GET /v1/get-last-order-info → GET /v1/get-order?orderId=... — feed import report."""
         err = self._validate_config()
         if err:
             raise RuntimeError(err)
+        r_info = await self._request_with_retry(
+            "get", f"{self.base_url}/v1/get-last-order-info",
+            headers=self._headers(), timeout=30.0,
+        )
+        r_info.raise_for_status()
+        info_data = r_info.json()
+        order_id = (info_data.get("result") or {}).get("orderId")
+        if not order_id:
+            logger.warning("CIAN get-last-order-info returned no orderId: %s", info_data)
+            return {"result": {"offers": []}}
         r = await self._request_with_retry(
             "get", f"{self.base_url}/v1/get-order",
-            headers=self._headers(), timeout=30.0,
+            headers=self._headers(), params={"orderId": order_id}, timeout=30.0,
         )
         r.raise_for_status()
         return r.json()
