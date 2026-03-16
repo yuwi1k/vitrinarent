@@ -208,10 +208,8 @@ def generate_cian_feed(properties: list) -> bytes:
         if len(desc_raw) < 15:
             desc_raw = desc_raw + " " + "Коммерческое помещение." * 2
         desc = _prepare_description(desc_raw[:3000])
-        desc_el = etree.fromstring(
-            f"<Description><![CDATA[{_cdata_safe(desc)}]]></Description>"
-        )
-        obj.append(desc_el)
+        desc_el = etree.SubElement(obj, "Description")
+        desc_el.text = etree.CDATA(desc)
 
         etree.SubElement(obj, "Address").text = (
             (getattr(prop, "address", None) or "Москва").strip() or "Москва"

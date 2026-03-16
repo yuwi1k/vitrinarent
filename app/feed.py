@@ -64,7 +64,8 @@ def generate_avito_feed(properties: list) -> bytes:
         etree.SubElement(ad, "OperationType").text = operation_type
         etree.SubElement(ad, "Price").text = str(prop.price or 0)
         etree.SubElement(ad, "Title").text = ((prop.title or "Объект").strip() or "Объект")[:50]
-        etree.SubElement(ad, "Description").text = _prepare_description(prop.description)
+        desc_el = etree.SubElement(ad, "Description")
+        desc_el.text = etree.CDATA(_prepare_description(prop.description))
         etree.SubElement(ad, "Address").text = (prop.address or "Москва").strip() or "Москва"
         etree.SubElement(ad, "Square").text = str(prop.area or 0)
         etree.SubElement(ad, "ContactPhone").text = contact_phone
@@ -127,10 +128,8 @@ def generate_avito_feed_full(properties: List) -> bytes:
         etree.SubElement(ad, "ManagerName").text = manager_name
         etree.SubElement(ad, "ContactPhone").text = contact_phone
         _desc_text = _prepare_description(getattr(prop, "description", None))
-        desc_elem = etree.fromstring(
-            "<Description><![CDATA[" + _cdata_safe(_desc_text) + "]]></Description>"
-        )
-        ad.append(desc_elem)
+        desc_elem = etree.SubElement(ad, "Description")
+        desc_elem.text = etree.CDATA(_desc_text)
         image_urls = []
         if getattr(prop, "main_image", None) and (prop.main_image or "").strip():
             url = (prop.main_image if prop.main_image.startswith("/") else "/" + prop.main_image).strip()
