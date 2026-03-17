@@ -417,6 +417,13 @@ async def create_property(
         except (json.JSONDecodeError, TypeError):
             avito_data_val = None
 
+    _AVITO_AUTO_KEYS = ("AvitoId", "AvitoStatus", "AutoloadErrors", "AutoloadSectionSlug")
+    if avito_data_val:
+        for _k in _AVITO_AUTO_KEYS:
+            avito_data_val.pop(_k, None)
+        if not avito_data_val:
+            avito_data_val = None
+
     cian_data_val: Optional[dict[str, Any]] = None
     if cian_data_json and (cian_data_json or "").strip():
         try:
@@ -424,6 +431,13 @@ async def create_property(
             if not isinstance(cian_data_val, dict):
                 cian_data_val = None
         except (json.JSONDecodeError, TypeError):
+            cian_data_val = None
+
+    _CIAN_AUTO_KEYS = ("CianOfferId", "CianStatus")
+    if cian_data_val:
+        for _k in _CIAN_AUTO_KEYS:
+            cian_data_val.pop(_k, None)
+        if not cian_data_val:
             cian_data_val = None
 
     prop = Property(

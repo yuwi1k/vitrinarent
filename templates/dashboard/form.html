@@ -505,7 +505,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Номер объявления на Авито (AvitoId)</label>
-                                <input type="text" class="form-control avito-field" name="avito_AvitoId" data-key="AvitoId" value="{{ avito.get('AvitoId', '') }}" placeholder="742817810">
+                                <input type="text" class="form-control avito-field" name="avito_AvitoId" data-key="AvitoId" value="{{ '' if is_copy else avito.get('AvitoId', '') }}" placeholder="742817810">
                                 <small class="text-muted">Заполнять только для уже размещённого объявления — чтобы Авито сопоставил его с вашим Id. Для нового оставьте пустым.</small>
                             </div>
                             <div class="mb-3">

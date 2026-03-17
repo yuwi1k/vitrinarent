@@ -18,29 +18,21 @@ else:
     exit(1)
 
 cmds = [
-    # Check security headers
-    "curl -sI https://aodiapazon.ru/ 2>/dev/null | grep -iE 'strict-transport|x-frame|x-content-type|referrer-policy|permissions-policy'",
-    # Check /docs disabled
-    "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/docs",
-    # Check /openapi.json disabled
-    "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/openapi.json",
-    # Check health endpoint doesn't leak details
-    "cd /root/vitrinarent && docker compose exec -T app python -c 'import requests; print(requests.get(\"http://localhost:8000/health/readiness\").json())' 2>&1 || curl -s http://localhost:8000/health/readiness",
-    # Check ENVIRONMENT
-    "cd /root/vitrinarent && grep ENVIRONMENT .env",
-    # Check DB port not exposed
-    "cd /root/vitrinarent && docker compose ps --format '{{.Ports}}' db 2>/dev/null || docker compose ps db",
-    # Check container user
-    "cd /root/vitrinarent && docker compose exec -T app whoami",
+    "cd /root/vitrinarent && git pull origin main",
+    "cd /root/vitrinarent && grep -n 'lightbox__nav' static/diapazon/css/diapazon-asset.css | tail -10",
+    "cd /root/vitrinarent && docker compose restart app",
+    "sleep 5",
+    "cd /root/vitrinarent && curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/",
+    "cd /root/vitrinarent && docker compose exec -T app grep -n 'lightbox__nav' /app/static/diapazon/css/diapazon-asset.css | tail -10",
 ]
 for cmd in cmds:
     print(f"\n>>> {cmd}")
-    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=30)
+    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=60)
     out = stdout.read().decode("utf-8", errors="replace")
     print(out)
     err = stderr.read().decode("utf-8", errors="replace")
     if err.strip():
-        print("STDERR:", err[:300])
+        print("STDERR:", err[:500])
 
 ssh.close()
-print("Done!")
+print("\nDone!")
