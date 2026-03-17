@@ -365,14 +365,13 @@
         </div>
 
         <div class="tab-pane" id="pane-media" role="tabpanel">
-            {% if model and model.documents %}
+            {% if is_copy and model and model.documents %}
             <div class="card mb-4">
-                <div class="card-header">{% if is_copy %}Документы исходного объекта <span class="text-muted small ms-2">(будут скопированы при сохранении)</span>{% else %}Прикреплённые документы{% endif %}</div>
+                <div class="card-header">Документы исходного объекта <span class="text-muted small ms-2">(будут скопированы при сохранении)</span></div>
                 <div class="list-group list-group-flush">
                     {% for doc in model.documents %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center" id="doc-row-{{ doc.id }}">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
                         <a href="{{ doc.document_url if doc.document_url and doc.document_url.startswith('/') else '/' + (doc.document_url or '') }}" target="_blank" rel="noopener" class="me-2 text-truncate">{{ doc.title or 'Документ' }}</a>
-                        {% if not is_copy %}<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteDocument({{ doc.id }})">Удалить</button>{% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -382,8 +381,12 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label">Главное фото (превью)</label>
-                        {% if is_copy and model and model.main_image %}
+                        {% if model and model.main_image %}
+                        {% if is_copy %}
                         <p class="text-muted small mb-2">Главное фото исходного объекта будет скопировано, если не выбрать новый файл.</p>
+                        {% else %}
+                        <p class="text-muted small mb-2">Текущее главное фото (загрузите новое, чтобы заменить):</p>
+                        {% endif %}
                         <img src="{{ model.main_image if (model.main_image or '')[:1] == '/' else '/' + (model.main_image or '') }}" alt="" class="img-thumbnail mb-2" style="max-height:120px;object-fit:cover;">
                         {% endif %}
                         <input type="file" name="main_image" id="input-main-image" class="form-control" accept="image/*">
