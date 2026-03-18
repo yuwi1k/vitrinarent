@@ -248,6 +248,15 @@
       clusterer.add(allPlacemarks);
       ymap.geoObjects.add(clusterer);
 
+      if (allPlacemarks.length) {
+        var bounds = clusterer.getBounds();
+        if (bounds) {
+          ymap.setBounds(bounds, { checkZoomRange: true, zoomMargin: 40 }).then(function() {
+            if (ymap.getZoom() > 16) ymap.setZoom(16);
+          });
+        }
+      }
+
       clusterer.events.add('click', function(e) {
         var target = e.get('target');
         if (!target) return;
