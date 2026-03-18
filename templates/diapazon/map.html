@@ -120,7 +120,7 @@
   </main>
 
   <script src="/static/js/vitrina-asset.js" defer></script>
-  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU{% if yandex_maps_api_key %}&apikey={{ yandex_maps_api_key }}{% endif %}&load=package.full" async></script>
+  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU{% if yandex_maps_api_key %}&apikey={{ yandex_maps_api_key }}{% endif %}" defer></script>
   <script>
   (function() {
     var props = {{ map_properties | default([]) | tojson }};
@@ -199,15 +199,25 @@
       applyFilters();
     }
 
+    var MOSCOW = [55.751244, 37.618423];
+    var ZOOM = 10;
+
     function init() {
       sidebarList = document.getElementById('map-sidebar-list');
 
-      ymap = new ymaps.Map('map', {
-        center: [55.751, 37.618],
-        zoom: 11,
+      var mapEl = document.getElementById('map');
+      if (!mapEl.offsetWidth || !mapEl.offsetHeight) {
+        setTimeout(init, 150);
+        return;
+      }
+
+      ymap = new ymaps.Map(mapEl, {
+        center: MOSCOW,
+        zoom: ZOOM,
         controls: ['zoomControl']
       }, {
-        suppressMapOpenBlock: true
+        suppressMapOpenBlock: true,
+        autoFitToViewport: 'always'
       });
 
       ymap.behaviors.disable('scrollZoom');
@@ -248,6 +258,18 @@
       clusterer.add(allPlacemarks);
       ymap.geoObjects.add(clusterer);
 
+      ymap.container.fitToViewport();
+      ymap.setCenter(MOSCOW, ZOOM);
+
+      setTimeout(function() {
+        ymap.container.fitToViewport();
+        ymap.setCenter(MOSCOW, ZOOM);
+      }, 500);
+
+      setTimeout(function() {
+        ymap.container.fitToViewport();
+        ymap.setCenter(MOSCOW, ZOOM);
+      }, 1500);
 
       clusterer.events.add('click', function(e) {
         var target = e.get('target');
