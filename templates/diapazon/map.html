@@ -248,13 +248,20 @@
       clusterer.add(allPlacemarks);
       ymap.geoObjects.add(clusterer);
 
-      if (allPlacemarks.length) {
-        var bounds = clusterer.getBounds();
-        if (bounds) {
-          ymap.setBounds(bounds, { checkZoomRange: true, zoomMargin: 40 }).then(function() {
-            if (ymap.getZoom() > 16) ymap.setZoom(16);
-          });
-        }
+      if (props.length) {
+        var lats = props.map(function(p) { return p.latitude; });
+        var lngs = props.map(function(p) { return p.longitude; });
+        var minLat = Math.min.apply(null, lats);
+        var maxLat = Math.max.apply(null, lats);
+        var minLng = Math.min.apply(null, lngs);
+        var maxLng = Math.max.apply(null, lngs);
+        ymap.setBounds([[minLat, minLng], [maxLat, maxLng]], {
+          checkZoomRange: true,
+          zoomMargin: 50
+        }).then(function() {
+          if (ymap.getZoom() > 16) ymap.setZoom(16);
+          if (ymap.getZoom() < 5) ymap.setZoom(10);
+        });
       }
 
       clusterer.events.add('click', function(e) {
