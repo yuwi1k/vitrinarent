@@ -6,8 +6,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from aiogram.exceptions import TelegramAPIError
-
 logger = logging.getLogger(__name__)
 
 _CONFIG_PATH = Path(__file__).parent.parent / "data" / "telegram_broadcast.json"
@@ -82,11 +80,8 @@ class BroadcastService:
             else:
                 await bot.send_message(chat_id=channel, text=text)
             return True
-        except TelegramAPIError as exc:
-            logger.warning("broadcast: Telegram error for channel %s: %s", channel, exc)
-            return False
-        except Exception:
-            logger.exception("broadcast: unexpected error for channel %s", channel)
+        except Exception as exc:
+            logger.warning("broadcast: error for channel %s: %s", channel, exc)
             return False
 
     async def send_next(self) -> Dict[str, Any]:

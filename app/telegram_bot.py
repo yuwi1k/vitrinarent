@@ -1,8 +1,6 @@
 import logging
 import os
 
-from aiogram.exceptions import TelegramAPIError
-
 logger = logging.getLogger(__name__)
 
 
@@ -31,10 +29,8 @@ class TelegramNotifier:
             from app.telegram_bot_instance import get_bot
             bot = get_bot()
             await bot.send_message(chat_id=target, text=text)
-        except TelegramAPIError as exc:
-            logger.warning("Telegram API error: %s", exc)
-        except Exception:
-            logger.exception("Failed to send Telegram message")
+        except Exception as exc:
+            logger.warning("Failed to send Telegram message: %s", exc)
 
     async def send_moderation_alert(self, property_title: str, platform: str, error: str) -> None:
         text = f"⚠️ <b>Модерация {platform}</b>\n{property_title}\n{error}"

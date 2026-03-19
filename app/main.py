@@ -160,11 +160,12 @@ from app.dashboard import router as dashboard_router
 from app.scheduler import start_scheduler, stop_scheduler
 
 _polling_task = None
+_bot_routers_registered = False
 
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
-    global _polling_task
+    global _polling_task, _bot_routers_registered
     import asyncio
     start_scheduler()
 
@@ -175,11 +176,10 @@ async def lifespan(application: FastAPI):
         from app.telegram_relay_handlers import router as relay_router
 
         dp = get_dp()
-        # Регистрируем роутеры (admin должен быть первым — у него фильтр на _is_admin)
-        if admin_router not in dp.routers:
+        if not _bot_routers_registered:
             dp.include_router(admin_router)
-        if relay_router not in dp.routers:
             dp.include_router(relay_router)
+            _bot_routers_registered = True
 
         bot = get_bot()
         _polling_task = asyncio.create_task(
