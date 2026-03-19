@@ -149,17 +149,38 @@
                         </div>
                         {% set avd = parent.avito_data or {} %}
                         {% set cian = parent.cian_data or {} %}
+                        {% set avito_status_map = {
+                            'active': ('Загружено ↗', 'bg-azure-lt'),
+                            'old': ('В архиве', 'bg-yellow-lt'),
+                            'removed': ('Удалено', 'bg-red-lt'),
+                            'blocked': ('Заблокировано', 'bg-red-lt'),
+                            'rejected': ('Отклонено', 'bg-red-lt'),
+                            'processing': ('Обработка', 'bg-secondary-lt'),
+                        } %}
+                        {% set cian_status_map = {
+                            'Published': ('Опубликовано', 'bg-green-lt'),
+                            'Deactivated': ('Снято', 'bg-yellow-lt'),
+                            'Blocked': ('Заблокировано', 'bg-red-lt'),
+                            'Deleted': ('Удалено', 'bg-red-lt'),
+                            'Draft': ('Черновик', 'bg-azure-lt'),
+                        } %}
                         <div class="mt-1 d-flex flex-column gap-1" style="font-size:.65rem;">
                             {% if avd is mapping and avd.get("AvitoId") %}
-                            <span class="badge bg-green-lt" title="Avito ID: {{ avd.get('AvitoId') }}">
-                                Avito: {{ avd.get("AvitoStatus", "—") }}
-                            </span>
+                            {% set av_st = avd.get("AvitoStatus", "") %}
+                            {% set av_info = avito_status_map.get(av_st, (av_st or '—', 'bg-secondary-lt')) %}
+                            <a href="https://www.avito.ru/{{ avd.get('AvitoId') }}" target="_blank"
+                               class="badge {{ av_info[1] }}" style="text-decoration:none;"
+                               title="Avito ID: {{ avd.get('AvitoId') }}. Нажмите чтобы открыть на Авито">
+                                Avito: {{ av_info[0] }}
+                            </a>
                             {% elif parent.publish_on_avito and parent.is_active %}
                             <span class="badge bg-secondary-lt">Avito: ожидание</span>
                             {% endif %}
-                            {% if cian.get("CianOfferId") %}
-                            <span class="badge bg-green-lt" title="Cian ID: {{ cian.get('CianOfferId') }}">
-                                Циан: {{ cian.get("CianStatus", "—") }}
+                            {% if cian is mapping and cian.get("CianOfferId") %}
+                            {% set ci_st = cian.get("CianStatus", "") %}
+                            {% set ci_info = cian_status_map.get(ci_st, (ci_st or '—', 'bg-secondary-lt')) %}
+                            <span class="badge {{ ci_info[1] }}" title="Циан ID: {{ cian.get('CianOfferId') }}">
+                                Циан: {{ ci_info[0] }}
                             </span>
                             {% elif parent.publish_on_cian and parent.is_active %}
                             <span class="badge bg-secondary-lt">Циан: ожидание</span>
@@ -249,16 +270,50 @@
                                                     <span class="pill-dot"></span>Циан
                                                 </button>
                                             </div>
+                                            {% set avd_ch = ch.avito_data or {} %}
                                             {% set cian_ch = ch.cian_data or {} %}
-                                            {% if cian_ch.get("CianStatus") == "published" %}
-                                            <span class="badge bg-green-lt mt-1" style="font-size:.65rem;">опубликовано</span>
-                                            {% elif cian_ch.get("CianStatus") == "inactive" %}
-                                            <span class="badge bg-yellow-lt mt-1" style="font-size:.65rem;">снято</span>
-                                            {% elif cian_ch.get("CianStatus") == "refusedByModerator" %}
-                                            <span class="badge bg-red-lt mt-1" style="font-size:.65rem;">отказ</span>
-                                            {% elif cian_ch.get("CianStatus") == "removedByModerator" %}
-                                            <span class="badge bg-red-lt mt-1" style="font-size:.65rem;">снято мод.</span>
-                                            {% endif %}
+                                            {% set av_status_map_ch = {
+                                                'active': ('Загружено ↗', 'bg-azure-lt'),
+                                                'old': ('В архиве', 'bg-yellow-lt'),
+                                                'removed': ('Удалено', 'bg-red-lt'),
+                                                'blocked': ('Заблокировано', 'bg-red-lt'),
+                                                'rejected': ('Отклонено', 'bg-red-lt'),
+                                                'processing': ('Обработка', 'bg-secondary-lt'),
+                                            } %}
+                                            {% set ci_status_map_ch = {
+                                                'Published': ('Опубликовано', 'bg-green-lt'),
+                                                'Deactivated': ('Снято', 'bg-yellow-lt'),
+                                                'Blocked': ('Заблокировано', 'bg-red-lt'),
+                                                'Deleted': ('Удалено', 'bg-red-lt'),
+                                                'Draft': ('Черновик', 'bg-azure-lt'),
+                                            } %}
+                                            <div class="mt-1 d-flex flex-column gap-1" style="font-size:.65rem;">
+                                                {% if avd_ch is mapping and avd_ch.get("AvitoId") %}
+                                                {% set av_st_ch = avd_ch.get("AvitoStatus", "") %}
+                                                {% set av_info_ch = av_status_map_ch.get(av_st_ch, (av_st_ch or '—', 'bg-secondary-lt')) %}
+                                                <a href="https://www.avito.ru/{{ avd_ch.get('AvitoId') }}" target="_blank"
+                                                   class="badge {{ av_info_ch[1] }}" style="text-decoration:none;"
+                                                   title="Avito ID: {{ avd_ch.get('AvitoId') }}">
+                                                    Avito: {{ av_info_ch[0] }}
+                                                </a>
+                                                {% elif ch.publish_on_avito and ch.is_active %}
+                                                <span class="badge bg-secondary-lt">Avito: ожидание</span>
+                                                {% endif %}
+                                                {% if cian_ch is mapping and cian_ch.get("CianOfferId") %}
+                                                {% set ci_st_ch = cian_ch.get("CianStatus", "") %}
+                                                {% set ci_info_ch = ci_status_map_ch.get(ci_st_ch, (ci_st_ch or '—', 'bg-secondary-lt')) %}
+                                                <span class="badge {{ ci_info_ch[1] }}" title="Циан ID: {{ cian_ch.get('CianOfferId') }}">
+                                                    Циан: {{ ci_info_ch[0] }}
+                                                </span>
+                                                {% elif ch.publish_on_cian and ch.is_active %}
+                                                <span class="badge bg-secondary-lt">Циан: ожидание</span>
+                                                {% endif %}
+                                                {% if avd_ch is mapping and avd_ch.get("AutoloadErrors") %}
+                                                <span class="badge bg-red-lt" title="{{ avd_ch.get('AutoloadErrors')|join(', ') }}">
+                                                    ⚠ Avito ошибки ({{ avd_ch.get('AutoloadErrors')|length }})
+                                                </span>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                         <td>{% set sd_ch = ch.stats_data or {} %}{% if sd_ch and sd_ch is mapping %}{{ (sd_ch.get("avito_views", 0) or 0) + (sd_ch.get("cian_views", 0) or 0) }}{% else %}—{% endif %}</td>
                                         <td>{% set sd_ch = ch.stats_data or {} %}{% if sd_ch and sd_ch is mapping %}{{ (sd_ch.get("avito_contacts", 0) or 0) + (sd_ch.get("cian_contacts", 0) or 0) }}{% else %}—{% endif %}</td>

@@ -12,7 +12,7 @@ from alembic import context
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.database import Base, SQLALCHEMY_DATABASE_URL_SYNC
-from app.models import Property, PropertyImage, PropertyDocument  # noqa: F401 — загрузка моделей в metadata
+from app.models import Property, PropertyImage, PropertyDocument, TelegramForwardMap  # noqa: F401 — загрузка моделей в metadata
 
 config = context.config
 config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL_SYNC)

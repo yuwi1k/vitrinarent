@@ -108,6 +108,12 @@ class SchedulerService:
                     avito_status = item.get("avito_status")
                     if avito_status:
                         data["AvitoStatus"] = avito_status
+                    avito_date_end = item.get("avito_date_end")
+                    if avito_date_end:
+                        data["AvitoDateEnd"] = str(avito_date_end)[:10]
+                    avito_url = item.get("url")
+                    if avito_url:
+                        data["AvitoUrl"] = avito_url
                     item_errors = item.get("errors") or []
                     item_warnings = item.get("warnings") or []
                     autoload_errors = item_errors + item_warnings
@@ -465,6 +471,30 @@ class SchedulerService:
             await notifier.send_scheduler_error("check_errors_and_notify", str(exc))
 
 
+    async def job_send_broadcast(self) -> None:
+        self._mark_running("send_broadcast")
+        t0 = time.monotonic()
+        try:
+            from app.telegram_broadcast import load_config, broadcast_service
+            config = load_config()
+            if not config.get("enabled", False):
+                self._record("send_broadcast", "skipped", "Broadcast disabled", t0)
+                return
+            result = await broadcast_service.send_next()
+            if result.get("ok"):
+                msg = (
+                    f"index={result['index'] + 1}/7 "
+                    f"channels={result['channels']} "
+                    f"success={result['success']} fail={result['fail']}"
+                )
+                self._record("send_broadcast", "ok", msg, t0)
+            else:
+                self._record("send_broadcast", "skipped", result.get("reason", ""), t0)
+        except Exception as exc:
+            logger.exception("scheduler: send_broadcast FAILED")
+            self._record("send_broadcast", "error", str(exc), t0)
+
+
 scheduler_service = SchedulerService()
 
 _scheduler: Optional[AsyncIOScheduler] = None
@@ -513,6 +543,19 @@ def start_scheduler() -> AsyncIOScheduler:
         name="Check errors and notify",
     )
 
+    # Рассылка в Telegram-каналы
+    try:
+        from app.telegram_broadcast import load_config as _load_bc
+        bc_config = _load_bc()
+        bc_minutes = max(1, bc_config.get("interval_minutes", 60))
+    except Exception:
+        bc_minutes = 60
+    _scheduler.add_job(
+        scheduler_service.job_send_broadcast,
+        "interval", minutes=bc_minutes, id="send_broadcast",
+        name="Telegram broadcast",
+    )
+
     _scheduler.start()
     logger.info("Scheduler started with %d jobs", len(_scheduler.get_jobs()))
     return _scheduler
@@ -524,6 +567,34 @@ def stop_scheduler() -> None:
         _scheduler.shutdown(wait=False)
         logger.info("Scheduler stopped")
     _scheduler = None
+
+
+def reschedule_broadcast(config: Dict[str, Any]) -> None:
+    """Перезапускает или останавливает job рассылки при изменении конфига из бота."""
+    global _scheduler
+    if not _scheduler or not _scheduler.running:
+        return
+    job_id = "send_broadcast"
+    enabled = config.get("enabled", False)
+    minutes = max(1, config.get("interval_minutes", 60))
+    try:
+        existing = _scheduler.get_job(job_id)
+        if enabled:
+            if existing:
+                _scheduler.reschedule_job(job_id, trigger="interval", minutes=minutes)
+            else:
+                _scheduler.add_job(
+                    scheduler_service.job_send_broadcast,
+                    "interval", minutes=minutes, id=job_id,
+                    name="Telegram broadcast",
+                )
+            logger.info("scheduler: broadcast job rescheduled to %d min", minutes)
+        else:
+            if existing:
+                _scheduler.pause_job(job_id)
+                logger.info("scheduler: broadcast job paused")
+    except Exception:
+        logger.exception("scheduler: failed to reschedule broadcast job")
 
 
 def get_scheduler_status() -> Dict[str, Any]:

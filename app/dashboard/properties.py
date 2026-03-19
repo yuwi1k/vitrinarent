@@ -417,7 +417,7 @@ async def create_property(
         except (json.JSONDecodeError, TypeError):
             avito_data_val = None
 
-    _AVITO_AUTO_KEYS = ("AvitoId", "AvitoStatus", "AutoloadErrors", "AutoloadSectionSlug")
+    _AVITO_AUTO_KEYS = ("AvitoId", "AvitoStatus", "AutoloadErrors", "AutoloadSectionSlug", "AvitoDateEnd", "AvitoUrl")
     if avito_data_val:
         for _k in _AVITO_AUTO_KEYS:
             avito_data_val.pop(_k, None)

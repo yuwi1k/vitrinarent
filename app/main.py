@@ -159,12 +159,51 @@ from app.routers import router as public_router
 from app.dashboard import router as dashboard_router
 from app.scheduler import start_scheduler, stop_scheduler
 
+_polling_task = None
+
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
+    global _polling_task
+    import asyncio
     start_scheduler()
+
+    # Запускаем aiogram polling как фоновую задачу
+    try:
+        from app.telegram_bot_instance import get_bot, get_dp
+        from app.telegram_admin_handlers import router as admin_router
+        from app.telegram_relay_handlers import router as relay_router
+
+        dp = get_dp()
+        # Регистрируем роутеры (admin должен быть первым — у него фильтр на _is_admin)
+        if admin_router not in dp.routers:
+            dp.include_router(admin_router)
+        if relay_router not in dp.routers:
+            dp.include_router(relay_router)
+
+        bot = get_bot()
+        _polling_task = asyncio.create_task(
+            dp.start_polling(bot, handle_signals=False)
+        )
+        logger.info("Telegram bot polling started")
+    except RuntimeError as exc:
+        logger.warning("Telegram bot not configured, polling skipped: %s", exc)
+    except Exception:
+        logger.exception("Failed to start Telegram bot polling")
+
     yield
+
     stop_scheduler()
+
+    # Останавливаем polling
+    if _polling_task and not _polling_task.done():
+        try:
+            from app.telegram_bot_instance import get_dp
+            await get_dp().stop_polling()
+            _polling_task.cancel()
+            logger.info("Telegram bot polling stopped")
+        except Exception:
+            logger.exception("Failed to stop Telegram bot polling")
 
 
 _docs_enabled = os.getenv("ENVIRONMENT", "").lower() != "production"

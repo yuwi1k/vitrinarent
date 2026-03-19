@@ -149,6 +149,12 @@ async def avito_sync_autoload_statuses(db: AsyncSession = Depends(get_db)):
         avito_status = item.get("avito_status")
         if avito_status:
             data["AvitoStatus"] = avito_status
+        avito_date_end = item.get("avito_date_end")
+        if avito_date_end:
+            data["AvitoDateEnd"] = str(avito_date_end)[:10]
+        avito_url = item.get("url")
+        if avito_url:
+            data["AvitoUrl"] = avito_url
         item_errors = item.get("errors") or []
         item_warnings = item.get("warnings") or []
         autoload_errors = item_errors + item_warnings

@@ -58,6 +58,11 @@
 
         <div class="db-nav-section">Система</div>
 
+        <a href="/dashboard/telegram-broadcast" class="db-nav-item {% if request.url.path.startswith('/dashboard/telegram-broadcast') %}active{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5l-19 7l8 2l2 8z"/><path d="M11 13l9 -8"/></svg>
+          TG Рассылка
+        </a>
+
         <a href="/dashboard/feed-errors" class="db-nav-item {% if request.url.path == '/dashboard/feed-errors' %}active{% endif %}">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></svg>
           Ошибки фидов

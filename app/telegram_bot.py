@@ -1,29 +1,38 @@
 import logging
 import os
 
-import httpx
+from aiogram.exceptions import TelegramAPIError
 
 logger = logging.getLogger(__name__)
 
 
+def _get_chat_id() -> str:
+    return os.getenv("TELEGRAM_CHAT_ID", "")
+
+
 class TelegramNotifier:
-    def __init__(self) -> None:
-        self.token = os.getenv("TELEGRAM_BOT_TOKEN", "")
-        self.chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
+    """Односторонний notifier для системных уведомлений (ошибки фидов, дайджест и т.д.).
+    Отправляет сообщения в TELEGRAM_CHAT_ID через единый aiogram.Bot."""
 
     @property
     def is_configured(self) -> bool:
-        return bool(self.token and self.chat_id)
-
-    async def send_message(self, text: str, parse_mode: str = "HTML") -> None:
-        if not self.is_configured:
-            return
+        from app.telegram_bot_instance import get_bot
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
-                await client.post(
-                    f"https://api.telegram.org/bot{self.token}/sendMessage",
-                    json={"chat_id": self.chat_id, "text": text, "parse_mode": parse_mode},
-                )
+            bot = get_bot()
+            return bool(bot.token and _get_chat_id())
+        except RuntimeError:
+            return False
+
+    async def send_message(self, text: str, chat_id: str | None = None) -> None:
+        if not _get_chat_id() and not chat_id:
+            return
+        target = chat_id or _get_chat_id()
+        try:
+            from app.telegram_bot_instance import get_bot
+            bot = get_bot()
+            await bot.send_message(chat_id=target, text=text)
+        except TelegramAPIError as exc:
+            logger.warning("Telegram API error: %s", exc)
         except Exception:
             logger.exception("Failed to send Telegram message")
 

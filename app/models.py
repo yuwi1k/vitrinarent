@@ -159,3 +159,14 @@ class PropertyDocument(Base):
     document_url = Column(String)
     
     property = relationship("Property", back_populates="documents", lazy="selectin")
+
+
+# ТАБЛИЦА ДЛЯ МАППИНГА RELAY-СООБЩЕНИЙ TELEGRAM
+class TelegramForwardMap(Base):
+    """Хранит соответствие: ID пересланного сообщения в support-чате → ID чата агента."""
+    __tablename__ = "telegram_forward_map"
+
+    id = Column(Integer, primary_key=True, index=True)
+    from_chat_id = Column(BigInteger, nullable=False, index=True)
+    forwarded_msg_id = Column(Integer, nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=True)
