@@ -31,14 +31,16 @@ def load_config() -> Dict[str, Any]:
         for key, val in _DEFAULT_CONFIG.items():
             if key not in data:
                 data[key] = val
-        # Гарантируем ровно 7 сообщений
-        while len(data["messages"]) < 7:
-            data["messages"].append({"text": "", "photo_file_id": None})
-        data["messages"] = data["messages"][:7]
-        # Гарантируем ровно 7 счётчиков
-        while len(data["sent_counts"]) < 7:
+        # Приводим sent_counts к длине messages
+        n = len(data["messages"])
+        while len(data["sent_counts"]) < n:
             data["sent_counts"].append(0)
-        data["sent_counts"] = data["sent_counts"][:7]
+        data["sent_counts"] = data["sent_counts"][:n]
+        # current_index не должен выходить за пределы
+        if n > 0:
+            data["current_index"] = data.get("current_index", 0) % n
+        else:
+            data["current_index"] = 0
         return data
     except Exception:
         logger.exception("Failed to load broadcast config, using defaults")
@@ -93,7 +95,12 @@ class BroadcastService:
             logger.info("broadcast: no channels configured, skipping")
             return {"ok": False, "reason": "no_channels"}
 
-        index: int = config.get("current_index", 0) % 7
+        messages: List[Dict] = config.get("messages", [])
+        n = len(messages)
+        if n == 0:
+            return {"ok": False, "reason": "no_messages"}
+
+        index: int = config.get("current_index", 0) % n
         success_count = 0
         fail_count = 0
         for channel in channels:
@@ -105,7 +112,7 @@ class BroadcastService:
 
         # Обновляем статистику
         config["sent_counts"][index] = config["sent_counts"][index] + success_count
-        config["current_index"] = (index + 1) % 7
+        config["current_index"] = (index + 1) % n
         config["last_sent_at"] = datetime.now(timezone.utc).isoformat()
         save_config(config)
 
@@ -130,12 +137,14 @@ class BroadcastService:
         current = config.get("current_index", 0)
         last_sent = config.get("last_sent_at")
 
+        messages = config.get("messages", [])
+        total = len(messages)
         status = "✅ Активна" if enabled else "⏸ Приостановлена"
-        next_msg = current + 1
+        next_msg = (current % total) + 1 if total else 1
 
         lines = [
             f"<b>Статус рассылки:</b> {status}",
-            f"<b>Следующее объявление:</b> #{next_msg} из 7",
+            f"<b>Следующее объявление:</b> #{next_msg} из {total}",
             f"<b>Каналов:</b> {len(channels)}",
             f"<b>Интервал:</b> {interval} мин.",
         ]
@@ -152,13 +161,13 @@ class BroadcastService:
     def get_stats_text(self) -> str:
         """Текст статистики отправок."""
         config = load_config()
-        counts: List[int] = config.get("sent_counts", [0] * 7)
         messages: List[Dict] = config.get("messages", [])
+        counts: List[int] = config.get("sent_counts", [0] * len(messages))
         last_sent = config.get("last_sent_at")
 
         lines = ["<b>📈 Статистика рассылки</b>\n"]
-        for i in range(7):
-            msg = messages[i] if i < len(messages) else {}
+        for i in range(len(messages)):
+            msg = messages[i]
             text_preview = (msg.get("text") or "")[:40].strip()
             has_photo = bool(msg.get("photo_file_id"))
             count = counts[i] if i < len(counts) else 0

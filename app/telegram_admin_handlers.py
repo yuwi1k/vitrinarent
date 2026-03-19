@@ -45,6 +45,7 @@ class BroadcastForm(StatesGroup):
     enter_photo = State()
     enter_channel = State()
     enter_interval = State()
+    enter_count = State()
 
 
 # ---------------------------------------------------------------------------
@@ -54,6 +55,7 @@ class BroadcastForm(StatesGroup):
 def _main_menu_keyboard() -> InlineKeyboardMarkup:
     config = load_config()
     enabled = config.get("enabled", False)
+    count = len(config.get("messages", []))
     toggle_label = "⏸ Приостановить" if enabled else "▶ Включить"
     return InlineKeyboardMarkup(inline_keyboard=[
         [
@@ -63,6 +65,9 @@ def _main_menu_keyboard() -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(text="💬 Каналы",           callback_data="bc:channels"),
             InlineKeyboardButton(text="⏱ Интервалы",        callback_data="bc:interval"),
+        ],
+        [
+            InlineKeyboardButton(text=f"🔢 Объявлений: {count}", callback_data="bc:count"),
         ],
         [
             InlineKeyboardButton(text="🚀 Запустить сейчас", callback_data="bc:send_now"),
@@ -76,13 +81,12 @@ def _main_menu_keyboard() -> InlineKeyboardMarkup:
 
 
 def _msg_index_keyboard(action: str) -> InlineKeyboardMarkup:
-    """Клавиатура выбора номера объявления 1–7."""
+    """Клавиатура выбора номера объявления."""
     config = load_config()
     messages = config.get("messages", [])
     buttons = []
     row = []
-    for i in range(7):
-        msg = messages[i] if i < len(messages) else {}
+    for i, msg in enumerate(messages):
         has_text = bool((msg.get("text") or "").strip())
         has_photo = bool(msg.get("photo_file_id"))
         icon = "✅" if (has_text or has_photo) else "⬜"
@@ -122,6 +126,8 @@ def _status_header(config: dict) -> str:
     channels = config.get("channels", [])
     interval = config.get("interval_minutes", 60)
     current = config.get("current_index", 0)
+    total = len(config.get("messages", []))
+    next_num = (current % total) + 1 if total else 1
     if enabled:
         header = "📢 <b>Рассылка активна</b>\nАвтоматические циклы запущены."
     else:
@@ -131,7 +137,7 @@ def _status_header(config: dict) -> str:
             "Ручной запуск через «Запустить сейчас» по-прежнему работает."
         )
     header += (
-        f"\n\nСледующее: объявление #{current + 1} из 7"
+        f"\n\nСледующее: объявление #{next_num} из {total}"
         f"\nКаналов: {len(channels)} | Интервал: {interval} мин."
     )
     return header
@@ -534,6 +540,74 @@ async def msg_enter_interval(message: Message, state: FSMContext) -> None:
     await state.clear()
     await message.answer(
         f"✅ Интервал установлен: <b>{minutes} мин.</b>",
+        reply_markup=_main_menu_keyboard(),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Callback: Изменить количество объявлений
+# ---------------------------------------------------------------------------
+
+@router.callback_query(F.data == "bc:count")
+async def cb_count(callback: CallbackQuery, state: FSMContext) -> None:
+    await callback.answer()
+    await state.set_state(BroadcastForm.enter_count)
+    config = load_config()
+    current = len(config.get("messages", []))
+    back = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="« Отмена", callback_data="bc:menu")]
+    ])
+    try:
+        await callback.message.edit_text(
+            f"Текущее количество объявлений: <b>{current}</b>\n\n"
+            f"Введите новое количество (от 1 до 20):\n\n"
+            f"<i>⚠️ При уменьшении — лишние объявления и их тексты/фото будут удалены.\n"
+            f"При увеличении — добавятся пустые слоты.</i>",
+            reply_markup=back,
+        )
+    except Exception:
+        await callback.message.answer(
+            f"Текущее количество: <b>{current}</b>\n\nВведите новое количество (1–20):",
+            reply_markup=back,
+        )
+
+
+@router.message(BroadcastForm.enter_count)
+async def msg_enter_count(message: Message, state: FSMContext) -> None:
+    if not _is_admin(message.from_user.id):
+        return
+    text = (message.text or "").strip()
+    if not text.isdigit() or not (1 <= int(text) <= 20):
+        await message.answer("Введите целое число от 1 до 20.")
+        return
+
+    new_count = int(text)
+    config = load_config()
+    messages = config.get("messages", [])
+    counts = config.get("sent_counts", [])
+    old_count = len(messages)
+
+    if new_count > old_count:
+        # Добавляем пустые слоты
+        for _ in range(new_count - old_count):
+            messages.append({"text": "", "photo_file_id": None})
+            counts.append(0)
+    elif new_count < old_count:
+        # Обрезаем
+        messages = messages[:new_count]
+        counts = counts[:new_count]
+
+    config["messages"] = messages
+    config["sent_counts"] = counts
+    # Сбрасываем индекс если вышел за пределы
+    if config.get("current_index", 0) >= new_count:
+        config["current_index"] = 0
+    save_config(config)
+
+    await state.clear()
+    action = "добавлено" if new_count > old_count else ("удалено" if new_count < old_count else "не изменено")
+    await message.answer(
+        f"✅ Количество объявлений изменено: <b>{old_count} → {new_count}</b> ({action}).",
         reply_markup=_main_menu_keyboard(),
     )
 
