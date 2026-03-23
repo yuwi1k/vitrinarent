@@ -54,12 +54,10 @@ async def verify_code(request: Request):
 @router.post("/userbot-auth/disconnect", dependencies=[Depends(check_admin)])
 async def disconnect_userbot(request: Request):
     from app.userbot import disconnect
-    import os
     from pathlib import Path
     await disconnect()
-    session_path = Path(__file__).parent.parent.parent / "data" / "userbot.session"
-    for ext in ["", "-journal", "-wal", "-shm"]:
-        p = Path(str(session_path) + ext)
-        if p.exists():
-            p.unlink()
+    # Удаляем файл сессии
+    session_file = Path(__file__).parent.parent.parent / "data" / "userbot_session.txt"
+    if session_file.exists():
+        session_file.unlink()
     return JSONResponse({"ok": True})

@@ -6,12 +6,10 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-_SESSION_PATH = Path(__file__).parent.parent / "data" / "userbot.session"
+# Сессия хранится как строка в текстовом файле (StringSession — без SQLite)
+_SESSION_FILE = Path(__file__).parent.parent / "data" / "userbot_session.txt"
 
-# Активный клиент для рассылки
 _client = None
-
-# Временный клиент во время процесса авторизации
 _auth_state: dict = {}
 
 
@@ -22,8 +20,19 @@ def _api_params():
         return 0, ""
 
 
+def _load_session_string() -> str:
+    if _SESSION_FILE.exists():
+        return _SESSION_FILE.read_text(encoding="utf-8").strip()
+    return ""
+
+
+def _save_session_string(s: str) -> None:
+    _SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _SESSION_FILE.write_text(s, encoding="utf-8")
+
+
 def is_session_exists() -> bool:
-    return _SESSION_PATH.exists()
+    return _SESSION_FILE.exists() and bool(_load_session_string())
 
 
 async def get_userbot():
@@ -31,23 +40,28 @@ async def get_userbot():
     global _client
     try:
         from telethon import TelegramClient
+        from telethon.sessions import StringSession
     except ImportError:
         return None
 
     api_id, api_hash = _api_params()
     if not api_id or not api_hash:
         return None
-    if not _SESSION_PATH.exists():
+
+    session_string = _load_session_string()
+    if not session_string:
         return None
 
+    # Если клиент уже создан с той же сессией — переиспользуем
     if _client is None:
-        _client = TelegramClient(str(_SESSION_PATH), api_id, api_hash)
+        _client = TelegramClient(StringSession(session_string), api_id, api_hash)
 
     if not _client.is_connected():
         await _client.connect()
 
     if not await _client.is_user_authorized():
         logger.warning("userbot: session expired")
+        _client = None
         return None
 
     return _client
@@ -65,12 +79,10 @@ async def disconnect():
 # ---------------------------------------------------------------------------
 
 async def auth_request_code(phone: str) -> dict:
-    """
-    Шаг 1: отправить SMS-код на номер.
-    Возвращает {"ok": True, "phone_code_hash": "..."} или {"ok": False, "error": "..."}
-    """
+    """Шаг 1: отправить код на номер телефона."""
     try:
         from telethon import TelegramClient
+        from telethon.sessions import StringSession
     except ImportError:
         return {"ok": False, "error": "telethon not installed"}
 
@@ -78,10 +90,9 @@ async def auth_request_code(phone: str) -> dict:
     if not api_id or not api_hash:
         return {"ok": False, "error": "TELEGRAM_API_ID/HASH not configured"}
 
-    _SESSION_PATH.parent.mkdir(parents=True, exist_ok=True)
-
     try:
-        client = TelegramClient(str(_SESSION_PATH), api_id, api_hash)
+        # Создаём временный клиент в памяти (StringSession без файла)
+        client = TelegramClient(StringSession(), api_id, api_hash)
         await client.connect()
         result = await client.send_code_request(phone)
         _auth_state["client"] = client
@@ -95,40 +106,43 @@ async def auth_request_code(phone: str) -> dict:
 
 
 async def auth_verify_code(code: str, password: str = "") -> dict:
-    """
-    Шаг 2: подтвердить код (и 2FA пароль если нужно).
-    Возвращает {"ok": True} или {"ok": False, "need_password": True, "error": "..."}
-    """
-    client = _auth_state.get("client")
-    phone = _auth_state.get("phone")
-    phone_code_hash = _auth_state.get("hash")
-
-    if not client or not phone or not phone_code_hash:
-        return {"ok": False, "error": "Auth session not found, request code first"}
-
+    """Шаг 2: подтвердить код, сохранить сессию."""
     try:
         from telethon.errors import SessionPasswordNeededError
     except ImportError:
         return {"ok": False, "error": "telethon not installed"}
 
+    client = _auth_state.get("client")
+    phone = _auth_state.get("phone")
+    phone_code_hash = _auth_state.get("hash")
+
+    if not client or not phone or not phone_code_hash:
+        return {"ok": False, "error": "Сессия авторизации устарела — запросите код заново"}
+
     try:
         await client.sign_in(phone, code, phone_code_hash=phone_code_hash)
-        _auth_state.clear()
-        logger.info("userbot: authorized successfully")
-        return {"ok": True}
     except SessionPasswordNeededError:
         if not password:
-            return {"ok": False, "need_password": True, "error": "2FA password required"}
+            return {"ok": False, "need_password": True, "error": "Требуется пароль 2FA"}
         try:
             await client.sign_in(password=password)
-            _auth_state.clear()
-            logger.info("userbot: authorized with 2FA")
-            return {"ok": True}
         except Exception as exc:
-            return {"ok": False, "error": f"Wrong 2FA password: {exc}"}
+            return {"ok": False, "error": f"Неверный пароль 2FA: {exc}"}
     except Exception as exc:
         logger.exception("userbot: sign_in failed")
         return {"ok": False, "error": str(exc)}
+
+    # Сохраняем строку сессии в файл
+    session_string = client.session.save()
+    _save_session_string(session_string)
+
+    # Сбрасываем глобальный клиент чтобы пересоздать с новой сессией
+    global _client
+    _client = None
+    _auth_state.clear()
+
+    logger.info("userbot: session saved successfully")
+    return {"ok": True}
 
 
 async def auth_get_me() -> Optional[str]:
@@ -138,6 +152,7 @@ async def auth_get_me() -> Optional[str]:
         return None
     try:
         me = await client.get_me()
-        return f"{me.first_name or ''} {me.last_name or ''}".strip() or me.username or str(me.id)
+        name = f"{me.first_name or ''} {me.last_name or ''}".strip()
+        return name or me.username or str(me.id)
     except Exception:
         return None
