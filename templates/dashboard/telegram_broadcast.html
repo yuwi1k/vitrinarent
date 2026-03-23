@@ -30,7 +30,7 @@
   <div class="col-12 col-md-3">
     <div class="card p-3 text-center">
       <div class="small text-muted mb-1">Следующее объявление</div>
-      <div style="font-size:1.1rem;font-weight:600;">#{{ config.current_index + 1 }} из 7</div>
+      <div style="font-size:1.1rem;font-weight:600;">#{{ config.current_index + 1 }} из {{ config.messages | length }}</div>
     </div>
   </div>
   <div class="col-12 col-md-3">
@@ -52,7 +52,7 @@
   <div class="col-12 col-lg-8">
     <div class="card">
       <div class="card-body">
-        <h5 class="fw-semibold mb-3" style="font-size:1rem;">Объявления (7 шт.)</h5>
+        <h5 class="fw-semibold mb-3" style="font-size:1rem;">Объявления ({{ config.messages | length }} шт.)</h5>
         <div class="table-responsive">
           <table class="db-table">
             <thead>
@@ -64,8 +64,8 @@
               </tr>
             </thead>
             <tbody>
-              {% for i in range(7) %}
-              {% set msg = config.messages[i] if i < config.messages | length else {} %}
+              {% for i in range(config.messages | length) %}
+              {% set msg = config.messages[i] %}
               {% set is_current = config.current_index == i %}
               <tr {% if is_current %}style="background:rgba(59,130,246,.06);"{% endif %}>
                 <td>
