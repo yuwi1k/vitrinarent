@@ -1,0 +1,166 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Юзербот — Авторизация{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <h2 class="db-page-title">Юзербот — Авторизация</h2>
+  <p class="db-page-subtitle">Рассылка от имени аккаунта Telegram (через Telethon)</p>
+</div>
+
+{% if not api_configured %}
+<div class="alert alert-warning">
+  <b>TELEGRAM_API_ID и TELEGRAM_API_HASH не настроены.</b><br>
+  Получите их на <a href="https://my.telegram.org" target="_blank">my.telegram.org</a> и добавьте в <code>.env</code> на сервере.
+</div>
+{% else %}
+
+{% if authorized %}
+{# --- Уже авторизован --- #}
+<div class="card mb-4" style="max-width:480px;">
+  <div class="card-body">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <span style="font-size:2rem;">✅</span>
+      <div>
+        <div class="fw-semibold">Авторизован как: <b>{{ username }}</b></div>
+        <div class="text-muted small">Рассылка идёт от имени этого аккаунта</div>
+      </div>
+    </div>
+    <button id="btn-disconnect" class="btn btn-outline-danger btn-sm">
+      Выйти / сбросить сессию
+    </button>
+  </div>
+</div>
+{% else %}
+{# --- Форма авторизации --- #}
+<div class="card" style="max-width:480px;">
+  <div class="card-body">
+
+    {# Шаг 1 #}
+    <div id="step1">
+      <h5 class="fw-semibold mb-3">Шаг 1 — Отправить код</h5>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Номер телефона</label>
+        <input id="inp-phone" type="text" class="form-control"
+               value="{{ phone }}" placeholder="+79001234567">
+        <div class="form-text">Телефон аккаунта, от имени которого будет рассылка</div>
+      </div>
+      <button id="btn-send-code" class="btn btn-primary btn-sm">
+        Отправить код в Telegram
+      </button>
+      <div id="step1-error" class="text-danger small mt-2" style="display:none;"></div>
+    </div>
+
+    {# Шаг 2 #}
+    <div id="step2" style="display:none;">
+      <h5 class="fw-semibold mb-3">Шаг 2 — Введите код</h5>
+      <p class="text-muted small">Код отправлен в Telegram на номер <b id="phone-display"></b>.
+        Если не пришёл в Telegram — придёт SMS.</p>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Код подтверждения</label>
+        <input id="inp-code" type="text" class="form-control" placeholder="12345" maxlength="10">
+      </div>
+      <div id="step2-password-block" style="display:none;" class="mb-3">
+        <label class="form-label small fw-semibold">Пароль двухфакторной аутентификации (2FA)</label>
+        <input id="inp-password" type="password" class="form-control" placeholder="Пароль">
+      </div>
+      <div class="d-flex gap-2">
+        <button id="btn-verify" class="btn btn-success btn-sm">Подтвердить</button>
+        <button id="btn-back" class="btn btn-outline-secondary btn-sm">← Назад</button>
+      </div>
+      <div id="step2-error" class="text-danger small mt-2" style="display:none;"></div>
+    </div>
+
+  </div>
+</div>
+{% endif %}
+
+{% endif %}
+
+<script>
+const csrfToken = '{{ request.session.get("_csrf_token", "") }}';
+
+{% if authorized %}
+document.getElementById('btn-disconnect')?.addEventListener('click', async () => {
+  if (!confirm('Сбросить сессию юзербота?')) return;
+  const r = await fetch('/dashboard/userbot-auth/disconnect', {method:'POST', headers:{'X-CSRF-Token':csrfToken}});
+  const d = await r.json();
+  if (d.ok) location.reload();
+});
+{% else %}
+let phoneCodeHash = null;
+
+document.getElementById('btn-send-code').addEventListener('click', async () => {
+  const phone = document.getElementById('inp-phone').value.trim();
+  const errEl = document.getElementById('step1-error');
+  errEl.style.display = 'none';
+  if (!phone) { errEl.textContent = 'Введите номер телефона'; errEl.style.display='block'; return; }
+
+  const btn = document.getElementById('btn-send-code');
+  btn.disabled = true; btn.textContent = 'Отправляю…';
+
+  try {
+    const r = await fetch('/dashboard/userbot-auth/request-code', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'X-CSRF-Token': csrfToken},
+      body: JSON.stringify({phone})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      phoneCodeHash = d.phone_code_hash;
+      document.getElementById('phone-display').textContent = phone;
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('step2').style.display = 'block';
+    } else {
+      errEl.textContent = d.error || 'Ошибка';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Ошибка запроса';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Отправить код в Telegram';
+  }
+});
+
+document.getElementById('btn-back').addEventListener('click', () => {
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('step1').style.display = 'block';
+});
+
+document.getElementById('btn-verify').addEventListener('click', async () => {
+  const code = document.getElementById('inp-code').value.trim();
+  const password = document.getElementById('inp-password').value.trim();
+  const errEl = document.getElementById('step2-error');
+  errEl.style.display = 'none';
+  if (!code) { errEl.textContent = 'Введите код'; errEl.style.display='block'; return; }
+
+  const btn = document.getElementById('btn-verify');
+  btn.disabled = true; btn.textContent = 'Проверяю…';
+
+  try {
+    const r = await fetch('/dashboard/userbot-auth/verify-code', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'X-CSRF-Token': csrfToken},
+      body: JSON.stringify({code, password})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      location.reload();
+    } else if (d.need_password) {
+      document.getElementById('step2-password-block').style.display = 'block';
+      errEl.textContent = 'Требуется пароль 2FA — введите ниже и нажмите «Подтвердить» снова';
+      errEl.style.display = 'block';
+    } else {
+      errEl.textContent = d.error || 'Ошибка';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Ошибка запроса';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Подтвердить';
+  }
+});
+{% endif %}
+</script>
+{% endblock %}

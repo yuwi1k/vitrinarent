@@ -72,13 +72,24 @@ class BroadcastService:
             logger.warning("broadcast: message %d is empty, skipping", index + 1)
             return False
         try:
+            from app.userbot import get_userbot
+            userbot = await get_userbot()
+            if userbot:
+                if photo_file_id:
+                    # Скачиваем фото через Bot API, затем отправляем через Telethon
+                    bot = get_bot()
+                    tg_file = await bot.get_file(photo_file_id)
+                    file_bytes = await bot.download_file(tg_file.file_path)
+                    import io
+                    await userbot.send_file(channel, io.BytesIO(file_bytes), caption=text or None)
+                else:
+                    await userbot.send_message(channel, text)
+                return True
+
+            # Fallback: бот
             bot = get_bot()
             if photo_file_id:
-                await bot.send_photo(
-                    chat_id=channel,
-                    photo=photo_file_id,
-                    caption=text or None,
-                )
+                await bot.send_photo(chat_id=channel, photo=photo_file_id, caption=text or None)
             else:
                 await bot.send_message(chat_id=channel, text=text)
             return True

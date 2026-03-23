@@ -18,6 +18,7 @@ from app.dashboard.messages_ui import router as messages_router
 from app.dashboard.promotion_ui import router as promotion_router
 from app.dashboard.statistics_ui import router as statistics_router
 from app.dashboard.telegram_ui import router as telegram_router
+from app.dashboard.userbot_auth import router as userbot_router
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -33,3 +34,4 @@ router.include_router(messages_router)
 router.include_router(promotion_router)
 router.include_router(statistics_router)
 router.include_router(telegram_router)
+router.include_router(userbot_router)
