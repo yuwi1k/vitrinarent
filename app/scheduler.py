@@ -57,6 +57,11 @@ class SchedulerService:
                 properties = result.scalars().all()
                 xml_bytes = generate_avito_feed_full(properties)
 
+                total_active_result = await db.execute(
+                    select(Property).where(Property.is_active.is_(True))
+                )
+                total_active_count = len(total_active_result.scalars().all())
+
             client = AvitoAutoloadClient()
             resp = await client.upload_feed()
             msg = f"Uploaded feed ({len(properties)} props, {len(xml_bytes)} bytes). API: {resp.get('status_code')}"
@@ -65,6 +70,7 @@ class SchedulerService:
             await notifier.send_feed_upload_result(
                 "Avito", len(properties), True,
                 f"API ответ: {resp.get('status_code')}",
+                total_active=total_active_count,
             )
         except Exception as exc:
             logger.exception("scheduler: upload_avito_feed FAILED")
@@ -133,7 +139,6 @@ class SchedulerService:
             msg = f"items={len(items)} updated={updated} skipped={skipped} not_found={not_found}"
             logger.info("scheduler: sync_avito_statuses OK — %s", msg)
             self._record("sync_avito_statuses", "ok", msg, t0)
-            await notifier.send_sync_result("Avito", updated, len(items), error_count)
         except Exception as exc:
             logger.exception("scheduler: sync_avito_statuses FAILED")
             self._record("sync_avito_statuses", "error", str(exc), t0)
@@ -196,7 +201,6 @@ class SchedulerService:
             msg = f"offers={len(all_announcements)} updated={updated} skipped={skipped} not_found={not_found}"
             logger.info("scheduler: sync_cian_statuses OK — %s", msg)
             self._record("sync_cian_statuses", "ok", msg, t0)
-            await notifier.send_sync_result("Циан", updated, len(all_announcements))
         except Exception as exc:
             logger.exception("scheduler: sync_cian_statuses FAILED")
             self._record("sync_cian_statuses", "error", str(exc), t0)
@@ -345,7 +349,7 @@ class SchedulerService:
                 1 for p in props
                 if isinstance(p.cian_data, dict) and (p.cian_data or {}).get("CianStatus") == "published"
             )
-            await notifier.send_daily_digest(active_avito, active_cian, total_views, total_contacts)
+            await notifier.send_daily_digest(active_avito, active_cian, total_views, total_contacts, total_active=len(props))
 
             from app.notification_config import get_scenarios
 

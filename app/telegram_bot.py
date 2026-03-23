@@ -42,11 +42,14 @@ class TelegramNotifier:
 
     async def send_daily_digest(
         self, active_avito: int, active_cian: int, total_views: int, total_contacts: int,
+        total_active: int = 0,
     ) -> None:
+        avito_str = f"{active_avito}/{total_active}" if total_active else str(active_avito)
+        cian_str = f"{active_cian}/{total_active}" if total_active else str(active_cian)
         text = (
             f"📊 <b>Дайджест за сутки</b>\n"
-            f"Авито: {active_avito} объявлений\n"
-            f"Циан: {active_cian} объявлений\n"
+            f"Авито: {avito_str} объявлений\n"
+            f"Циан: {cian_str} объявлений\n"
             f"Просмотры: {total_views}\n"
             f"Контакты: {total_contacts}"
         )
@@ -58,9 +61,11 @@ class TelegramNotifier:
 
     async def send_feed_upload_result(
         self, platform: str, total: int, success: bool, details: str = "",
+        total_active: int = 0,
     ) -> None:
         if success:
-            text = f"✅ <b>Автозагрузка {platform}</b>\nОбъектов в фиде: {total}"
+            count_str = f"{total}/{total_active}" if total_active else str(total)
+            text = f"✅ <b>Автозагрузка {platform}</b>\nОбъектов в фиде: {count_str}"
             if details:
                 text += f"\n{details}"
         else:
