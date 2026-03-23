@@ -169,27 +169,31 @@ async def lifespan(application: FastAPI):
     import asyncio
     start_scheduler()
 
-    # Запускаем aiogram polling как фоновую задачу
-    try:
-        from app.telegram_bot_instance import get_bot, get_dp
-        from app.telegram_admin_handlers import router as admin_router
-        from app.telegram_relay_handlers import router as relay_router
+    # Запускаем aiogram polling только в production (не в dev, чтобы не конфликтовать с сервером)
+    _env = os.getenv("ENVIRONMENT", "production").lower()
+    if _env == "development":
+        logger.info("Telegram bot polling skipped in development mode (ENVIRONMENT=development)")
+    else:
+        try:
+            from app.telegram_bot_instance import get_bot, get_dp
+            from app.telegram_admin_handlers import router as admin_router
+            from app.telegram_relay_handlers import router as relay_router
 
-        dp = get_dp()
-        if not _bot_routers_registered:
-            dp.include_router(admin_router)
-            dp.include_router(relay_router)
-            _bot_routers_registered = True
+            dp = get_dp()
+            if not _bot_routers_registered:
+                dp.include_router(admin_router)
+                dp.include_router(relay_router)
+                _bot_routers_registered = True
 
-        bot = get_bot()
-        _polling_task = asyncio.create_task(
-            dp.start_polling(bot, handle_signals=False)
-        )
-        logger.info("Telegram bot polling started")
-    except RuntimeError as exc:
-        logger.warning("Telegram bot not configured, polling skipped: %s", exc)
-    except Exception:
-        logger.exception("Failed to start Telegram bot polling")
+            bot = get_bot()
+            _polling_task = asyncio.create_task(
+                dp.start_polling(bot, handle_signals=False)
+            )
+            logger.info("Telegram bot polling started")
+        except RuntimeError as exc:
+            logger.warning("Telegram bot not configured, polling skipped: %s", exc)
+        except Exception:
+            logger.exception("Failed to start Telegram bot polling")
 
     yield
 

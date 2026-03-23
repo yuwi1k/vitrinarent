@@ -483,7 +483,7 @@ class SchedulerService:
             result = await broadcast_service.send_next()
             if result.get("ok"):
                 msg = (
-                    f"index={result['index'] + 1}/7 "
+                    f"index={result['index'] + 1} "
                     f"channels={result['channels']} "
                     f"success={result['success']} fail={result['fail']}"
                 )
@@ -512,35 +512,38 @@ def start_scheduler() -> AsyncIOScheduler:
     offset_30m = now + timedelta(minutes=30)
     offset_1h = now + timedelta(hours=1)
 
+    # misfire_grace_time — допустимое опоздание (в секундах) прежде чем job считается пропущенным
+    _grace = 600  # 10 минут
+
     _scheduler.add_job(
         scheduler_service.job_upload_avito_feed,
         "interval", hours=3, id="upload_avito_feed",
-        name="Upload Avito feed",
+        name="Upload Avito feed", misfire_grace_time=_grace,
     )
     _scheduler.add_job(
         scheduler_service.job_sync_avito_statuses,
         "interval", hours=3, start_date=offset_30m, id="sync_avito_statuses",
-        name="Sync Avito statuses",
+        name="Sync Avito statuses", misfire_grace_time=_grace,
     )
     _scheduler.add_job(
         scheduler_service.job_sync_cian_statuses,
         "interval", hours=3, start_date=offset_1h, id="sync_cian_statuses",
-        name="Sync CIAN statuses",
+        name="Sync CIAN statuses", misfire_grace_time=_grace,
     )
     _scheduler.add_job(
         scheduler_service.job_collect_statistics,
         "interval", hours=1, id="collect_statistics",
-        name="Collect statistics",
+        name="Collect statistics", misfire_grace_time=_grace,
     )
     _scheduler.add_job(
         scheduler_service.job_daily_digest,
         "cron", hour=9, minute=0, id="daily_digest",
-        name="Daily digest",
+        name="Daily digest", misfire_grace_time=_grace,
     )
     _scheduler.add_job(
         scheduler_service.job_check_errors_and_notify,
         "interval", hours=3, start_date=offset_30m, id="check_errors_and_notify",
-        name="Check errors and notify",
+        name="Check errors and notify", misfire_grace_time=_grace,
     )
 
     # Рассылка в Telegram-каналы
@@ -553,7 +556,7 @@ def start_scheduler() -> AsyncIOScheduler:
     _scheduler.add_job(
         scheduler_service.job_send_broadcast,
         "interval", minutes=bc_minutes, id="send_broadcast",
-        name="Telegram broadcast",
+        name="Telegram broadcast", misfire_grace_time=_grace,
     )
 
     _scheduler.start()
